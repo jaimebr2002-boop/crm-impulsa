@@ -35,8 +35,8 @@ cp .env.example .env.local
 ```
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+NEXT_PUBLIC_SB_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SB_ANON_KEY=tu-anon-key
 ```
 
 ## 4. Ejecutar en local
@@ -67,7 +67,7 @@ npm run start
 
 1. Sube este proyecto a un repositorio Git.
 2. Impórtalo en [vercel.com/new](https://vercel.com/new).
-3. Añade las mismas variables de entorno (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) en la configuración del proyecto de Vercel.
+3. Añade las mismas variables de entorno (`NEXT_PUBLIC_SB_URL`, `NEXT_PUBLIC_SB_ANON_KEY`) en la configuración del proyecto de Vercel.
 4. Despliega. No hace falta configuración adicional.
 
 ## Notas
