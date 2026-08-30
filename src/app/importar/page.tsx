@@ -136,21 +136,21 @@ export default function ImportarPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
-      <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-slate-400">
+      <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-ink3">
         ← Volver
       </button>
-      <h1 className="mb-1 text-2xl font-semibold text-slate-900">Importar leads históricos</h1>
-      <p className="mb-5 text-sm text-slate-500">
+      <h1 className="mb-1 text-2xl font-semibold text-ink">Importar leads históricos</h1>
+      <p className="mb-5 text-sm text-ink2">
         No se inventa ningún dato: solo se guarda lo que traiga la importación.
       </p>
 
       {!filas ? (
         <>
-          <div className="mb-5 flex rounded-xl bg-slate-100 p-1">
+          <div className="mb-5 flex rounded-xl bg-mute p-1">
             <button
               onClick={() => cambiarModo("csv")}
               className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-                modo === "csv" ? "bg-white text-slate-900 shadow-card" : "text-slate-500"
+                modo === "csv" ? "bg-surface text-ink shadow-card" : "text-ink2"
               }`}
             >
               CSV / TSV
@@ -158,7 +158,7 @@ export default function ImportarPage() {
             <button
               onClick={() => cambiarModo("html")}
               className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-                modo === "html" ? "bg-white text-slate-900 shadow-card" : "text-slate-500"
+                modo === "html" ? "bg-surface text-ink shadow-card" : "text-ink2"
               }`}
             >
               Archivo HTML
@@ -168,7 +168,7 @@ export default function ImportarPage() {
           {modo === "csv" ? (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500">Datos a importar</span>
+                <span className="text-xs font-medium text-ink2">Datos a importar</span>
                 <button onClick={() => inputArchivoCsv.current?.click()} className="text-xs font-semibold text-brand-dark">
                   Subir archivo CSV/TSV
                 </button>
@@ -181,7 +181,7 @@ export default function ImportarPage() {
                 placeholder={EJEMPLO}
                 className="input font-mono text-xs"
               />
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-xs text-ink3">
                 Cabeceras reconocidas: negocio, contacto/nombre_contacto, telefono, email, enlace_demo/demo, segmento,
                 nota, ciudad, nicho.
               </p>
@@ -201,15 +201,15 @@ export default function ImportarPage() {
             <>
               <button
                 onClick={() => inputArchivoHtml.current?.click()}
-                className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-10 text-center"
+                className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-surface px-6 py-10 text-center"
               >
                 <span className="text-sm font-semibold text-brand-dark">
                   {nombreArchivoHtml ? nombreArchivoHtml : "Seleccionar archivo HTML"}
                 </span>
-                <span className="text-xs text-slate-400">Exportación de una herramienta anterior (.html)</span>
+                <span className="text-xs text-ink3">Exportación de una herramienta anterior (.html)</span>
               </button>
               <input ref={inputArchivoHtml} type="file" accept=".html,.htm" className="hidden" onChange={cargarArchivoHtml} />
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-xs text-ink3">
                 Se reconocen tablas HTML con cabecera y bloques repetidos con pares &quot;Campo: valor&quot; (negocio,
                 contacto, teléfono, email, segmento, nota, enlace_demo, ciudad, nicho).
               </p>
@@ -222,19 +222,19 @@ export default function ImportarPage() {
       ) : (
         <>
           <div className="mb-4 flex gap-3">
-            <div className="flex-1 rounded-2xl border border-slate-200 bg-white p-4 text-center">
-              <p className="text-2xl font-semibold text-slate-900">{validas}</p>
-              <p className="text-xs text-slate-500">Registros válidos</p>
+            <div className="flex-1 rounded-2xl border border-line bg-surface p-4 text-center">
+              <p className="text-2xl font-semibold text-ink">{validas}</p>
+              <p className="text-xs text-ink2">Registros válidos</p>
             </div>
-            <div className="flex-1 rounded-2xl border border-slate-200 bg-white p-4 text-center">
-              <p className={`text-2xl font-semibold ${invalidas > 0 ? "text-amber-600" : "text-slate-900"}`}>{invalidas}</p>
-              <p className="text-xs text-slate-500">Sin datos suficientes</p>
+            <div className="flex-1 rounded-2xl border border-line bg-surface p-4 text-center">
+              <p className={`text-2xl font-semibold ${invalidas > 0 ? "text-amber-600" : "text-ink"}`}>{invalidas}</p>
+              <p className="text-xs text-ink2">Sin datos suficientes</p>
             </div>
           </div>
 
           {esAdmin ? (
             <label className="mb-4 block">
-              <span className="mb-1 block text-xs font-medium text-slate-500">Asignar los leads importados a</span>
+              <span className="mb-1 block text-xs font-medium text-ink2">Asignar los leads importados a</span>
               <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
                 <option value="">Sin asignar</option>
                 {usuarios.map((u) => (
@@ -245,12 +245,12 @@ export default function ImportarPage() {
               </select>
             </label>
           ) : (
-            <p className="mb-4 text-xs text-slate-400">Los leads importados quedarán asignados a ti.</p>
+            <p className="mb-4 text-xs text-ink3">Los leads importados quedarán asignados a ti.</p>
           )}
 
-          <div className="max-h-96 overflow-auto rounded-2xl border border-slate-200 bg-white">
+          <div className="max-h-96 overflow-auto rounded-2xl border border-line bg-surface">
             <table className="w-full text-left text-xs">
-              <thead className="sticky top-0 bg-slate-50 text-slate-500">
+              <thead className="sticky top-0 bg-canvas text-ink2">
                 <tr>
                   <th className="px-3 py-2">Negocio</th>
                   <th className="px-3 py-2">Contacto</th>
@@ -261,7 +261,7 @@ export default function ImportarPage() {
               </thead>
               <tbody>
                 {filas.map((f, i) => (
-                  <tr key={i} className={`border-t border-slate-100 ${!f.valida ? "bg-amber-50/60" : ""}`}>
+                  <tr key={i} className={`border-t border-line ${!f.valida ? "bg-amber-50/60" : ""}`}>
                     <td className="max-w-[9rem] truncate px-3 py-2">{f.negocio || "—"}</td>
                     <td className="max-w-[7rem] truncate px-3 py-2">{f.nombre_contacto || "—"}</td>
                     <td className="px-3 py-2">{f.telefono || "—"}</td>
@@ -274,13 +274,13 @@ export default function ImportarPage() {
           </div>
 
           {error ? <p className="mt-3 text-sm font-medium text-red-600">{error}</p> : null}
-          {importando ? <p className="mt-3 text-sm text-slate-500">Importando {progreso}/{validas}…</p> : null}
+          {importando ? <p className="mt-3 text-sm text-ink2">Importando {progreso}/{validas}…</p> : null}
 
           <div className="mt-5 flex gap-3">
             <button
               onClick={() => setFilas(null)}
               disabled={importando}
-              className="flex-1 rounded-xl border border-slate-200 py-3.5 text-base font-medium text-slate-600 disabled:opacity-50"
+              className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2 disabled:opacity-50"
             >
               Cancelar
             </button>

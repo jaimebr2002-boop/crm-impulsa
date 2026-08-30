@@ -33,10 +33,10 @@ export function EventCard({
     <div
       className={`flex items-start gap-3 rounded-2xl border p-4 ${
         evento.completada
-          ? "border-slate-100 bg-slate-50"
+          ? "border-line bg-canvas"
           : vencido
           ? "border-red-200 bg-red-50"
-          : "border-slate-200 bg-white"
+          : "border-line bg-surface"
       }`}
     >
       <button
@@ -55,19 +55,19 @@ export function EventCard({
       </button>
 
       <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${evento.completada ? "text-slate-400 line-through" : "text-slate-900"}`}>
+        <p className={`text-sm font-semibold ${evento.completada ? "text-ink3 line-through" : "text-ink"}`}>
           {evento.titulo}
         </p>
-        <p className={`mt-0.5 text-xs ${vencido && !evento.completada ? "font-semibold text-red-600" : "text-slate-500"}`}>
+        <p className={`mt-0.5 text-xs ${vencido && !evento.completada ? "font-semibold text-red-600" : "text-ink2"}`}>
           {formatFechaRelativa(evento.fecha_hora)}
           {vencido && !evento.completada ? " · Vencido" : ""}
         </p>
         {mostrarLead && conLead?.lead ? (
-          <p className="mt-1 truncate text-xs text-slate-500">
+          <p className="mt-1 truncate text-xs text-ink2">
             {conLead.lead.negocio || conLead.lead.nombre_contacto || "Lead"}
           </p>
         ) : null}
-        {conLead?.usuario ? <p className="mt-0.5 text-xs text-slate-400">Responsable: {conLead.usuario.nombre}</p> : null}
+        {conLead?.usuario ? <p className="mt-0.5 text-xs text-ink3">Responsable: {conLead.usuario.nombre}</p> : null}
       </div>
     </div>
   );

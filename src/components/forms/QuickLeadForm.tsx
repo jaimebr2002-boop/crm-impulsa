@@ -57,23 +57,23 @@ export function QuickLeadForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Negocio</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Negocio</span>
         <input value={negocio} onChange={(e) => setNegocio(e.target.value)} className="input" autoFocus />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Contacto</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Contacto</span>
         <input value={contacto} onChange={(e) => setContacto(e.target.value)} className="input" />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Teléfono</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Teléfono</span>
         <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" inputMode="tel" />
         {esFijo ? <p className="mt-1.5 text-xs font-medium text-amber-700">Teléfono fijo · no WhatsApp.</p> : null}
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Referido por</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Referido por</span>
         <input
           value={referidoPor}
           onChange={(e) => setReferidoPor(e.target.value)}
@@ -84,7 +84,7 @@ export function QuickLeadForm({
 
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Origen</span>
+          <span className="mb-1 block text-xs font-medium text-ink2">Origen</span>
           <select value={origen} onChange={(e) => setOrigen(e.target.value)} className="input">
             {ORIGENES.map((o) => (
               <option key={o} value={o}>
@@ -94,7 +94,7 @@ export function QuickLeadForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Estado</span>
+          <span className="mb-1 block text-xs font-medium text-ink2">Estado</span>
           <select value={estado} onChange={(e) => setEstado(e.target.value)} className="input">
             {ESTADOS.map((e) => (
               <option key={e} value={e}>
@@ -107,7 +107,7 @@ export function QuickLeadForm({
 
       {puedeAsignar ? (
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Responsable</span>
+          <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
           <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
             {usuarios.map((u) => (
               <option key={u.id} value={u.id}>
@@ -122,7 +122,7 @@ export function QuickLeadForm({
 
       <div className="mt-2 flex gap-3">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-slate-200 py-3.5 text-base font-medium text-slate-600">
+          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
             Cancelar
           </button>
         ) : null}

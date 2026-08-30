@@ -39,16 +39,16 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark">Impulsa Studio</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-900">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-slate-500">Accede con tu cuenta del CRM</p>
+          <h1 className="mt-2 text-2xl font-semibold text-ink">Iniciar sesión</h1>
+          <p className="mt-1 text-sm text-ink2">Accede con tu cuenta del CRM</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-card"
+          className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-card"
         >
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">Email</span>
+            <span className="mb-1 block text-xs font-medium text-ink2">Email</span>
             <input
               type="email"
               autoComplete="email"
@@ -62,7 +62,7 @@ export default function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">Contraseña</span>
+            <span className="mb-1 block text-xs font-medium text-ink2">Contraseña</span>
             <input
               type="password"
               autoComplete="current-password"

@@ -58,11 +58,11 @@ export default function ActualizarPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark">Impulsa Studio</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-900">Crea tu contraseña</h1>
-          <p className="mt-1 text-sm text-slate-500">Es la única vez que la necesitarás introducir aquí</p>
+          <h1 className="mt-2 text-2xl font-semibold text-ink">Crea tu contraseña</h1>
+          <p className="mt-1 text-sm text-ink2">Es la única vez que la necesitarás introducir aquí</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+        <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
           {!listo ? (
             <LoadingState texto="Comprobando enlace…" />
           ) : !sesionValida ? (
@@ -74,7 +74,7 @@ export default function ActualizarPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Nueva contraseña</span>
+                <span className="mb-1 block text-xs font-medium text-ink2">Nueva contraseña</span>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -88,7 +88,7 @@ export default function ActualizarPasswordPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Confirmar contraseña</span>
+                <span className="mb-1 block text-xs font-medium text-ink2">Confirmar contraseña</span>
                 <input
                   type="password"
                   autoComplete="new-password"

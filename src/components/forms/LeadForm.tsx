@@ -208,7 +208,7 @@ export function LeadForm({
 
       <div className="mt-2 flex gap-3">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-slate-200 py-3.5 text-base font-medium text-slate-600">
+          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
             Cancelar
           </button>
         ) : null}
@@ -223,9 +223,9 @@ export function LeadForm({
 function Campo({ label, nota, children }: { label: string; nota?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-slate-500">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-ink2">{label}</span>
       {children}
-      {nota ? <span className="mt-1 block text-[11px] text-slate-400">{nota}</span> : null}
+      {nota ? <span className="mt-1 block text-[11px] text-ink3">{nota}</span> : null}
     </label>
   );
 }

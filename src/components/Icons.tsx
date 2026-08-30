@@ -117,3 +117,40 @@ export function IconCheck({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconAnalitica({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M4 20V10M11 20V4M18 20v-7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 20h16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconTrendUp({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className={`${base} ${className ?? ""}`}>
+      <path d="M4 16l5.5-5.5L13 14l7-7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 7h5v5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconTrendDown({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className={`${base} ${className ?? ""}`}>
+      <path d="M4 8l5.5 5.5L13 10l7 7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 17h5v-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconUsuarios({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M2.5 19c1.1-3.2 3.6-5 6.5-5s5.4 1.8 6.5 5" strokeLinecap="round" />
+      <path d="M16 4.2c1.5.4 2.5 1.7 2.5 3.3s-1 2.9-2.5 3.3M19 14.3c1.5.5 2.6 1.9 3 3.7" strokeLinecap="round" />
+    </svg>
+  );
+}

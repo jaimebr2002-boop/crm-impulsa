@@ -80,7 +80,7 @@ export default function LeadsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 pt-6 md:px-8">
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Leads</h1>
+        <h1 className="text-2xl font-semibold text-ink">Leads</h1>
         <Link
           href="/leads/nuevo"
           className="hidden items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white md:flex"
@@ -97,7 +97,7 @@ export default function LeadsPage() {
               key={u.id}
               onClick={() => setFiltroAsignado(u.id)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroAsignado === u.id ? "bg-brand text-white" : "border border-slate-200 bg-white text-slate-600"
+                filtroAsignado === u.id ? "bg-brand text-white" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}
@@ -107,13 +107,13 @@ export default function LeadsPage() {
       ) : null}
 
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
-          <IconBuscar className="h-4 w-4 text-slate-400" />
+        <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-surface px-3 py-3">
+          <IconBuscar className="h-4 w-4 text-ink3" />
           <input
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="Negocio, contacto o teléfono…"
-            className="w-full bg-transparent text-base outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-base outline-none placeholder:text-ink3"
           />
         </div>
         <LeadFilters filtros={filtros} onChange={setFiltros} />

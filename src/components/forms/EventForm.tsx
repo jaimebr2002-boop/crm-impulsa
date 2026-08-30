@@ -46,7 +46,7 @@ export function EventForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Título</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Título</span>
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
@@ -57,7 +57,7 @@ export function EventForm({
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Fecha y hora</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Fecha y hora</span>
         <input
           type="datetime-local"
           value={fechaHoraLocal}
@@ -67,7 +67,7 @@ export function EventForm({
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Responsable</span>
+        <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
         <select value={usuarioId} onChange={(e) => setUsuarioId(e.target.value)} className="input">
           <option value="">Sin asignar</option>
           {usuarios.map((u) => (
@@ -82,7 +82,7 @@ export function EventForm({
 
       <div className="mt-1 flex gap-3">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-slate-200 py-3.5 text-base font-medium text-slate-600">
+          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
             Cancelar
           </button>
         ) : null}

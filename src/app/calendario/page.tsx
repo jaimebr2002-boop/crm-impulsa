@@ -77,29 +77,29 @@ export default function CalendarioPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
-      <h1 className="text-2xl font-semibold text-slate-900">Calendario</h1>
+      <h1 className="text-2xl font-semibold text-ink">Calendario</h1>
 
       <div className="mt-4 flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <button onClick={() => navegar(-1)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
+          <button onClick={() => navegar(-1)} className="rounded-full p-2 text-ink2 hover:bg-mute">
             <IconChevron className="h-5 w-5 rotate-180" />
           </button>
-          <span className="min-w-[9rem] text-center text-sm font-medium capitalize text-slate-700">{etiquetaPeriodo}</span>
-          <button onClick={() => navegar(1)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
+          <span className="min-w-[9rem] text-center text-sm font-medium capitalize text-ink">{etiquetaPeriodo}</span>
+          <button onClick={() => navegar(1)} className="rounded-full p-2 text-ink2 hover:bg-mute">
             <IconChevron className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex rounded-xl bg-slate-100 p-1">
+        <div className="flex rounded-xl bg-mute p-1">
           <button
             onClick={() => setVista("mes")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${vista === "mes" ? "bg-white text-slate-900 shadow-card" : "text-slate-500"}`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${vista === "mes" ? "bg-surface text-ink shadow-card" : "text-ink2"}`}
           >
             Mes
           </button>
           <button
             onClick={() => setVista("semana")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${vista === "semana" ? "bg-white text-slate-900 shadow-card" : "text-slate-500"}`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${vista === "semana" ? "bg-surface text-ink shadow-card" : "text-ink2"}`}
           >
             Semana
           </button>
@@ -113,7 +113,7 @@ export default function CalendarioPage() {
               key={u.id}
               onClick={() => setFiltroUsuarioId(u.id)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroUsuarioId === u.id ? "bg-brand text-white" : "border border-slate-200 bg-white text-slate-600"
+                filtroUsuarioId === u.id ? "bg-brand text-white" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}

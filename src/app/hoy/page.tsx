@@ -71,8 +71,8 @@ export default function HoyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 md:px-8">
-      <h1 className="text-2xl font-semibold text-slate-900">Hoy</h1>
-      <p className="mt-0.5 text-sm text-slate-500">
+      <h1 className="text-2xl font-semibold text-ink">Hoy</h1>
+      <p className="mt-0.5 text-sm text-ink2">
         {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
       </p>
 
@@ -83,7 +83,7 @@ export default function HoyPage() {
               key={u.id}
               onClick={() => setFiltroUsuarioId(u.id)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroUsuarioId === u.id ? "bg-brand text-white" : "border border-slate-200 bg-white text-slate-600"
+                filtroUsuarioId === u.id ? "bg-brand text-white" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}
@@ -111,7 +111,7 @@ export default function HoyPage() {
       {!cargando && !error ? (
         <div className="mt-6 flex flex-col gap-8 pb-10">
           <section>
-            <h2 className="mb-3 text-base font-semibold text-slate-900">Vencidos</h2>
+            <h2 className="mb-3 text-base font-semibold text-ink">Vencidos</h2>
             {vencidos.length === 0 ? (
               <EmptyState titulo="Sin eventos vencidos" />
             ) : (
@@ -124,7 +124,7 @@ export default function HoyPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-slate-900">Hoy</h2>
+            <h2 className="mb-3 text-base font-semibold text-ink">Hoy</h2>
             {pendientesHoy.length === 0 && completadosHoy.length === 0 ? (
               <EmptyState titulo="No tienes eventos hoy" />
             ) : (
@@ -145,10 +145,22 @@ export default function HoyPage() {
 }
 
 const TONOS = {
-  brand: { fondo: "bg-brand-light", texto: "text-brand-dark", icono: "text-brand-dark" },
-  info: { fondo: "bg-sky-50", texto: "text-sky-900", icono: "text-sky-600" },
-  alerta: { fondo: "bg-red-50", texto: "text-red-700", icono: "text-red-600" },
-  neutro: { fondo: "bg-slate-50", texto: "text-slate-900", icono: "text-slate-400" },
+  brand: {
+    fondo: "bg-brand-light",
+    texto: "text-brand-dark dark:text-brand",
+    icono: "text-brand-dark dark:text-brand",
+  },
+  info: {
+    fondo: "bg-sky-50 dark:bg-sky-500/15",
+    texto: "text-sky-900 dark:text-sky-300",
+    icono: "text-sky-600 dark:text-sky-400",
+  },
+  alerta: {
+    fondo: "bg-red-50 dark:bg-red-500/15",
+    texto: "text-red-700 dark:text-red-300",
+    icono: "text-red-600 dark:text-red-400",
+  },
+  neutro: { fondo: "bg-canvas", texto: "text-ink", icono: "text-ink3" },
 } as const;
 
 function Metrica({

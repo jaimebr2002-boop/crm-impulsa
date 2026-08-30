@@ -35,7 +35,7 @@ export function LeadFilters({ filtros, onChange }: Props) {
     <>
       <button
         onClick={() => setAbierto(true)}
-        className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700"
+        className="relative flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink"
       >
         <IconFiltro className="h-4 w-4" />
         Filtros
@@ -49,11 +49,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
       {abierto ? (
         <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/30 md:items-center" onClick={() => setAbierto(false)}>
           <div
-            className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 md:rounded-3xl"
+            className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface p-5 md:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Filtros</h2>
+              <h2 className="text-lg font-semibold text-ink">Filtros</h2>
               <button onClick={limpiar} className="text-sm font-medium text-brand-dark">
                 Limpiar
               </button>
@@ -61,11 +61,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
 
             <div className="flex flex-col gap-4">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Estado</span>
+                <span className="mb-1 block text-xs font-medium text-ink2">Estado</span>
                 <select
                   value={filtros.estado ?? ""}
                   onChange={(e) => set("estado", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
                 >
                   <option value="">Todos</option>
                   {ESTADOS.map((e) => (
@@ -77,11 +77,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Origen</span>
+                <span className="mb-1 block text-xs font-medium text-ink2">Origen</span>
                 <select
                   value={filtros.origen ?? ""}
                   onChange={(e) => set("origen", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
                 >
                   <option value="">Todos</option>
                   {ORIGENES.map((o) => (
@@ -93,11 +93,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Segmento</span>
+                <span className="mb-1 block text-xs font-medium text-ink2">Segmento</span>
                 <select
                   value={filtros.segmento ?? ""}
                   onChange={(e) => set("segmento", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
                 >
                   <option value="">Todos</option>
                   {SEGMENTOS.map((s) => (
@@ -109,11 +109,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-500">Canal</span>
+                <span className="mb-1 block text-xs font-medium text-ink2">Canal</span>
                 <select
                   value={filtros.canal ?? ""}
                   onChange={(e) => set("canal", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
                 >
                   <option value="">Todos</option>
                   {CANALES.map((c) => (

@@ -43,7 +43,7 @@ export function CalendarViewMes({
 
   return (
     <div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-slate-400">
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-ink3">
         {DIAS_SEMANA.map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -61,14 +61,14 @@ export function CalendarViewMes({
               key={dia.toISOString()}
               onClick={() => setDiaSeleccionado(startOfDay(dia))}
               className={`flex aspect-square flex-col items-center justify-center rounded-xl text-sm ${
-                seleccionado ? "bg-brand text-white" : enMes ? "text-slate-800 hover:bg-slate-100" : "text-slate-300"
+                seleccionado ? "bg-brand text-white" : enMes ? "text-ink hover:bg-mute" : "text-ink3"
               }`}
             >
               <span className={esHoy && !seleccionado ? "font-bold text-brand-dark" : ""}>{dia.getDate()}</span>
               {eventosDia.length > 0 ? (
                 <span
                   className={`mt-0.5 h-1.5 w-1.5 rounded-full ${
-                    seleccionado ? "bg-white" : hayVencido ? "bg-red-500" : "bg-brand"
+                    seleccionado ? "bg-surface" : hayVencido ? "bg-red-500" : "bg-brand"
                   }`}
                 />
               ) : null}
@@ -78,7 +78,7 @@ export function CalendarViewMes({
       </div>
 
       <div className="mt-5">
-        <h3 className="mb-3 text-sm font-semibold text-slate-900">
+        <h3 className="mb-3 text-sm font-semibold text-ink">
           {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(diaSeleccionado)}
         </h3>
         {eventosDelDia.length === 0 ? (
@@ -128,16 +128,16 @@ export function CalendarViewSemana({
         return (
           <div key={dia.toISOString()}>
             <div className="mb-2 flex items-baseline gap-2">
-              <span className={`text-sm font-semibold ${esHoy ? "text-brand-dark" : "text-slate-900"}`}>
+              <span className={`text-sm font-semibold ${esHoy ? "text-brand-dark" : "text-ink"}`}>
                 {DIAS_SEMANA_LARGO[i]}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-ink3">
                 {new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(dia)}
               </span>
               {esHoy ? <span className="rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-semibold text-brand-dark">Hoy</span> : null}
             </div>
             {eventosDia.length === 0 ? (
-              <p className="text-xs text-slate-300">Sin eventos</p>
+              <p className="text-xs text-ink3">Sin eventos</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {eventosDia.map((ev) => (

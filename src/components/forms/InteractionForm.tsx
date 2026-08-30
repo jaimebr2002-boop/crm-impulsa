@@ -69,7 +69,7 @@ export function InteractionForm({
       {variante === "llamada" ? (
         <>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">Canal</span>
+            <span className="mb-1 block text-xs font-medium text-ink2">Canal</span>
             <select value={canal} onChange={(e) => setCanal(e.target.value)} className="input">
               {CANALES.map((c) => (
                 <option key={c} value={c}>
@@ -80,7 +80,7 @@ export function InteractionForm({
           </label>
 
           <div>
-            <span className="mb-2 block text-xs font-medium text-slate-500">Resultado</span>
+            <span className="mb-2 block text-xs font-medium text-ink2">Resultado</span>
             <div className="flex flex-wrap gap-2">
               {RESULTADOS_LLAMADA.map((r) => (
                 <button
@@ -90,7 +90,7 @@ export function InteractionForm({
                   className={`rounded-full border px-3 py-2 text-sm font-medium ${
                     resultado === r
                       ? "border-brand bg-brand-light text-brand-dark"
-                      : "border-slate-200 text-slate-600"
+                      : "border-line text-ink2"
                   }`}
                 >
                   {r}
@@ -102,7 +102,7 @@ export function InteractionForm({
       ) : null}
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">
+        <span className="mb-1 block text-xs font-medium text-ink2">
           Nota {variante === "llamada" ? "(opcional)" : ""}
         </span>
         <textarea
@@ -115,19 +115,19 @@ export function InteractionForm({
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+      <label className="flex items-center gap-2 text-sm font-medium text-ink">
         <input type="checkbox" checked={crearSeguimiento} onChange={(e) => setCrearSeguimiento(e.target.checked)} className="h-4 w-4" />
         Crear próximo seguimiento
       </label>
 
       {crearSeguimiento ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-slate-200 p-3">
+        <div className="flex flex-col gap-3 rounded-xl border border-line p-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">Título</span>
+            <span className="mb-1 block text-xs font-medium text-ink2">Título</span>
             <input value={tituloSeguimiento} onChange={(e) => setTituloSeguimiento(e.target.value)} className="input" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">Fecha y hora</span>
+            <span className="mb-1 block text-xs font-medium text-ink2">Fecha y hora</span>
             <input
               type="datetime-local"
               value={fechaSeguimiento}
@@ -142,7 +142,7 @@ export function InteractionForm({
 
       <div className="mt-1 flex gap-3">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-slate-200 py-3.5 text-base font-medium text-slate-600">
+          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
             Cancelar
           </button>
         ) : null}

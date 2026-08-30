@@ -31,14 +31,14 @@ export default function NuevoLeadPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-10 pt-6 md:px-8">
-      <h1 className="mb-1 text-2xl font-semibold text-slate-900">Nuevo lead</h1>
-      <p className="mb-5 text-sm text-slate-500">No se inventan datos: solo se guarda lo que introduzcas.</p>
+      <h1 className="mb-1 text-2xl font-semibold text-ink">Nuevo lead</h1>
+      <p className="mb-5 text-sm text-ink2">No se inventan datos: solo se guarda lo que introduzcas.</p>
 
-      <div className="mb-6 flex rounded-xl bg-slate-100 p-1">
+      <div className="mb-6 flex rounded-xl bg-mute p-1">
         <button
           onClick={() => setModo("rapida")}
           className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-            modo === "rapida" ? "bg-white text-slate-900 shadow-card" : "text-slate-500"
+            modo === "rapida" ? "bg-surface text-ink shadow-card" : "text-ink2"
           }`}
         >
           Alta rápida
@@ -46,7 +46,7 @@ export default function NuevoLeadPage() {
         <button
           onClick={() => setModo("completa")}
           className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-            modo === "completa" ? "bg-white text-slate-900 shadow-card" : "text-slate-500"
+            modo === "completa" ? "bg-surface text-ink shadow-card" : "text-ink2"
           }`}
         >
           Alta completa

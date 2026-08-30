@@ -131,7 +131,7 @@ export default function LeadDetallePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
-      <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-slate-400">
+      <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-ink3">
         ← Volver
       </button>
 
@@ -141,8 +141,8 @@ export default function LeadDetallePage() {
           <div className="flex min-w-0 items-center gap-3">
             <Avatar nombre={lead.negocio || lead.nombre_contacto || "?"} size="lg" />
             <div className="min-w-0">
-              <h1 className="truncate text-2xl font-semibold text-slate-900">{lead.negocio || "Sin negocio"}</h1>
-              <p className="mt-0.5 truncate text-base text-slate-500">{lead.nombre_contacto || "Sin contacto"}</p>
+              <h1 className="truncate text-2xl font-semibold text-ink">{lead.negocio || "Sin negocio"}</h1>
+              <p className="mt-0.5 truncate text-base text-ink2">{lead.nombre_contacto || "Sin contacto"}</p>
             </div>
           </div>
           <span className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${ESTADO_COLOR[lead.estado] ?? ""}`}>
@@ -157,8 +157,8 @@ export default function LeadDetallePage() {
           <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
         ) : (
           <div>
-            <span className="mb-1 block text-xs font-medium text-slate-500">Responsable</span>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-500">
+            <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
+            <div className="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-3 text-base font-medium text-ink2">
               {asignado?.nombre ?? "Sin asignar"}
             </div>
           </div>
@@ -171,10 +171,10 @@ export default function LeadDetallePage() {
 
       {/* Teléfono */}
       {lead.telefono ? (
-        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="mb-5 rounded-2xl border border-line bg-surface p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-base font-medium text-slate-900">{lead.telefono}</p>
+              <p className="text-base font-medium text-ink">{lead.telefono}</p>
               <div className="mt-1"><PhoneIndicator telefono={lead.telefono} /></div>
             </div>
             <div className="flex gap-2">
@@ -201,10 +201,10 @@ export default function LeadDetallePage() {
         <button onClick={() => setModal("llamada")} className="rounded-2xl bg-brand py-4 text-sm font-semibold text-white">
           Registrar llamada
         </button>
-        <button onClick={() => setModal("nota")} className="rounded-2xl border border-slate-200 bg-white py-4 text-sm font-semibold text-slate-700">
+        <button onClick={() => setModal("nota")} className="rounded-2xl border border-line bg-surface py-4 text-sm font-semibold text-ink">
           + Añadir nota
         </button>
-        <button onClick={() => setModal("evento")} className="col-span-2 rounded-2xl border border-slate-200 bg-white py-4 text-sm font-semibold text-slate-700">
+        <button onClick={() => setModal("evento")} className="col-span-2 rounded-2xl border border-line bg-surface py-4 text-sm font-semibold text-ink">
           + Crear seguimiento
         </button>
       </div>
@@ -212,12 +212,12 @@ export default function LeadDetallePage() {
       {/* Información */}
       <section className="mb-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Información</h2>
+          <h2 className="text-base font-semibold text-ink">Información</h2>
           <button onClick={() => setModal("editar")} className="text-sm font-medium text-brand-dark">
             Editar
           </button>
         </div>
-        <dl className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+        <dl className="grid grid-cols-2 gap-3 rounded-2xl border border-line bg-surface p-4 text-sm">
           <Campo label="Nicho" valor={lead.nicho} />
           <Campo label="Ciudad" valor={lead.ciudad} />
           <Campo label="Canal" valor={lead.canal ? CANAL_LABEL[lead.canal] ?? lead.canal : null} />
@@ -240,9 +240,9 @@ export default function LeadDetallePage() {
 
       {/* Seguimientos */}
       <section className="mb-6">
-        <h2 className="mb-3 text-base font-semibold text-slate-900">Seguimientos</h2>
+        <h2 className="mb-3 text-base font-semibold text-ink">Seguimientos</h2>
         {eventosOrdenados.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-center text-sm text-slate-400">
+          <p className="rounded-2xl border border-dashed border-line bg-surface p-4 text-center text-sm text-ink3">
             Sin seguimientos programados.
           </p>
         ) : (
@@ -256,7 +256,7 @@ export default function LeadDetallePage() {
 
       {/* Historial */}
       <section>
-        <h2 className="mb-3 text-base font-semibold text-slate-900">Historial</h2>
+        <h2 className="mb-3 text-base font-semibold text-ink">Historial</h2>
         <InteractionTimeline interacciones={interacciones} />
       </section>
 
@@ -314,8 +314,8 @@ export default function LeadDetallePage() {
 function Campo({ label, valor }: { label: string; valor: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-slate-400">{label}</dt>
-      <dd className="mt-0.5 font-medium text-slate-800">{valor || <span className="text-slate-300">—</span>}</dd>
+      <dt className="text-xs text-ink3">{label}</dt>
+      <dd className="mt-0.5 font-medium text-ink">{valor || <span className="text-ink3">—</span>}</dd>
     </div>
   );
 }
