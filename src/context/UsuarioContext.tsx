@@ -1,75 +1,83 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { borrarUsuarioGuardado, getUsuarioIdGuardado, guardarUsuarioId } from "@/lib/user";
 import type { Usuario } from "@/lib/types";
 
 type UsuarioContextValue = {
-  usuarios: Usuario[];
   usuarioActual: Usuario | null;
   cargando: boolean;
   error: string | null;
-  esJaime: boolean;
-  seleccionarUsuario: (id: string) => void;
-  cambiarUsuario: () => void;
+  esAdmin: boolean;
+  cerrarSesion: () => Promise<void>;
 };
 
 const UsuarioContext = createContext<UsuarioContextValue | undefined>(undefined);
 
 export function UsuarioProvider({ children }: { children: ReactNode }) {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const router = useRouter();
   const [usuarioActual, setUsuarioActual] = useState<Usuario | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const cargarPerfil = useCallback(async (userId: string) => {
+    const { data, error: err } = await supabase
+      .from("usuarios")
+      .select("id, nombre, email, rol")
+      .eq("id", userId)
+      .maybeSingle();
+    if (err) {
+      setError("No se ha podido cargar tu perfil. Contacta con el administrador.");
+      setUsuarioActual(null);
+      return;
+    }
+    setUsuarioActual(data);
+    setError(data ? null : "Tu cuenta no tiene un perfil asociado en el CRM. Contacta con el administrador.");
+  }, []);
+
   useEffect(() => {
     let activo = true;
+
     (async () => {
-      try {
-        const { data, error: err } = await supabase.from("usuarios").select("id, nombre").order("nombre");
-        if (!activo) return;
-        if (err) throw err;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!activo) return;
+      if (session?.user) {
+        await cargarPerfil(session.user.id);
+      }
+      if (activo) setCargando(false);
+    })();
 
-        const lista = data ?? [];
-        setUsuarios(lista);
-
-        const guardadoId = getUsuarioIdGuardado();
-        const encontrado = lista.find((u) => u.id === guardadoId) ?? null;
-        setUsuarioActual(encontrado);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_evento, session) => {
+      if (!activo) return;
+      if (session?.user) {
+        setCargando(true);
+        await cargarPerfil(session.user.id);
         setCargando(false);
-      } catch {
-        if (!activo) return;
-        setError("No se ha podido conectar con la base de datos. Revisa la configuración de Supabase en .env.local.");
+      } else {
+        setUsuarioActual(null);
         setCargando(false);
       }
-    })();
+    });
+
     return () => {
       activo = false;
+      listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [cargarPerfil]);
 
-  const seleccionarUsuario = useCallback(
-    (id: string) => {
-      const usuario = usuarios.find((u) => u.id === id) ?? null;
-      if (!usuario) return;
-      guardarUsuarioId(id);
-      setUsuarioActual(usuario);
-    },
-    [usuarios]
-  );
-
-  const cambiarUsuario = useCallback(() => {
-    borrarUsuarioGuardado();
+  const cerrarSesion = useCallback(async () => {
+    await supabase.auth.signOut();
     setUsuarioActual(null);
-  }, []);
+    router.push("/login");
+  }, [router]);
 
-  const esJaime = usuarioActual?.nombre.trim().toLowerCase() === "jaime";
+  const esAdmin = usuarioActual?.rol === "admin";
 
   return (
-    <UsuarioContext.Provider
-      value={{ usuarios, usuarioActual, cargando, error, esJaime, seleccionarUsuario, cambiarUsuario }}
-    >
+    <UsuarioContext.Provider value={{ usuarioActual, cargando, error, esAdmin, cerrarSesion }}>
       {children}
     </UsuarioContext.Provider>
   );

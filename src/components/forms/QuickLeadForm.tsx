@@ -8,11 +8,13 @@ import type { LeadInsert, Usuario } from "@/lib/types";
 export function QuickLeadForm({
   usuarios,
   usuarioActualId,
+  puedeAsignar,
   onSubmit,
   onCancelar,
 }: {
   usuarios: Usuario[];
   usuarioActualId: string;
+  puedeAsignar: boolean;
   onSubmit: (valores: LeadInsert) => Promise<void>;
   onCancelar?: () => void;
 }) {
@@ -38,7 +40,9 @@ export function QuickLeadForm({
         negocio,
         nombre_contacto: contacto,
         telefono,
-        asignado_a: asignadoA || undefined,
+        // Un comercial nunca envía asignado_a distinto de sí mismo: RLS lo
+        // rechazaría igualmente, pero ni se lo ofrecemos en la interfaz.
+        asignado_a: puedeAsignar ? asignadoA || undefined : usuarioActualId,
         origen,
         referido_por: referidoPor || undefined,
         estado,
@@ -101,16 +105,18 @@ export function QuickLeadForm({
         </label>
       </div>
 
-      <label className="block">
-        <span className="mb-1 block text-xs font-medium text-slate-500">Responsable</span>
-        <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
-          {usuarios.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.nombre}
-            </option>
-          ))}
-        </select>
-      </label>
+      {puedeAsignar ? (
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-slate-500">Responsable</span>
+          <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
+            {usuarios.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
 
       {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 

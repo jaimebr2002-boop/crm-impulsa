@@ -12,7 +12,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { IconChevron } from "@/components/Icons";
 
 export default function CalendarioPage() {
-  const { usuarioActual, esJaime, cargando: cargandoUsuario } = useUsuario();
+  const { usuarioActual, esAdmin, cargando: cargandoUsuario } = useUsuario();
   const [vista, setVista] = useState<"mes" | "semana">("mes");
   const [fechaReferencia, setFechaReferencia] = useState(new Date());
   const [filtroUsuarioId, setFiltroUsuarioId] = useState("todos");
@@ -27,9 +27,9 @@ export default function CalendarioPage() {
 
   const usuarioIdParaFiltro = useMemo(() => {
     if (!usuarioActual) return undefined;
-    if (!esJaime) return usuarioActual.id;
+    if (!esAdmin) return usuarioActual.id;
     return filtroUsuarioId === "todos" ? undefined : filtroUsuarioId;
-  }, [usuarioActual, esJaime, filtroUsuarioId]);
+  }, [usuarioActual, esAdmin, filtroUsuarioId]);
 
   const rango = useMemo(() => {
     if (vista === "semana") {
@@ -106,7 +106,7 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      {esJaime ? (
+      {esAdmin ? (
         <div className="mt-4 flex gap-2 overflow-x-auto">
           {[{ id: "todos", nombre: "Todos" }, ...usuarios].map((u) => (
             <button

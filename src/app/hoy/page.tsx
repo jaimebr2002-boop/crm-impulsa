@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { IconAlerta, IconCalendario, IconLeads } from "@/components/Icons";
 
 export default function HoyPage() {
-  const { usuarioActual, esJaime, cargando: cargandoUsuario } = useUsuario();
+  const { usuarioActual, esAdmin, cargando: cargandoUsuario } = useUsuario();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [filtroUsuarioId, setFiltroUsuarioId] = useState<string>("todos");
   const [vencidos, setVencidos] = useState<EventoConLead[]>([]);
@@ -27,9 +27,9 @@ export default function HoyPage() {
 
   const usuarioIdParaFiltro = useMemo(() => {
     if (!usuarioActual) return undefined;
-    if (!esJaime) return usuarioActual.id;
+    if (!esAdmin) return usuarioActual.id;
     return filtroUsuarioId === "todos" ? undefined : filtroUsuarioId;
-  }, [usuarioActual, esJaime, filtroUsuarioId]);
+  }, [usuarioActual, esAdmin, filtroUsuarioId]);
 
   const cargar = useCallback(async () => {
     if (!usuarioActual) return;
@@ -76,7 +76,7 @@ export default function HoyPage() {
         {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
       </p>
 
-      {esJaime ? (
+      {esAdmin ? (
         <div className="mt-5 flex gap-2 overflow-x-auto">
           {[{ id: "todos", nombre: "Todos" }, ...usuarios].map((u) => (
             <button

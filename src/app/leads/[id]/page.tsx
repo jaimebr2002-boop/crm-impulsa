@@ -28,7 +28,7 @@ import { IconTelefono, IconWhatsapp } from "@/components/Icons";
 export default function LeadDetallePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { usuarioActual } = useUsuario();
+  const { usuarioActual, esAdmin } = useUsuario();
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -153,7 +153,16 @@ export default function LeadDetallePage() {
 
       <div className="mb-5 grid grid-cols-2 gap-3">
         <LeadStatusSelector value={lead.estado} onChange={cambiarEstado} />
-        <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
+        {esAdmin ? (
+          <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
+        ) : (
+          <div>
+            <span className="mb-1 block text-xs font-medium text-slate-500">Responsable</span>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-base font-medium text-slate-500">
+              {asignado?.nombre ?? "Sin asignar"}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-5">
@@ -286,9 +295,16 @@ export default function LeadDetallePage() {
         </Modal>
       ) : null}
 
-      {modal === "editar" ? (
+      {modal === "editar" && usuarioActual ? (
         <Modal titulo="Editar lead" onClose={() => setModal(null)}>
-          <LeadForm usuarios={usuarios} valoresIniciales={lead} onSubmit={guardarEdicion} onCancelar={() => setModal(null)} />
+          <LeadForm
+            usuarios={usuarios}
+            usuarioActualId={usuarioActual.id}
+            puedeAsignar={esAdmin}
+            valoresIniciales={lead}
+            onSubmit={guardarEdicion}
+            onCancelar={() => setModal(null)}
+          />
         </Modal>
       ) : null}
     </div>

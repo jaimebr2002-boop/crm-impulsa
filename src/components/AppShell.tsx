@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
-import { UserSelector } from "./UserSelector";
 import { LoadingState } from "./LoadingState";
 import { ErrorState } from "./ErrorState";
 import { IconHoy, IconLeads, IconCalendario, IconMas, IconPerfil } from "./Icons";
@@ -18,9 +17,29 @@ const NAV = [
   { href: "/perfil", label: "Perfil", icon: IconPerfil },
 ];
 
+const RUTAS_PUBLICAS = ["/login", "/actualizar-password"];
+
+const ROL_LABEL: Record<string, string> = {
+  admin: "Administrador",
+  comercial: "Comercial",
+};
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { cargando, error, usuarioActual } = useUsuario();
   const pathname = usePathname();
+  const router = useRouter();
+
+  const esRutaPublica = RUTAS_PUBLICAS.some((ruta) => pathname?.startsWith(ruta));
+
+  useEffect(() => {
+    if (!esRutaPublica && !cargando && !usuarioActual && !error) {
+      router.replace("/login");
+    }
+  }, [esRutaPublica, cargando, usuarioActual, error, router]);
+
+  if (esRutaPublica) {
+    return <>{children}</>;
+  }
 
   if (cargando) {
     return (
@@ -39,7 +58,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!usuarioActual) {
-    return <UserSelector />;
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <LoadingState texto="Redirigiendo…" />
+      </div>
+    );
   }
 
   return (
@@ -71,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Avatar nombre={usuarioActual.nombre} />
           <span>
             <span className="block font-medium text-slate-900">{usuarioActual.nombre}</span>
-            <span className="block text-xs text-slate-400">Ver perfil</span>
+            <span className="block text-xs text-slate-400">{ROL_LABEL[usuarioActual.rol] ?? usuarioActual.rol}</span>
           </span>
         </Link>
       </aside>

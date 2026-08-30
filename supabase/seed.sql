@@ -1,9 +1,12 @@
--- Seed de usuarios — Jaime, Laura y Reyes.
--- Idempotente: no duplica si ya existen usuarios con esos nombres.
-
-insert into usuarios (nombre)
-select v.nombre
-from (values ('Jaime'), ('Laura'), ('Reyes')) as v(nombre)
-where not exists (
-  select 1 from usuarios u where u.nombre = v.nombre
-);
+-- Los usuarios ya no se siembran con un id aleatorio: usuarios.id debe
+-- coincidir exactamente con el id de su cuenta en auth.users (Supabase Auth).
+--
+-- Pasos para dar de alta a Jaime, Laura y Reyes:
+--   1. Crea sus cuentas de Auth (dashboard: Authentication → Users → Invite
+--      user, o vía `supabase.auth.admin.inviteUserByEmail(email, { data:
+--      { nombre, rol } })`), pasando nombre y rol ('admin' | 'comercial')
+--      en el metadata del usuario.
+--   2. El trigger `handle_new_user` (ver 0002_auth_roles_rls.sql) crea
+--      automáticamente su fila en `usuarios` a partir de ese metadata.
+--
+-- No es necesario ejecutar ningún SQL adicional para el alta normal.

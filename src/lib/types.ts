@@ -1,6 +1,10 @@
+export type RolUsuario = "admin" | "comercial";
+
 export type Usuario = {
   id: string;
   nombre: string;
+  email: string;
+  rol: RolUsuario;
 };
 
 export type EstadoLead =

@@ -12,7 +12,7 @@ import { LoadingState } from "@/components/LoadingState";
 
 export default function NuevoLeadPage() {
   const router = useRouter();
-  const { usuarioActual, cargando: cargandoUsuario } = useUsuario();
+  const { usuarioActual, esAdmin, cargando: cargandoUsuario } = useUsuario();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [modo, setModo] = useState<"rapida" | "completa">("rapida");
 
@@ -57,12 +57,15 @@ export default function NuevoLeadPage() {
         <QuickLeadForm
           usuarios={usuarios}
           usuarioActualId={usuarioActual.id}
+          puedeAsignar={esAdmin}
           onSubmit={guardar}
           onCancelar={() => router.back()}
         />
       ) : (
         <LeadForm
           usuarios={usuarios}
+          usuarioActualId={usuarioActual.id}
+          puedeAsignar={esAdmin}
           valoresIniciales={{ asignado_a: usuarioActual.id }}
           onSubmit={guardar}
           onCancelar={() => router.back()}

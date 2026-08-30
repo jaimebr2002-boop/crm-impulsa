@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { IconBuscar, IconMas } from "@/components/Icons";
 
 export default function LeadsPage() {
-  const { usuarioActual, esJaime, cargando: cargandoUsuario } = useUsuario();
+  const { usuarioActual, esAdmin, cargando: cargandoUsuario } = useUsuario();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [proximos, setProximos] = useState<Record<string, string>>({});
@@ -32,9 +32,9 @@ export default function LeadsPage() {
   const filtrosEfectivos = useMemo<FiltrosLeads>(() => {
     if (!usuarioActual) return {};
     const base: FiltrosLeads = { ...filtros, busqueda };
-    base.asignadoA = esJaime ? filtroAsignado : usuarioActual.id;
+    base.asignadoA = esAdmin ? filtroAsignado : usuarioActual.id;
     return base;
-  }, [filtros, busqueda, usuarioActual, esJaime, filtroAsignado]);
+  }, [filtros, busqueda, usuarioActual, esAdmin, filtroAsignado]);
 
   useEffect(() => {
     if (cargandoUsuario || !usuarioActual) return;
@@ -90,7 +90,7 @@ export default function LeadsPage() {
         </Link>
       </div>
 
-      {esJaime ? (
+      {esAdmin ? (
         <div className="mb-4 flex gap-2 overflow-x-auto">
           {[{ id: "todos", nombre: "Todos" }, ...usuarios].map((u) => (
             <button

@@ -9,6 +9,8 @@ export type LeadFormValores = LeadInsert;
 
 type Props = {
   usuarios: Usuario[];
+  usuarioActualId: string;
+  puedeAsignar: boolean;
   valoresIniciales?: LeadFormValores;
   onSubmit: (valores: LeadFormValores) => Promise<void>;
   botonTexto?: string;
@@ -32,7 +34,15 @@ const VACIO: LeadFormValores = {
   enlace_demo: "",
 };
 
-export function LeadForm({ usuarios, valoresIniciales, onSubmit, botonTexto = "Guardar lead", onCancelar }: Props) {
+export function LeadForm({
+  usuarios,
+  usuarioActualId,
+  puedeAsignar,
+  valoresIniciales,
+  onSubmit,
+  botonTexto = "Guardar lead",
+  onCancelar,
+}: Props) {
   const [valores, setValores] = useState<LeadFormValores>({ ...VACIO, ...valoresIniciales });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +61,13 @@ export function LeadForm({ usuarios, valoresIniciales, onSubmit, botonTexto = "G
     setError(null);
     try {
       const payload: LeadFormValores = { ...valores };
-      if (!payload.asignado_a) delete payload.asignado_a;
+      // Un comercial solo trabaja sobre sus propios leads: se fuerza aquí
+      // igual que lo exige la política RLS de INSERT/UPDATE en Supabase.
+      if (!puedeAsignar) {
+        payload.asignado_a = usuarioActualId;
+      } else if (!payload.asignado_a) {
+        delete payload.asignado_a;
+      }
       await onSubmit(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido guardar el lead.");
@@ -175,16 +191,18 @@ export function LeadForm({ usuarios, valoresIniciales, onSubmit, botonTexto = "G
         </Campo>
       </div>
 
-      <Campo label="Responsable">
-        <select value={valores.asignado_a ?? ""} onChange={(e) => set("asignado_a", e.target.value)} className="input">
-          <option value="">Sin asignar</option>
-          {usuarios.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.nombre}
-            </option>
-          ))}
-        </select>
-      </Campo>
+      {puedeAsignar ? (
+        <Campo label="Responsable">
+          <select value={valores.asignado_a ?? ""} onChange={(e) => set("asignado_a", e.target.value)} className="input">
+            <option value="">Sin asignar</option>
+            {usuarios.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nombre}
+              </option>
+            ))}
+          </select>
+        </Campo>
+      ) : null}
 
       {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 

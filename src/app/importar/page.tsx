@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { parsearImportacion, type FilaImportada } from "@/lib/importar";
 import { parsearHtmlLeads } from "@/lib/importarHtml";
 import { crearLead } from "@/lib/data/leads";
 import { crearInteraccion } from "@/lib/data/interacciones";
+import { listarUsuarios } from "@/lib/data/usuarios";
 import { useUsuario } from "@/context/UsuarioContext";
+import type { Usuario } from "@/lib/types";
 
 const EJEMPLO = `negocio\tcontacto\ttelefono\temail\tenlace_demo\tsegmento\tnota
 Clínica Dental Sonrisa\tAna Pérez\t610123456\tana@clinica.es\thttps://demo.impulsa.studio/sonrisa\tcaliente\tMuy interesada, pidió precio final`;
@@ -15,7 +17,7 @@ type Modo = "csv" | "html";
 
 export default function ImportarPage() {
   const router = useRouter();
-  const { usuarioActual } = useUsuario();
+  const { usuarioActual, esAdmin } = useUsuario();
   const [modo, setModo] = useState<Modo>("csv");
   const [texto, setTexto] = useState("");
   const [nombreArchivoHtml, setNombreArchivoHtml] = useState<string | null>(null);
@@ -24,8 +26,14 @@ export default function ImportarPage() {
   const [progreso, setProgreso] = useState(0);
   const [resultado, setResultado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [asignadoA, setAsignadoA] = useState("");
   const inputArchivoCsv = useRef<HTMLInputElement>(null);
   const inputArchivoHtml = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    listarUsuarios().then(setUsuarios).catch(() => {});
+  }, []);
 
   function previsualizarCsv() {
     setError(null);
@@ -62,8 +70,11 @@ export default function ImportarPage() {
   }
 
   async function confirmarImportacion() {
-    if (!filas) return;
+    if (!filas || !usuarioActual) return;
     const validas = filas.filter((f) => f.valida);
+    // Un comercial nunca puede importar leads a nombre de otro: se fuerza su
+    // propio id igual que exige la política RLS de INSERT en Supabase.
+    const responsable = esAdmin ? asignadoA || undefined : usuarioActual.id;
     setImportando(true);
     setProgreso(0);
     setError(null);
@@ -81,6 +92,7 @@ export default function ImportarPage() {
           nicho: fila.nicho || null,
           origen: "reactivacion_web",
           estado: "pendiente",
+          asignado_a: responsable,
         });
         if (fila.nota) {
           await crearInteraccion({
@@ -219,6 +231,22 @@ export default function ImportarPage() {
               <p className="text-xs text-slate-500">Sin datos suficientes</p>
             </div>
           </div>
+
+          {esAdmin ? (
+            <label className="mb-4 block">
+              <span className="mb-1 block text-xs font-medium text-slate-500">Asignar los leads importados a</span>
+              <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
+                <option value="">Sin asignar</option>
+                {usuarios.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p className="mb-4 text-xs text-slate-400">Los leads importados quedarán asignados a ti.</p>
+          )}
 
           <div className="max-h-96 overflow-auto rounded-2xl border border-slate-200 bg-white">
             <table className="w-full text-left text-xs">

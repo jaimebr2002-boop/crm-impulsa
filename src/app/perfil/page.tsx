@@ -6,8 +6,13 @@ import { LoadingState } from "@/components/LoadingState";
 import { IconChevron } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 
+const ROL_LABEL: Record<string, string> = {
+  admin: "Administrador",
+  comercial: "Comercial",
+};
+
 export default function PerfilPage() {
-  const { usuarioActual, cargando, cambiarUsuario } = useUsuario();
+  const { usuarioActual, cargando, cerrarSesion } = useUsuario();
 
   if (cargando || !usuarioActual) return <LoadingState />;
 
@@ -19,7 +24,8 @@ export default function PerfilPage() {
         <Avatar nombre={usuarioActual.nombre} size="lg" />
         <div>
           <p className="text-lg font-semibold text-slate-900">{usuarioActual.nombre}</p>
-          <p className="text-sm text-slate-500">Impulsa Studio</p>
+          <p className="text-sm text-slate-500">{ROL_LABEL[usuarioActual.rol] ?? usuarioActual.rol}</p>
+          <p className="text-xs text-slate-400">{usuarioActual.email}</p>
         </div>
       </div>
 
@@ -29,10 +35,10 @@ export default function PerfilPage() {
           <IconChevron className="h-4 w-4 text-slate-300" />
         </Link>
         <button
-          onClick={cambiarUsuario}
+          onClick={cerrarSesion}
           className="flex w-full items-center justify-between border-t border-slate-100 px-5 py-4 text-left text-sm font-medium text-red-600"
         >
-          Cambiar de usuario
+          Cerrar sesión
           <IconChevron className="h-4 w-4 text-red-300" />
         </button>
       </div>
