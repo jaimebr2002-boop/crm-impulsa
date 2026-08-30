@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px; /* evita el zoom automático en iOS al enfocar un campo */
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base text-slate-900 outline-none focus:border-brand;
+  }
+}
