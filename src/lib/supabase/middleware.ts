@@ -26,7 +26,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const esRutaPublica = RUTAS_PUBLICAS.some((ruta) => request.nextUrl.pathname.startsWith(ruta));
+  const esRaiz = request.nextUrl.pathname === "/";
+  const esRutaPublica = esRaiz || RUTAS_PUBLICAS.some((ruta) => request.nextUrl.pathname.startsWith(ruta));
 
   if (!user && !esRutaPublica) {
     const url = request.nextUrl.clone();
@@ -34,7 +35,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && request.nextUrl.pathname === "/login") {
+  if (user && (request.nextUrl.pathname === "/login" || esRaiz)) {
     const url = request.nextUrl.clone();
     url.pathname = "/hoy";
     return NextResponse.redirect(url);

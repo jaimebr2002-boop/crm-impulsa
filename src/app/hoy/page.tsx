@@ -71,7 +71,7 @@ export default function HoyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 md:px-8">
-      <h1 className="text-2xl font-semibold text-ink">Hoy</h1>
+      <h1 className="font-display text-2xl font-bold text-ink">Hoy</h1>
       <p className="mt-0.5 text-sm text-ink2">
         {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
       </p>
@@ -83,7 +83,7 @@ export default function HoyPage() {
               key={u.id}
               onClick={() => setFiltroUsuarioId(u.id)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroUsuarioId === u.id ? "bg-brand text-white" : "border border-line bg-surface text-ink2"
+                filtroUsuarioId === u.id ? "bg-brand-gradient text-white" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}

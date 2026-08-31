@@ -15,13 +15,13 @@ export function FunnelChart({ etapas }: { etapas: EtapaFunnel[] }) {
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-ink2">{etapa.etiqueta}</span>
               <span className="flex items-center gap-2">
-                {conversion !== null ? <span className="text-ink3">{conversion}% del anterior</span> : null}
-                <span className="font-semibold text-ink">{etapa.valor}</span>
+                {conversion !== null ? <span className="text-accent2">↳ {conversion}% del anterior</span> : null}
+                <span className="font-display font-bold text-ink">{etapa.valor}</span>
               </span>
             </div>
             <div className="h-8 w-full overflow-hidden rounded-lg bg-mute">
               <div
-                className="flex h-full items-center justify-end rounded-lg bg-gradient-to-r from-brand/50 to-brand pr-2 transition-all duration-500"
+                className="flex h-full items-center justify-end rounded-lg bg-brand-gradient pr-2 transition-all duration-500"
                 style={{ width: `${anchoPct}%` }}
               />
             </div>

@@ -141,7 +141,7 @@ export default function LeadDetallePage() {
           <div className="flex min-w-0 items-center gap-3">
             <Avatar nombre={lead.negocio || lead.nombre_contacto || "?"} size="lg" />
             <div className="min-w-0">
-              <h1 className="truncate text-2xl font-semibold text-ink">{lead.negocio || "Sin negocio"}</h1>
+              <h1 className="truncate font-display text-2xl font-bold text-ink">{lead.negocio || "Sin negocio"}</h1>
               <p className="mt-0.5 truncate text-base text-ink2">{lead.nombre_contacto || "Sin contacto"}</p>
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function LeadDetallePage() {
               <div className="mt-1"><PhoneIndicator telefono={lead.telefono} /></div>
             </div>
             <div className="flex gap-2">
-              <a href={telHref(lead.telefono)} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white">
+              <a href={telHref(lead.telefono)} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-white">
                 <IconTelefono className="h-5 w-5" />
               </a>
               {!esFijo ? (
@@ -198,7 +198,7 @@ export default function LeadDetallePage() {
 
       {/* Acciones rápidas */}
       <div className="mb-6 grid grid-cols-2 gap-3">
-        <button onClick={() => setModal("llamada")} className="rounded-2xl bg-brand py-4 text-sm font-semibold text-white">
+        <button onClick={() => setModal("llamada")} className="rounded-2xl bg-brand-gradient py-4 text-sm font-semibold text-white">
           Registrar llamada
         </button>
         <button onClick={() => setModal("nota")} className="rounded-2xl border border-line bg-surface py-4 text-sm font-semibold text-ink">

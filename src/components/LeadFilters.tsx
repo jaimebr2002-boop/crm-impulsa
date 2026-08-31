@@ -127,7 +127,7 @@ export function LeadFilters({ filtros, onChange }: Props) {
 
             <button
               onClick={() => setAbierto(false)}
-              className="mt-6 w-full rounded-xl bg-brand py-3.5 text-base font-semibold text-white"
+              className="mt-6 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white"
             >
               Ver resultados
             </button>

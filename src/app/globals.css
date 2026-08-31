@@ -4,6 +4,7 @@
 
 :root {
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", var(--font-sans);
 
   /* Tokens — modo claro */
   --canvas: 246 246 251; /* fondo de página, lavanda casi imperceptible */
@@ -19,6 +20,9 @@
   --glass-alpha: 0.72;
   --glass-border: 255 255 255;
   --glass-border-alpha: 0.6;
+
+  --blob1: radial-gradient(circle, rgba(139, 92, 246, 0.16), transparent 70%);
+  --blob2: radial-gradient(circle, rgba(34, 211, 238, 0.14), transparent 70%);
 }
 
 :root[data-theme="dark"],
@@ -36,6 +40,9 @@
   --glass-alpha: 0.6;
   --glass-border: 255 255 255;
   --glass-border-alpha: 0.08;
+
+  --blob1: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
+  --blob2: radial-gradient(circle, rgba(34, 211, 238, 0.16), transparent 70%);
 }
 
 html,
@@ -75,5 +82,14 @@ textarea {
     border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
+  }
+
+  /* Manchas ambientales fijas en las esquinas — decorativas, sin datos. */
+  .blob-bg {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 9999px;
+    filter: blur(90px);
   }
 }

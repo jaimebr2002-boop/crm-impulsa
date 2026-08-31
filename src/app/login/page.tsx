@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const MENSAJES_ERROR: Record<string, string> = {
   "Invalid login credentials": "Email o contraseña incorrectos.",
@@ -35,18 +37,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-light px-6">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark">Impulsa Studio</p>
-          <h1 className="mt-2 text-2xl font-semibold text-ink">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-ink2">Accede con tu cuenta del CRM</p>
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-canvas px-6">
+      <div className="blob-bg -left-40 -top-40 h-[420px] w-[420px]" style={{ background: "var(--blob1)" }} />
+      <div className="blob-bg -bottom-48 -right-32 h-[480px] w-[480px]" style={{ background: "var(--blob2)" }} />
+
+      <div className="relative z-10 w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Logo size={40} />
+          <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Bienvenido de nuevo</h1>
+          <p className="mt-1 text-sm text-ink2">Accede a tu panel de Impulsa Studio</p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-card"
-        >
+        <form onSubmit={handleSubmit} className="glass-strong flex flex-col gap-4 rounded-2xl p-6 shadow-glass dark:shadow-glass-dark">
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-ink2">Email</span>
             <input
@@ -79,11 +81,15 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={enviando}
-            className="mt-2 w-full rounded-xl bg-brand py-3.5 text-base font-semibold text-white disabled:opacity-60"
+            className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white shadow-lg shadow-brand/30 disabled:opacity-60"
           >
             {enviando ? "Entrando…" : "Iniciar sesión"}
           </button>
         </form>
+
+        <div className="mt-6 flex justify-center">
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );

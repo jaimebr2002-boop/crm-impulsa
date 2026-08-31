@@ -42,7 +42,7 @@ export function KpiCard({
         ) : null}
       </div>
 
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-ink">{valor}</p>
+      <p className="mt-3 font-display text-2xl font-bold tracking-tight text-ink">{valor}</p>
       <p className="mt-0.5 text-xs text-ink2">{etiqueta}</p>
       {nota ? <p className="mt-0.5 text-[10px] text-ink3">{nota}</p> : null}
 

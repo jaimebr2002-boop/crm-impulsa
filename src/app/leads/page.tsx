@@ -80,7 +80,7 @@ export default function LeadsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 pt-6 md:px-8">
       <div className="mb-5 flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold text-ink">Leads</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">Leads</h1>
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/importar"
@@ -91,7 +91,7 @@ export default function LeadsPage() {
           </Link>
           <Link
             href="/leads/nuevo"
-            className="flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white"
+            className="flex items-center gap-1.5 rounded-xl bg-brand-gradient px-4 py-2.5 text-sm font-semibold text-white"
           >
             <IconMas className="h-4 w-4" />
             Nuevo lead
@@ -106,7 +106,7 @@ export default function LeadsPage() {
               key={u.id}
               onClick={() => setFiltroAsignado(u.id)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroAsignado === u.id ? "bg-brand text-white" : "border border-line bg-surface text-ink2"
+                filtroAsignado === u.id ? "bg-brand-gradient text-white" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}
@@ -150,7 +150,7 @@ export default function LeadsPage() {
 
       <Link
         href="/leads/nuevo"
-        className="fixed bottom-24 right-5 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-lg md:hidden"
+        className="fixed bottom-24 right-5 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-brand-gradient text-white shadow-lg md:hidden"
       >
         <IconMas className="h-6 w-6" />
       </Link>

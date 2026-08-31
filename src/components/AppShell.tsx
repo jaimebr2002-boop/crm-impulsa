@@ -9,6 +9,7 @@ import { ErrorState } from "./ErrorState";
 import { IconHoy, IconLeads, IconCalendario, IconMas, IconPerfil, IconAnalitica, IconImportar } from "./Icons";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
 
 const NAV = [
   { href: "/hoy", label: "Hoy", icon: IconHoy },
@@ -34,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const esRutaPublica = RUTAS_PUBLICAS.some((ruta) => pathname?.startsWith(ruta));
+  const esRutaPublica = pathname === "/" || RUTAS_PUBLICAS.some((ruta) => pathname?.startsWith(ruta));
 
   useEffect(() => {
     if (!esRutaPublica && !cargando && !usuarioActual && !error) {
@@ -71,10 +72,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-canvas [background-image:radial-gradient(ellipse_120%_60%_at_50%_-10%,rgb(124_92_252_/_0.08),transparent)] md:flex">
-      <aside className="glass sticky top-0 hidden h-dvh w-64 shrink-0 flex-col p-5 md:flex">
+    <div className="relative min-h-dvh overflow-hidden bg-canvas md:flex">
+      <div className="blob-bg -left-32 -top-40 h-[420px] w-[420px]" style={{ background: "var(--blob1)" }} />
+      <div className="blob-bg -bottom-48 -right-32 h-[480px] w-[480px]" style={{ background: "var(--blob2)" }} />
+
+      <aside className="glass sticky top-0 z-10 hidden h-dvh w-64 shrink-0 flex-col p-5 md:flex">
         <div className="flex items-center justify-between px-2">
-          <p className="text-lg font-semibold tracking-tight text-ink">Impulsa CRM</p>
+          <div className="flex items-center gap-2">
+            <Logo size={26} />
+            <p className="font-display text-base font-bold tracking-tight text-ink">Impulsa</p>
+          </div>
           <ThemeToggle />
         </div>
         <nav className="mt-8 flex flex-1 flex-col gap-1">
@@ -85,10 +92,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  activo ? "bg-brand-light text-brand-dark" : "text-ink2 hover:bg-mute hover:text-ink"
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  activo ? "bg-brand-gradient text-white shadow-lg shadow-brand/25" : "text-ink2 hover:bg-mute hover:text-ink"
                 }`}
               >
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activo ? "bg-white" : "bg-ink3"}`} />
                 <Icon className="h-5 w-5" />
                 {item.label}
               </Link>
@@ -97,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <Link
           href="/perfil"
-          className="mt-auto flex items-center gap-3 rounded-xl border border-line px-3 py-3 text-sm transition-colors hover:bg-mute"
+          className="mt-auto flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-3 text-sm transition-colors hover:bg-mute"
         >
           <Avatar nombre={usuarioActual.nombre} />
           <span>
@@ -107,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
       </aside>
 
-      <div className="flex min-h-dvh flex-1 flex-col">
+      <div className="relative z-[1] flex min-h-dvh flex-1 flex-col">
         <main className="flex-1 pb-20 md:pb-8">{children}</main>
 
         <nav className="glass fixed inset-x-0 bottom-0 z-20 flex md:hidden">

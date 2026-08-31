@@ -33,7 +33,7 @@ export function BarChart({ datos, formatoEtiqueta }: { datos: BarraDato[]; forma
               ) : null}
               <div
                 className={`w-full rounded-t-md transition-all duration-300 ${
-                  activo === i ? "bg-brand-dark" : "bg-brand/70"
+                  activo === i ? "bg-brand-gradient" : "bg-brand/60"
                 }`}
                 style={{ height: `${alturaPct}%`, minHeight: "3px" }}
               />

@@ -7,10 +7,11 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#7C5CFC",
-          dark: "#5F3DF0",
+          DEFAULT: "#8B5CF6",
+          dark: "#7C3AED",
           light: "rgb(var(--brand-light) / <alpha-value>)",
         },
+        accent2: "#22D3EE",
         canvas: "rgb(var(--canvas) / <alpha-value>)",
         surface: "rgb(var(--surface) / <alpha-value>)",
         mute: "rgb(var(--mute) / <alpha-value>)",
@@ -21,6 +22,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
+      },
+      backgroundImage: {
+        "brand-gradient": "linear-gradient(135deg, #8B5CF6, #22D3EE)",
       },
       boxShadow: {
         card: "0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)",

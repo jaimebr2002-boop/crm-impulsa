@@ -20,7 +20,7 @@ export default function PerfilPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-16 pt-6 md:px-8">
-      <h1 className="mb-5 text-2xl font-semibold text-ink">Perfil</h1>
+      <h1 className="mb-5 font-display text-2xl font-bold text-ink">Perfil</h1>
 
       <div className="mb-6 flex items-center gap-4 rounded-2xl border border-line bg-surface p-5">
         <Avatar nombre={usuarioActual.nombre} size="lg" />

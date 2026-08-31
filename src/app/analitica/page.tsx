@@ -20,6 +20,7 @@ import { KpiCard } from "@/components/analitica/KpiCard";
 import { BarChart } from "@/components/analitica/BarChart";
 import { FunnelChart } from "@/components/analitica/FunnelChart";
 import { TeamTable, type FilaEquipo } from "@/components/analitica/TeamTable";
+import { ActivityFeed, type ActividadItem } from "@/components/analitica/ActivityFeed";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { IconLeads, IconTelefono, IconCalendario, IconCheck } from "@/components/Icons";
@@ -143,9 +144,70 @@ export default function AnaliticaPage() {
     }))
     .sort((a, b) => b.cerrados - a.cerrados || b.interacciones - a.interacciones);
 
+  // --- Actividad reciente: mezcla real de interacciones + eventos del periodo ---
+  const leadsPorId: Record<string, Lead> = {};
+  for (const l of leadsActuales) leadsPorId[l.id] = l;
+  const usuariosPorId: Record<string, Usuario> = {};
+  for (const u of usuarios) usuariosPorId[u.id] = u;
+  const nombreLead = (leadId: string) => {
+    const l = leadsPorId[leadId];
+    return l?.negocio || l?.nombre_contacto || "Lead";
+  };
+  const nombreUsuarioDe = (usuarioId: string | null) => (usuarioId ? usuariosPorId[usuarioId]?.nombre ?? "—" : "—");
+
+  const actividadInteracciones: ActividadItem[] = interacciones.map((i) => {
+    if (i.canal === "llamada") {
+      const contestada = llamadaContestada(i);
+      return {
+        id: `int-${i.id}`,
+        texto: `Llamada${i.resultado ? `: ${i.resultado}` : ""} — ${nombreLead(i.lead_id)}`,
+        quien: nombreUsuarioDe(i.usuario_id),
+        cuandoIso: i.fecha,
+        colorDot: contestada ? "bg-emerald-500" : "bg-red-400",
+        colorTexto: contestada ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+        etiqueta: "Llamada",
+      };
+    }
+    if (i.canal === "nota") {
+      return {
+        id: `int-${i.id}`,
+        texto: `${i.nota || "Nota añadida"} — ${nombreLead(i.lead_id)}`,
+        quien: nombreUsuarioDe(i.usuario_id),
+        cuandoIso: i.fecha,
+        colorDot: "bg-brand",
+        colorTexto: "text-brand-dark dark:text-brand",
+        etiqueta: "Nota",
+      };
+    }
+    const etiquetaCanal = (i.canal && CANAL_LABEL[i.canal]) || "Interacción";
+    return {
+      id: `int-${i.id}`,
+      texto: `${etiquetaCanal}${i.resultado ? `: ${i.resultado}` : ""} — ${nombreLead(i.lead_id)}`,
+      quien: nombreUsuarioDe(i.usuario_id),
+      cuandoIso: i.fecha,
+      colorDot: "bg-sky-500",
+      colorTexto: "text-sky-600 dark:text-sky-400",
+      etiqueta: etiquetaCanal,
+    };
+  });
+
+  const actividadEventos: ActividadItem[] = eventos.map((e) => ({
+    id: `ev-${e.id}`,
+    texto: `Seguimiento ${e.completada ? "completado" : "programado"} — ${nombreLead(e.lead_id)}`,
+    quien: nombreUsuarioDe(e.usuario_id),
+    cuandoIso: e.completada ? e.fecha_hora : e.created_at,
+    colorDot: e.completada ? "bg-emerald-500" : "bg-amber-400",
+    colorTexto: e.completada ? "text-emerald-600 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400",
+    etiqueta: e.completada ? "Seguimiento" : "Programado",
+  }));
+
+  const actividad = [...actividadInteracciones, ...actividadEventos]
+    .sort((a, b) => new Date(b.cuandoIso).getTime() - new Date(a.cuandoIso).getTime())
+    .slice(0, 15);
+
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-6 md:px-8">
-      <h1 className="text-2xl font-semibold text-ink">Analítica</h1>
+      <h1 className="font-display text-2xl font-bold text-ink">Analítica</h1>
       <p className="mt-0.5 text-sm text-ink2">{periodo.etiqueta}, comparado con el periodo anterior equivalente.</p>
 
       {esAdmin ? (
@@ -154,8 +216,8 @@ export default function AnaliticaPage() {
             <button
               key={u.id}
               onClick={() => setFiltroUsuarioId(u.id)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroUsuarioId === u.id ? "bg-brand text-white" : "border border-line bg-surface text-ink2"
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
+                filtroUsuarioId === u.id ? "bg-brand-gradient text-white shadow-md shadow-brand/25" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}
@@ -215,29 +277,36 @@ export default function AnaliticaPage() {
           </section>
 
           <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-            <h2 className="mb-4 text-sm font-semibold text-ink">Leads nuevos por día</h2>
+            <h2 className="mb-4 font-display text-sm font-bold text-ink">Leads nuevos por día</h2>
             <BarChart
               datos={serieDatos.map((d) => ({ etiqueta: d.fecha, valor: d.valor }))}
               formatoEtiqueta={(f) => new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "2-digit" }).format(new Date(f))}
             />
           </section>
 
-          <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-ink">Pipeline actual</h2>
-              {perdidos > 0 ? <span className="text-xs text-ink3">{perdidos} descartados / sin contestar</span> : null}
-            </div>
-            <FunnelChart etapas={funnelData} />
-          </section>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_1fr]">
+            <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-sm font-bold text-ink">Pipeline actual</h2>
+                {perdidos > 0 ? <span className="text-xs text-ink3">{perdidos} descartados / sin contestar</span> : null}
+              </div>
+              <FunnelChart etapas={funnelData} />
+            </section>
+
+            <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
+              <h2 className="mb-2 font-display text-sm font-bold text-ink">Actividad reciente</h2>
+              <ActivityFeed items={actividad} />
+            </section>
+          </div>
 
           <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-            <h2 className="mb-4 text-sm font-semibold text-ink">Interacciones por canal</h2>
+            <h2 className="mb-4 font-display text-sm font-bold text-ink">Interacciones por canal</h2>
             <BarChart datos={datosCanal} />
           </section>
 
           {esAdmin ? (
             <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-              <h2 className="mb-4 text-sm font-semibold text-ink">Rendimiento del equipo</h2>
+              <h2 className="mb-4 font-display text-sm font-bold text-ink">Rendimiento del equipo</h2>
               <TeamTable filas={equipo} />
             </section>
           ) : null}

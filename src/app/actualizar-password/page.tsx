@@ -104,7 +104,7 @@ export default function ActualizarPasswordPage() {
               <button
                 type="submit"
                 disabled={enviando}
-                className="mt-2 w-full rounded-xl bg-brand py-3.5 text-base font-semibold text-white disabled:opacity-60"
+                className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-60"
               >
                 {enviando ? "Guardando…" : "Guardar contraseña"}
               </button>

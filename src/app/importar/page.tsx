@@ -227,7 +227,7 @@ export default function ImportarPage() {
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
             <IconCheck className="h-6 w-6" />
           </div>
-          <h1 className="text-xl font-semibold text-ink">Importación completada</h1>
+          <h1 className="font-display text-xl font-bold text-ink">Importación completada</h1>
           <p className="mt-1 text-sm text-ink2">Los leads importados ya están disponibles en el CRM.</p>
 
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -279,7 +279,7 @@ export default function ImportarPage() {
             </button>
             <Link
               href="/leads"
-              className="flex-1 rounded-xl bg-brand py-3.5 text-center text-base font-semibold text-white"
+              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-center text-base font-semibold text-white"
             >
               Ver leads importados
             </Link>
@@ -287,7 +287,7 @@ export default function ImportarPage() {
         </div>
       ) : !filas ? (
         <>
-          <h1 className="mb-1 text-2xl font-semibold text-ink">Importar leads</h1>
+          <h1 className="mb-1 font-display text-2xl font-bold text-ink">Importar leads</h1>
           <p className="mb-5 text-sm text-ink2">
             No se inventa ningún dato: solo se guarda lo que traiga el archivo.
           </p>
@@ -338,7 +338,7 @@ export default function ImportarPage() {
               <button
                 onClick={previsualizarCsv}
                 disabled={!texto.trim() || preparando}
-                className="mt-5 w-full rounded-xl bg-brand py-3.5 text-base font-semibold text-white disabled:opacity-50"
+                className="mt-5 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-50"
               >
                 {preparando ? "Analizando…" : "Previsualizar"}
               </button>
@@ -369,7 +369,7 @@ export default function ImportarPage() {
         </>
       ) : (
         <>
-          <h1 className="mb-1 text-2xl font-semibold text-ink">
+          <h1 className="mb-1 font-display text-2xl font-bold text-ink">
             Se {validas.length === 1 ? "ha" : "han"} encontrado {filas.length} lead{filas.length === 1 ? "" : "s"}
           </h1>
           {columnasDetectadas.length > 0 ? (
@@ -380,7 +380,7 @@ export default function ImportarPage() {
 
           <div className="mb-4 grid grid-cols-3 gap-2">
             <div className="rounded-2xl border border-line bg-surface p-3 text-center">
-              <p className="text-2xl font-semibold text-ink">{validas.length}</p>
+              <p className="font-display text-2xl font-bold text-ink">{validas.length}</p>
               <p className="text-[11px] text-ink2">Válidos</p>
             </div>
             <div className="rounded-2xl border border-line bg-surface p-3 text-center">
@@ -504,7 +504,7 @@ export default function ImportarPage() {
             <button
               onClick={confirmarImportacion}
               disabled={importando || validas.length === 0}
-              className="flex-1 rounded-xl bg-brand py-3.5 text-base font-semibold text-white disabled:opacity-50"
+              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-50"
             >
               {importando
                 ? "Importando…"
