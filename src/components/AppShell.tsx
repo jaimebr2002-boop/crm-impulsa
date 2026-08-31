@@ -6,7 +6,7 @@ import { useEffect, type ReactNode } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
 import { LoadingState } from "./LoadingState";
 import { ErrorState } from "./ErrorState";
-import { IconHoy, IconLeads, IconCalendario, IconMas, IconPerfil, IconAnalitica } from "./Icons";
+import { IconHoy, IconLeads, IconCalendario, IconMas, IconPerfil, IconAnalitica, IconImportar } from "./Icons";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -14,12 +14,13 @@ const NAV = [
   { href: "/hoy", label: "Hoy", icon: IconHoy },
   { href: "/leads", label: "Leads", icon: IconLeads },
   { href: "/analitica", label: "Analítica", icon: IconAnalitica },
+  { href: "/importar", label: "Importar leads", icon: IconImportar },
   { href: "/calendario", label: "Calendario", icon: IconCalendario },
   { href: "/leads/nuevo", label: "Nuevo lead", icon: IconMas },
   { href: "/perfil", label: "Perfil", icon: IconPerfil },
 ];
 
-const NAV_MOVIL = NAV.filter((n) => n.href !== "/analitica");
+const NAV_MOVIL = NAV.filter((n) => n.href !== "/analitica" && n.href !== "/importar");
 
 const RUTAS_PUBLICAS = ["/login", "/actualizar-password"];
 

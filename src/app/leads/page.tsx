@@ -12,7 +12,7 @@ import { LeadFilters } from "@/components/LeadFilters";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { EmptyState } from "@/components/EmptyState";
-import { IconBuscar, IconMas } from "@/components/Icons";
+import { IconBuscar, IconMas, IconImportar } from "@/components/Icons";
 
 export default function LeadsPage() {
   const { usuarioActual, esAdmin, cargando: cargandoUsuario } = useUsuario();
@@ -79,15 +79,24 @@ export default function LeadsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-6 md:px-8">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold text-ink">Leads</h1>
-        <Link
-          href="/leads/nuevo"
-          className="hidden items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white md:flex"
-        >
-          <IconMas className="h-4 w-4" />
-          Nuevo lead
-        </Link>
+        <div className="hidden items-center gap-2 md:flex">
+          <Link
+            href="/importar"
+            className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink2 hover:text-ink"
+          >
+            <IconImportar className="h-4 w-4" />
+            Importar
+          </Link>
+          <Link
+            href="/leads/nuevo"
+            className="flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            <IconMas className="h-4 w-4" />
+            Nuevo lead
+          </Link>
+        </div>
       </div>
 
       {esAdmin ? (

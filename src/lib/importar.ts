@@ -38,7 +38,13 @@ export type FilaImportada = {
   nota: string;
   ciudad: string;
   nicho: string;
+  canal: string;
+  origen: string;
+  estado: string;
+  referido_por: string;
+  oferta: string;
   valida: boolean;
+  posibleDuplicado: boolean;
 };
 
 /** Construye una fila normalizada a partir de un mapa campo→valor ya traducido con SINONIMOS_CAMPOS. */
@@ -53,7 +59,13 @@ export function filaDesdeCampos(fila: Record<string, string>): FilaImportada {
     nota: fila.nota ?? "",
     ciudad: fila.ciudad ?? "",
     nicho: fila.nicho ?? "",
+    canal: fila.canal ?? "",
+    origen: fila.origen ?? "",
+    estado: fila.estado ?? "",
+    referido_por: fila.referido_por ?? "",
+    oferta: fila.oferta ?? "",
     valida: Boolean(fila.negocio || fila.nombre_contacto || fila.telefono || fila.email),
+    posibleDuplicado: false,
   };
 }
 
@@ -107,4 +119,65 @@ export function parsearImportacion(texto: string): FilaImportada[] {
   }
 
   return filas;
+}
+
+/** Qué campos de FilaImportada tienen valor en al menos una fila — para mostrar qué se ha reconocido del archivo. */
+export function camposDetectados(filas: FilaImportada[]): (keyof FilaImportada)[] {
+  const campos: (keyof FilaImportada)[] = [
+    "negocio",
+    "nombre_contacto",
+    "telefono",
+    "email",
+    "ciudad",
+    "nicho",
+    "canal",
+    "referido_por",
+    "origen",
+    "segmento",
+    "oferta",
+    "estado",
+    "enlace_demo",
+    "nota",
+  ];
+  return campos.filter((campo) => filas.some((f) => String(f[campo]).trim().length > 0));
+}
+
+function normalizarTelefono(telefono: string): string {
+  return telefono.trim().replace(/[\s-]/g, "").replace(/^\+34/, "").replace(/^0034/, "");
+}
+
+function normalizarEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/**
+ * Marca cada fila con posibleDuplicado si su teléfono o email coincide con un
+ * lead ya existente en Supabase, o con otra fila anterior del mismo archivo.
+ * No excluye ni modifica nada: solo informa, la decisión es del usuario.
+ */
+export function marcarDuplicados(
+  filas: FilaImportada[],
+  existentes: { telefono: string | null; email: string | null }[]
+): FilaImportada[] {
+  const telefonosExistentes = new Set(
+    existentes.map((e) => (e.telefono ? normalizarTelefono(e.telefono) : "")).filter(Boolean)
+  );
+  const emailsExistentes = new Set(
+    existentes.map((e) => (e.email ? normalizarEmail(e.email) : "")).filter(Boolean)
+  );
+  const vistosEnArchivo = new Set<string>();
+
+  return filas.map((fila) => {
+    const tel = fila.telefono ? normalizarTelefono(fila.telefono) : "";
+    const email = fila.email ? normalizarEmail(fila.email) : "";
+
+    let posibleDuplicado = false;
+    if (tel && (telefonosExistentes.has(tel) || vistosEnArchivo.has(`tel:${tel}`))) posibleDuplicado = true;
+    if (email && (emailsExistentes.has(email) || vistosEnArchivo.has(`email:${email}`))) posibleDuplicado = true;
+
+    if (tel) vistosEnArchivo.add(`tel:${tel}`);
+    if (email) vistosEnArchivo.add(`email:${email}`);
+
+    return { ...fila, posibleDuplicado };
+  });
 }

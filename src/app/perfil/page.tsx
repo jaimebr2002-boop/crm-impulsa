@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useUsuario } from "@/context/UsuarioContext";
 import { useTheme } from "@/context/ThemeContext";
 import { LoadingState } from "@/components/LoadingState";
-import { IconChevron, IconAnalitica } from "@/components/Icons";
+import { IconChevron, IconAnalitica, IconImportar } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 
 const ROL_LABEL: Record<string, string> = {
@@ -43,7 +43,10 @@ export default function PerfilPage() {
           href="/importar"
           className="flex items-center justify-between border-t border-line px-5 py-4 text-sm font-medium text-ink"
         >
-          Importar leads históricos
+          <span className="flex items-center gap-2.5">
+            <IconImportar className="h-4 w-4 text-ink3" />
+            Importar leads
+          </span>
           <IconChevron className="h-4 w-4 text-ink3" />
         </Link>
         <button
