@@ -279,7 +279,7 @@ export default function ImportarPage() {
             </button>
             <Link
               href="/leads"
-              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-center text-base font-semibold text-white"
+              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-center text-base font-semibold text-brand-ink"
             >
               Ver leads importados
             </Link>
@@ -338,7 +338,7 @@ export default function ImportarPage() {
               <button
                 onClick={previsualizarCsv}
                 disabled={!texto.trim() || preparando}
-                className="mt-5 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-50"
+                className="mt-5 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-50"
               >
                 {preparando ? "Analizando…" : "Previsualizar"}
               </button>
@@ -504,7 +504,7 @@ export default function ImportarPage() {
             <button
               onClick={confirmarImportacion}
               disabled={importando || validas.length === 0}
-              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-50"
+              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-50"
             >
               {importando
                 ? "Importando…"

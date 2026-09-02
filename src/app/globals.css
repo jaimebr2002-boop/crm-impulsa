@@ -6,43 +6,48 @@
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Space Grotesk", var(--font-sans);
 
-  /* Tokens — modo claro */
-  --canvas: 246 246 251; /* fondo de página, lavanda casi imperceptible */
+  /* Tokens — modo claro. Impulsa Studio no tiene un sistema de marca en
+     claro definido (su propio material es siempre negro puro + verde
+     lima); estos son neutros discretos que dejan sitio al acento verde. */
+  --canvas: 247 247 245; /* fondo de página */
   --surface: 255 255 255; /* tarjetas, paneles */
-  --mute: 241 241 247; /* chips, pistas de segmented control, hover */
-  --line: 228 228 238; /* bordes */
-  --ink: 17 17 24; /* texto principal */
-  --ink-2: 100 100 120; /* texto secundario */
-  --ink-3: 150 150 168; /* texto terciario / placeholder */
-  --brand-light: 239 233 255;
+  --mute: 240 240 237; /* chips, pistas de segmented control, hover */
+  --line: 226 226 221; /* bordes */
+  --ink: 15 15 13; /* texto principal */
+  --ink-2: 100 100 96; /* texto secundario */
+  --ink-3: 150 150 145; /* texto terciario / placeholder */
+  --brand-light: 234 250 204; /* verde muy pálido, para insignias sobre fondo claro */
 
   --glass-surface: 255 255 255;
   --glass-alpha: 0.72;
   --glass-border: 255 255 255;
   --glass-border-alpha: 0.6;
 
-  --blob1: radial-gradient(circle, rgba(139, 92, 246, 0.16), transparent 70%);
-  --blob2: radial-gradient(circle, rgba(34, 211, 238, 0.14), transparent 70%);
+  --blob1: radial-gradient(circle, rgba(170, 255, 0, 0.14), transparent 70%);
+  --blob2: radial-gradient(circle, rgba(170, 255, 0, 0.08), transparent 70%);
 }
 
 :root[data-theme="dark"],
 .dark {
-  --canvas: 10 10 16;
-  --surface: 22 22 32;
-  --mute: 32 32 44;
-  --line: 47 47 62;
-  --ink: 245 245 250;
-  --ink-2: 168 168 188;
-  --ink-3: 110 110 130;
-  --brand-light: 43 33 74;
+  /* Paleta real de Impulsa Studio (impulsa_master_clipboard.html):
+     --bg:#0a0a0a --s2:#161616 --s3:#1c1c1c --b1:#1f1f1f
+     --text:#f0f0f0 --muted:#777 --accent:#AAFF00 */
+  --canvas: 10 10 10;
+  --surface: 22 22 22;
+  --mute: 28 28 28;
+  --line: 31 31 31;
+  --ink: 240 240 240;
+  --ink-2: 150 150 150;
+  --ink-3: 110 110 110;
+  --brand-light: 30 40 8; /* verde muy oscuro, para insignias sobre fondo negro */
 
-  --glass-surface: 26 26 38;
-  --glass-alpha: 0.6;
+  --glass-surface: 20 20 20;
+  --glass-alpha: 0.65;
   --glass-border: 255 255 255;
   --glass-border-alpha: 0.08;
 
-  --blob1: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
-  --blob2: radial-gradient(circle, rgba(34, 211, 238, 0.16), transparent 70%);
+  --blob1: radial-gradient(circle, rgba(170, 255, 0, 0.16), transparent 70%);
+  --blob2: radial-gradient(circle, rgba(170, 255, 0, 0.08), transparent 70%);
 }
 
 html,

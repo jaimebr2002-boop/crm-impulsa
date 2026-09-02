@@ -7,11 +7,16 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#8B5CF6",
-          dark: "#7C3AED",
+          // Verde lima real de Impulsa Studio (#AAFF00), tal cual definido
+          // en impulsa_master_clipboard.html y usado en sus gráficos de marca.
+          DEFAULT: "#AAFF00",
+          // Variante oscura accesible: texto/iconos sobre superficies
+          // claras, y estado hover de los botones.
+          dark: "#5C8A00",
+          // Texto sobre relleno brand (contraste alto, blanco puro deslumbra sobre el verde).
+          ink: "#0A1400",
           light: "rgb(var(--brand-light) / <alpha-value>)",
         },
-        accent2: "#22D3EE",
         canvas: "rgb(var(--canvas) / <alpha-value>)",
         surface: "rgb(var(--surface) / <alpha-value>)",
         mute: "rgb(var(--mute) / <alpha-value>)",
@@ -25,7 +30,10 @@ const config: Config = {
         display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(135deg, #8B5CF6, #22D3EE)",
+        // Un único tono (con una variación sutil para dar algo de
+        // profundidad) — el sistema real de Impulsa Studio usa el verde
+        // lima como color sólido, no un degradado de dos tonos.
+        "brand-gradient": "linear-gradient(135deg, #AAFF00, #93E000)",
       },
       boxShadow: {
         card: "0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)",

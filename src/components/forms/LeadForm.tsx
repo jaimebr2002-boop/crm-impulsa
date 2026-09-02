@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { CANALES, CANAL_LABEL, ESTADOS, ESTADO_LABEL, ORIGENES, ORIGEN_LABEL, SEGMENTOS, SEGMENTO_LABEL } from "@/lib/constants";
 import { esTelefonoFijoEspanol } from "@/lib/phone";
+import { normalizarInstagram } from "@/lib/instagram";
+import { useBorradorFormulario } from "@/lib/useBorradorFormulario";
 import type { LeadInsert, Usuario } from "@/lib/types";
 
 export type LeadFormValores = LeadInsert;
@@ -12,6 +14,8 @@ type Props = {
   usuarioActualId: string;
   puedeAsignar: boolean;
   valoresIniciales?: LeadFormValores;
+  /** Clave única del borrador (distinta por lead al editar, y por modo al crear) para no mezclar formularios entre sí. */
+  draftKey: string;
   onSubmit: (valores: LeadFormValores) => Promise<void>;
   botonTexto?: string;
   onCancelar?: () => void;
@@ -21,6 +25,7 @@ const VACIO: LeadFormValores = {
   nombre_contacto: "",
   negocio: "",
   telefono: "",
+  instagram: "",
   nicho: "",
   ciudad: "",
   canal: "",
@@ -39,11 +44,15 @@ export function LeadForm({
   usuarioActualId,
   puedeAsignar,
   valoresIniciales,
+  draftKey,
   onSubmit,
   botonTexto = "Guardar lead",
   onCancelar,
 }: Props) {
-  const [valores, setValores] = useState<LeadFormValores>({ ...VACIO, ...valoresIniciales });
+  const [valores, setValores, limpiarBorrador] = useBorradorFormulario<LeadFormValores>(draftKey, {
+    ...VACIO,
+    ...valoresIniciales,
+  });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,13 +63,18 @@ export function LeadForm({
     setValores((v) => ({ ...v, [campo]: valor }));
   }
 
+  function cancelar() {
+    limpiarBorrador();
+    onCancelar?.();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (enviando) return;
     setEnviando(true);
     setError(null);
     try {
-      const payload: LeadFormValores = { ...valores };
+      const payload: LeadFormValores = { ...valores, instagram: normalizarInstagram(valores.instagram) };
       // Un comercial solo trabaja sobre sus propios leads: se fuerza aquí
       // igual que lo exige la política RLS de INSERT/UPDATE en Supabase.
       if (!puedeAsignar) {
@@ -69,6 +83,8 @@ export function LeadForm({
         delete payload.asignado_a;
       }
       await onSubmit(payload);
+      // El lead ya está guardado: el borrador temporal deja de tener sentido.
+      limpiarBorrador();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido guardar el lead.");
     } finally {
@@ -96,18 +112,29 @@ export function LeadForm({
         />
       </Campo>
 
-      <Campo label="Teléfono">
-        <input
-          value={valores.telefono ?? ""}
-          onChange={(e) => set("telefono", e.target.value)}
-          className="input"
-          placeholder="600 000 000"
-          inputMode="tel"
-        />
-        {esFijo ? (
-          <p className="mt-1.5 text-xs font-medium text-amber-700">Teléfono fijo · no puede recibir WhatsApp.</p>
-        ) : null}
-      </Campo>
+      <div className="grid grid-cols-2 gap-3">
+        <Campo label="Teléfono">
+          <input
+            value={valores.telefono ?? ""}
+            onChange={(e) => set("telefono", e.target.value)}
+            className="input"
+            placeholder="600 000 000"
+            inputMode="tel"
+          />
+          {esFijo ? (
+            <p className="mt-1.5 text-xs font-medium text-amber-700">Teléfono fijo · no puede recibir WhatsApp.</p>
+          ) : null}
+        </Campo>
+        <Campo label="Instagram">
+          <input
+            value={valores.instagram ?? ""}
+            onChange={(e) => set("instagram", e.target.value)}
+            onBlur={(e) => set("instagram", normalizarInstagram(e.target.value))}
+            className="input"
+            placeholder="@usuario"
+          />
+        </Campo>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Campo label="Nicho">
@@ -208,11 +235,11 @@ export function LeadForm({
 
       <div className="mt-2 flex gap-3">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+          <button type="button" onClick={cancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
           {enviando ? "Guardando…" : botonTexto}
         </button>
       </div>

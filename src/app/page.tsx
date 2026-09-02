@@ -59,7 +59,7 @@ export default function LandingPage() {
             <ThemeToggle />
             <Link
               href="/login"
-              className="rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand/30"
+              className="rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-brand-ink shadow-lg shadow-brand/30"
             >
               Iniciar sesión
             </Link>
@@ -83,7 +83,7 @@ export default function LandingPage() {
 
           <Link
             href="/login"
-            className="mt-8 rounded-xl bg-brand-gradient px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-brand/30"
+            className="mt-8 rounded-xl bg-brand-gradient px-7 py-3.5 text-sm font-bold text-brand-ink shadow-xl shadow-brand/30"
           >
             Entrar al CRM →
           </Link>

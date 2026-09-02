@@ -28,6 +28,7 @@ export type Lead = {
   nombre_contacto: string | null;
   negocio: string | null;
   telefono: string | null;
+  instagram: string | null;
   nicho: string | null;
   ciudad: string | null;
   canal: string | null;

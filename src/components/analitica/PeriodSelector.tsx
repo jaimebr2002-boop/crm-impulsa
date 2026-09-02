@@ -70,7 +70,7 @@ export function PeriodSelector({ onChange }: { onChange: (periodo: Periodo) => v
             key={o}
             onClick={() => elegir(o)}
             className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
-              opcion === o ? "bg-brand-gradient text-white shadow-md shadow-brand/25" : "border border-line bg-surface text-ink2 hover:text-ink"
+              opcion === o ? "bg-brand-gradient text-brand-ink shadow-md shadow-brand/25" : "border border-line bg-surface text-ink2 hover:text-ink"
             }`}
           >
             {o}
@@ -94,7 +94,7 @@ export function PeriodSelector({ onChange }: { onChange: (periodo: Periodo) => v
           />
           <button
             onClick={aplicarPersonalizado}
-            className="rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white"
+            className="rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-brand-ink"
           >
             Aplicar
           </button>

@@ -61,7 +61,7 @@ export function CalendarViewMes({
               key={dia.toISOString()}
               onClick={() => setDiaSeleccionado(startOfDay(dia))}
               className={`flex aspect-square flex-col items-center justify-center rounded-xl text-sm ${
-                seleccionado ? "bg-brand-gradient text-white" : enMes ? "text-ink hover:bg-mute" : "text-ink3"
+                seleccionado ? "bg-brand-gradient text-brand-ink" : enMes ? "text-ink hover:bg-mute" : "text-ink3"
               }`}
             >
               <span className={esHoy && !seleccionado ? "font-bold text-brand-dark" : ""}>{dia.getDate()}</span>

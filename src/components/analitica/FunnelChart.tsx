@@ -15,7 +15,9 @@ export function FunnelChart({ etapas }: { etapas: EtapaFunnel[] }) {
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="font-medium text-ink2">{etapa.etiqueta}</span>
               <span className="flex items-center gap-2">
-                {conversion !== null ? <span className="text-accent2">↳ {conversion}% del anterior</span> : null}
+                {conversion !== null ? (
+                  <span className="text-brand-dark dark:text-brand">↳ {conversion}% del anterior</span>
+                ) : null}
                 <span className="font-display font-bold text-ink">{etapa.valor}</span>
               </span>
             </div>

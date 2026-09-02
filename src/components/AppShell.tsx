@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                  activo ? "bg-brand-gradient text-white shadow-lg shadow-brand/25" : "text-ink2 hover:bg-mute hover:text-ink"
+                  activo ? "bg-brand-gradient text-brand-ink shadow-lg shadow-brand/25" : "text-ink2 hover:bg-mute hover:text-ink"
                 }`}
               >
                 <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activo ? "bg-white" : "bg-ink3"}`} />

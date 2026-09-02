@@ -113,7 +113,7 @@ export default function CalendarioPage() {
               key={u.id}
               onClick={() => setFiltroUsuarioId(u.id)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
-                filtroUsuarioId === u.id ? "bg-brand-gradient text-white" : "border border-line bg-surface text-ink2"
+                filtroUsuarioId === u.id ? "bg-brand-gradient text-brand-ink" : "border border-line bg-surface text-ink2"
               }`}
             >
               {u.nombre}

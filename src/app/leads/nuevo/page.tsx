@@ -58,6 +58,7 @@ export default function NuevoLeadPage() {
           usuarios={usuarios}
           usuarioActualId={usuarioActual.id}
           puedeAsignar={esAdmin}
+          draftKey="lead-nuevo-rapida"
           onSubmit={guardar}
           onCancelar={() => router.back()}
         />
@@ -67,6 +68,7 @@ export default function NuevoLeadPage() {
           usuarioActualId={usuarioActual.id}
           puedeAsignar={esAdmin}
           valoresIniciales={{ asignado_a: usuarioActual.id }}
+          draftKey="lead-nuevo-completa"
           onSubmit={guardar}
           onCancelar={() => router.back()}
         />

@@ -41,6 +41,7 @@ export function LeadCard({
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink2">
         {lead.telefono ? <span>{lead.telefono}</span> : null}
         <PhoneIndicator telefono={lead.telefono} />
+        {lead.instagram ? <span className="text-ink3">· {lead.instagram}</span> : null}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-xs text-ink2">

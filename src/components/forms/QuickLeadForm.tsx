@@ -3,32 +3,58 @@
 import { useState } from "react";
 import { ESTADOS, ESTADO_LABEL, ORIGENES, ORIGEN_LABEL } from "@/lib/constants";
 import { esTelefonoFijoEspanol } from "@/lib/phone";
+import { useBorradorFormulario } from "@/lib/useBorradorFormulario";
 import type { LeadInsert, Usuario } from "@/lib/types";
+
+type CamposRapidos = {
+  negocio: string;
+  contacto: string;
+  telefono: string;
+  asignadoA: string;
+  origen: string;
+  referidoPor: string;
+  estado: string;
+};
 
 export function QuickLeadForm({
   usuarios,
   usuarioActualId,
   puedeAsignar,
+  draftKey,
   onSubmit,
   onCancelar,
 }: {
   usuarios: Usuario[];
   usuarioActualId: string;
   puedeAsignar: boolean;
+  /** Clave única del borrador, para no mezclarlo con el de la alta completa. */
+  draftKey: string;
   onSubmit: (valores: LeadInsert) => Promise<void>;
   onCancelar?: () => void;
 }) {
-  const [negocio, setNegocio] = useState("");
-  const [contacto, setContacto] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [asignadoA, setAsignadoA] = useState(usuarioActualId);
-  const [origen, setOrigen] = useState("referido_personal");
-  const [referidoPor, setReferidoPor] = useState("");
-  const [estado, setEstado] = useState("pendiente");
+  const [campos, setCampos, limpiarBorrador] = useBorradorFormulario<CamposRapidos>(draftKey, {
+    negocio: "",
+    contacto: "",
+    telefono: "",
+    asignadoA: usuarioActualId,
+    origen: "referido_personal",
+    referidoPor: "",
+    estado: "pendiente",
+  });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { negocio, contacto, telefono, asignadoA, origen, referidoPor, estado } = campos;
+  function set<K extends keyof CamposRapidos>(campo: K, valor: CamposRapidos[K]) {
+    setCampos((c) => ({ ...c, [campo]: valor }));
+  }
+
   const esFijo = esTelefonoFijoEspanol(telefono);
+
+  function cancelar() {
+    limpiarBorrador();
+    onCancelar?.();
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +73,8 @@ export function QuickLeadForm({
         referido_por: referidoPor || undefined,
         estado,
       });
+      // El lead ya está guardado: el borrador temporal deja de tener sentido.
+      limpiarBorrador();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido guardar el lead.");
     } finally {
@@ -58,17 +86,17 @@ export function QuickLeadForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <label className="block">
         <span className="mb-1 block text-xs font-medium text-ink2">Negocio</span>
-        <input value={negocio} onChange={(e) => setNegocio(e.target.value)} className="input" autoFocus />
+        <input value={negocio} onChange={(e) => set("negocio", e.target.value)} className="input" autoFocus />
       </label>
 
       <label className="block">
         <span className="mb-1 block text-xs font-medium text-ink2">Contacto</span>
-        <input value={contacto} onChange={(e) => setContacto(e.target.value)} className="input" />
+        <input value={contacto} onChange={(e) => set("contacto", e.target.value)} className="input" />
       </label>
 
       <label className="block">
         <span className="mb-1 block text-xs font-medium text-ink2">Teléfono</span>
-        <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" inputMode="tel" />
+        <input value={telefono} onChange={(e) => set("telefono", e.target.value)} className="input" inputMode="tel" />
         {esFijo ? <p className="mt-1.5 text-xs font-medium text-amber-700">Teléfono fijo · no WhatsApp.</p> : null}
       </label>
 
@@ -76,7 +104,7 @@ export function QuickLeadForm({
         <span className="mb-1 block text-xs font-medium text-ink2">Referido por</span>
         <input
           value={referidoPor}
-          onChange={(e) => setReferidoPor(e.target.value)}
+          onChange={(e) => set("referidoPor", e.target.value)}
           className="input"
           placeholder="Si viene de un referido"
         />
@@ -85,7 +113,7 @@ export function QuickLeadForm({
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-ink2">Origen</span>
-          <select value={origen} onChange={(e) => setOrigen(e.target.value)} className="input">
+          <select value={origen} onChange={(e) => set("origen", e.target.value)} className="input">
             {ORIGENES.map((o) => (
               <option key={o} value={o}>
                 {ORIGEN_LABEL[o]}
@@ -95,7 +123,7 @@ export function QuickLeadForm({
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-ink2">Estado</span>
-          <select value={estado} onChange={(e) => setEstado(e.target.value)} className="input">
+          <select value={estado} onChange={(e) => set("estado", e.target.value)} className="input">
             {ESTADOS.map((e) => (
               <option key={e} value={e}>
                 {ESTADO_LABEL[e]}
@@ -108,7 +136,7 @@ export function QuickLeadForm({
       {puedeAsignar ? (
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
-          <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
+          <select value={asignadoA} onChange={(e) => set("asignadoA", e.target.value)} className="input">
             {usuarios.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.nombre}
@@ -122,11 +150,11 @@ export function QuickLeadForm({
 
       <div className="mt-2 flex gap-3">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+          <button type="button" onClick={cancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
           {enviando ? "Guardando…" : "Guardar y continuar"}
         </button>
       </div>

@@ -146,7 +146,7 @@ export function InteractionForm({
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
           {enviando ? "Guardando…" : variante === "llamada" ? "Registrar llamada" : "Guardar nota"}
         </button>
       </div>

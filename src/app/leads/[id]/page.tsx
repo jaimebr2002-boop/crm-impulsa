@@ -10,6 +10,7 @@ import { listarUsuarios } from "@/lib/data/usuarios";
 import type { Evento, Lead, Usuario } from "@/lib/types";
 import { CANAL_LABEL, ESTADO_LABEL, ESTADO_COLOR, ORIGEN_LABEL, SEGMENTO_LABEL, SEGMENTO_COLOR } from "@/lib/constants";
 import { telHref, whatsappHref, esTelefonoFijoEspanol } from "@/lib/phone";
+import { instagramHref } from "@/lib/instagram";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { ReferralBanner } from "@/components/ReferralBanner";
@@ -178,7 +179,7 @@ export default function LeadDetallePage() {
               <div className="mt-1"><PhoneIndicator telefono={lead.telefono} /></div>
             </div>
             <div className="flex gap-2">
-              <a href={telHref(lead.telefono)} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-white">
+              <a href={telHref(lead.telefono)} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-brand-ink">
                 <IconTelefono className="h-5 w-5" />
               </a>
               {!esFijo ? (
@@ -198,7 +199,7 @@ export default function LeadDetallePage() {
 
       {/* Acciones rápidas */}
       <div className="mb-6 grid grid-cols-2 gap-3">
-        <button onClick={() => setModal("llamada")} className="rounded-2xl bg-brand-gradient py-4 text-sm font-semibold text-white">
+        <button onClick={() => setModal("llamada")} className="rounded-2xl bg-brand-gradient py-4 text-sm font-semibold text-brand-ink">
           Registrar llamada
         </button>
         <button onClick={() => setModal("nota")} className="rounded-2xl border border-line bg-surface py-4 text-sm font-semibold text-ink">
@@ -221,6 +222,16 @@ export default function LeadDetallePage() {
           <Campo label="Nicho" valor={lead.nicho} />
           <Campo label="Ciudad" valor={lead.ciudad} />
           <Campo label="Canal" valor={lead.canal ? CANAL_LABEL[lead.canal] ?? lead.canal : null} />
+          <Campo
+            label="Instagram"
+            valor={
+              lead.instagram ? (
+                <a href={instagramHref(lead.instagram)} target="_blank" rel="noreferrer" className="text-brand-dark">
+                  {lead.instagram}
+                </a>
+              ) : null
+            }
+          />
           <Campo label="Origen" valor={lead.origen ? ORIGEN_LABEL[lead.origen] ?? lead.origen : null} />
           <Campo
             label="Segmento"
@@ -302,6 +313,7 @@ export default function LeadDetallePage() {
             usuarioActualId={usuarioActual.id}
             puedeAsignar={esAdmin}
             valoresIniciales={lead}
+            draftKey={`lead-editar-${lead.id}`}
             onSubmit={guardarEdicion}
             onCancelar={() => setModal(null)}
           />

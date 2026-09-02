@@ -81,7 +81,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={enviando}
-            className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-white shadow-lg shadow-brand/30 disabled:opacity-60"
+            className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink shadow-lg shadow-brand/30 disabled:opacity-60"
           >
             {enviando ? "Entrando…" : "Iniciar sesión"}
           </button>
