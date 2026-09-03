@@ -147,13 +147,6 @@ export default function LeadsPage() {
           ))}
         </div>
       ) : null}
-
-      <Link
-        href="/leads/nuevo"
-        className="fixed bottom-24 right-5 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-brand-gradient text-brand-ink shadow-lg md:hidden"
-      >
-        <IconMas className="h-6 w-6" />
-      </Link>
     </div>
   );
 }

@@ -38,15 +38,15 @@ const NAV = [
 ];
 
 // Barra inferior de móvil — el botón "Nuevo lead" se renderiza elevado, en el
-// centro. Analítica e Importar no caben con holgura junto a las otras 5
+// centro. Analítica e Importar no caben con holgura junto a las otras
 // secciones (etiquetas de una sola palabra, densidad tipo Instagram/WhatsApp),
-// así que se agrupan detrás de "Más".
+// así que se agrupan detrás de "Más". Perfil NO va aquí: su único acceso es
+// el chip de la cabecera (arriba a la derecha), igual en móvil que en escritorio.
 const NAV_MOVIL = [
   { href: "/hoy", label: "Hoy", icon: IconHoy },
   { href: "/leads", label: "Leads", icon: IconLeads },
   { href: "/leads/nuevo", label: "Nuevo lead", icon: IconMas },
   { href: "/calendario", label: "Calendario", icon: IconCalendario },
-  { href: "/perfil", label: "Perfil", icon: IconPerfil },
 ];
 
 const NAV_MOVIL_MAS = [
@@ -168,7 +168,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="relative z-[1]">
+      {/* Sin z-index propio a propósito: crear aquí un stacking context nuevo
+          atraparía los modales de página (z-40) por debajo del header/dock
+          (z-20), pase lo que pase con su z-index interno. `relative` solo
+          basta para pintar por encima de los blobs decorativos (position:
+          fixed, z-index:0) gracias al orden del DOM. */}
+      <div className="relative">
         <main className="pb-32">{children}</main>
       </div>
 
