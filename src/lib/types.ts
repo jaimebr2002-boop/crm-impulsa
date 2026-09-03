@@ -5,6 +5,7 @@ export type Usuario = {
   nombre: string;
   email: string;
   rol: RolUsuario;
+  notificaciones_activas: boolean;
 };
 
 export type EstadoLead =
@@ -69,6 +70,7 @@ export type Evento = {
   titulo: string;
   fecha_hora: string;
   completada: boolean;
+  leida_en: string | null;
   created_at: string;
   updated_at: string;
 };

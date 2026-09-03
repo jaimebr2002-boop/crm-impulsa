@@ -11,6 +11,7 @@ type UsuarioContextValue = {
   error: string | null;
   esAdmin: boolean;
   cerrarSesion: () => Promise<void>;
+  actualizarPreferenciaNotificaciones: (activa: boolean) => Promise<void>;
 };
 
 const UsuarioContext = createContext<UsuarioContextValue | undefined>(undefined);
@@ -24,7 +25,7 @@ export function UsuarioProvider({ children }: { children: ReactNode }) {
   const cargarPerfil = useCallback(async (userId: string) => {
     const { data, error: err } = await supabase
       .from("usuarios")
-      .select("id, nombre, email, rol")
+      .select("id, nombre, email, rol, notificaciones_activas")
       .eq("id", userId)
       .maybeSingle();
     if (err) {
@@ -74,10 +75,22 @@ export function UsuarioProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   }, [router]);
 
+  const actualizarPreferenciaNotificaciones = useCallback(async (activa: boolean) => {
+    if (!usuarioActual) return;
+    const { error: err } = await supabase
+      .from("usuarios")
+      .update({ notificaciones_activas: activa })
+      .eq("id", usuarioActual.id);
+    if (err) throw new Error(err.message);
+    setUsuarioActual((prev) => (prev ? { ...prev, notificaciones_activas: activa } : prev));
+  }, [usuarioActual]);
+
   const esAdmin = usuarioActual?.rol === "admin";
 
   return (
-    <UsuarioContext.Provider value={{ usuarioActual, cargando, error, esAdmin, cerrarSesion }}>
+    <UsuarioContext.Provider
+      value={{ usuarioActual, cargando, error, esAdmin, cerrarSesion, actualizarPreferenciaNotificaciones }}
+    >
       {children}
     </UsuarioContext.Provider>
   );

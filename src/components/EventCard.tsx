@@ -35,7 +35,7 @@ export function EventCard({
         evento.completada
           ? "border-line bg-canvas"
           : vencido
-          ? "border-red-200 bg-red-50"
+          ? "border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10"
           : "border-line bg-surface"
       }`}
     >
@@ -48,7 +48,7 @@ export function EventCard({
         }}
         disabled={guardando}
         className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
-          evento.completada ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent"
+          evento.completada ? "border-emerald-500 bg-emerald-500 text-white" : "border-ink3 text-transparent"
         }`}
       >
         <IconCheck className="h-3.5 w-3.5" />
@@ -58,7 +58,11 @@ export function EventCard({
         <p className={`text-sm font-semibold ${evento.completada ? "text-ink3 line-through" : "text-ink"}`}>
           {evento.titulo}
         </p>
-        <p className={`mt-0.5 text-xs ${vencido && !evento.completada ? "font-semibold text-red-600" : "text-ink2"}`}>
+        <p
+          className={`mt-0.5 text-xs ${
+            vencido && !evento.completada ? "font-semibold text-red-600 dark:text-red-400" : "text-ink2"
+          }`}
+        >
           {formatFechaRelativa(evento.fecha_hora)}
           {vencido && !evento.completada ? " · Vencido" : ""}
         </p>

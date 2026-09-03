@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
 import { useTheme } from "@/context/ThemeContext";
 import { LoadingState } from "@/components/LoadingState";
 import { IconChevron, IconAnalitica, IconImportar } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
+import { Switch } from "@/components/Switch";
 
 const ROL_LABEL: Record<string, string> = {
   admin: "Administrador",
@@ -13,10 +15,21 @@ const ROL_LABEL: Record<string, string> = {
 };
 
 export default function PerfilPage() {
-  const { usuarioActual, cargando, cerrarSesion } = useUsuario();
+  const { usuarioActual, cargando, cerrarSesion, actualizarPreferenciaNotificaciones } = useUsuario();
   const { tema, alternarTema } = useTheme();
+  const [guardandoNotif, setGuardandoNotif] = useState(false);
 
   if (cargando || !usuarioActual) return <LoadingState />;
+
+  async function alternarNotificaciones() {
+    if (guardandoNotif || !usuarioActual) return;
+    setGuardandoNotif(true);
+    try {
+      await actualizarPreferenciaNotificaciones(!usuarioActual.notificaciones_activas);
+    } finally {
+      setGuardandoNotif(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-16 pt-6 md:px-8">
@@ -56,6 +69,14 @@ export default function PerfilPage() {
           Apariencia
           <span className="text-xs text-ink3">{tema === "dark" ? "Oscuro" : "Claro"}</span>
         </button>
+        <div className="flex w-full items-center justify-between gap-3 border-t border-line px-5 py-4 text-sm font-medium text-ink">
+          Recibir recordatorios de seguimientos vencidos
+          <Switch
+            checked={usuarioActual.notificaciones_activas}
+            onChange={alternarNotificaciones}
+            label="Recibir recordatorios de seguimientos vencidos"
+          />
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-surface">

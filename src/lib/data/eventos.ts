@@ -84,3 +84,37 @@ export async function marcarEventoCompletado(id: string, completada: boolean): P
   if (error) throw new Error(error.message);
   return data;
 }
+
+/**
+ * Notificaciones pendientes de un usuario: seguimientos ya vencidos, no
+ * completados y aún no vistos en la campana. Ver/leer una notificación
+ * (leida_en) es independiente de completar el seguimiento (completada).
+ */
+export async function listarNotificacionesPendientes(usuarioId: string): Promise<EventoConLead[]> {
+  const { data, error } = await supabase
+    .from("eventos")
+    .select(SELECT_CON_LEAD)
+    .eq("usuario_id", usuarioId)
+    .eq("completada", false)
+    .is("leida_en", null)
+    .lte("fecha_hora", new Date().toISOString())
+    .order("fecha_hora", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as EventoConLead[];
+}
+
+export async function marcarNotificacionLeida(id: string): Promise<void> {
+  const { error } = await supabase.from("eventos").update({ leida_en: new Date().toISOString() }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function marcarTodasLasNotificacionesLeidas(usuarioId: string): Promise<void> {
+  const { error } = await supabase
+    .from("eventos")
+    .update({ leida_en: new Date().toISOString() })
+    .eq("usuario_id", usuarioId)
+    .eq("completada", false)
+    .is("leida_en", null)
+    .lte("fecha_hora", new Date().toISOString());
+  if (error) throw new Error(error.message);
+}

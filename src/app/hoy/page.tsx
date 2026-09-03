@@ -71,8 +71,9 @@ export default function HoyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 md:px-8">
-      <h1 className="font-display text-2xl font-bold text-ink">Hoy</h1>
-      <p className="mt-0.5 text-sm text-ink2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark dark:text-brand">Hoy</p>
+      <h1 className="mt-1 font-display text-2xl font-bold text-ink">Hola, {usuarioActual.nombre}</h1>
+      <p className="mt-0.5 text-sm capitalize text-ink2">
         {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
       </p>
 
@@ -95,12 +96,7 @@ export default function HoyPage() {
       {!cargando && !error ? (
         <div className="mt-5 grid grid-cols-3 gap-3">
           <Metrica valor={pendientesHoy.length + vencidos.length} etiqueta="Seguimientos pendientes" tono="brand" icono={IconCalendario} />
-          <Metrica
-            valor={vencidos.length}
-            etiqueta="Eventos vencidos"
-            tono={vencidos.length > 0 ? "alerta" : "neutro"}
-            icono={IconAlerta}
-          />
+          <Metrica valor={vencidos.length} etiqueta="Eventos vencidos" tono="alerta" icono={IconAlerta} />
           <Metrica valor={leadsQueRequierenAtencion} etiqueta="Leads a atender" tono="info" icono={IconLeads} />
         </div>
       ) : null}
@@ -146,21 +142,20 @@ export default function HoyPage() {
 
 const TONOS = {
   brand: {
-    fondo: "bg-brand-light",
+    fondo: "bg-brand/10 dark:bg-brand/15",
     texto: "text-brand-dark dark:text-brand",
     icono: "text-brand-dark dark:text-brand",
   },
   info: {
-    fondo: "bg-sky-50 dark:bg-sky-500/15",
-    texto: "text-sky-900 dark:text-sky-300",
-    icono: "text-sky-600 dark:text-sky-400",
+    fondo: "bg-blue-500/10 dark:bg-blue-500/20",
+    texto: "text-blue-800 dark:text-blue-300",
+    icono: "text-blue-600 dark:text-blue-400",
   },
   alerta: {
-    fondo: "bg-red-50 dark:bg-red-500/15",
+    fondo: "bg-red-500/10 dark:bg-red-500/20",
     texto: "text-red-700 dark:text-red-300",
     icono: "text-red-600 dark:text-red-400",
   },
-  neutro: { fondo: "bg-canvas", texto: "text-ink", icono: "text-ink3" },
 } as const;
 
 function Metrica({
