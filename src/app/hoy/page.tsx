@@ -2,15 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
-import { listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
+import { crearEvento, listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
 import { listarUsuarios } from "@/lib/data/usuarios";
+import { obtenerInteraccionesPeriodo, obtenerLeadsActuales, llamadaContestada, contarPor } from "@/lib/data/analitica";
 import { startOfDay, endOfDay } from "@/lib/dates";
-import type { EventoConLead, Usuario } from "@/lib/types";
+import type { EventoConLead, Lead, Usuario } from "@/lib/types";
+import { ESTADOS, ESTADO_LABEL, ESTADO_COLOR } from "@/lib/constants";
 import { EventCard } from "@/components/EventCard";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { EmptyState } from "@/components/EmptyState";
-import { IconAlerta, IconCalendario, IconLeads } from "@/components/Icons";
+import { Modal } from "@/components/Modal";
+import { QuickEventForm } from "@/components/forms/QuickEventForm";
+import { IconAlerta, IconCalendario, IconLeads, IconMas, IconTelefono, IconCheck } from "@/components/Icons";
 
 export default function HoyPage() {
   const { usuarioActual, esAdmin, cargando: cargandoUsuario } = useUsuario();
@@ -18,8 +22,12 @@ export default function HoyPage() {
   const [filtroUsuarioId, setFiltroUsuarioId] = useState<string>("todos");
   const [vencidos, setVencidos] = useState<EventoConLead[]>([]);
   const [deHoy, setDeHoy] = useState<EventoConLead[]>([]);
+  const [leadsActuales, setLeadsActuales] = useState<Lead[]>([]);
+  const [contactadosSemana, setContactadosSemana] = useState(0);
+  const [tasaRespuestaSemana, setTasaRespuestaSemana] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nuevoSeguimientoAbierto, setNuevoSeguimientoAbierto] = useState(false);
 
   useEffect(() => {
     listarUsuarios().then(setUsuarios).catch(() => {});
@@ -37,12 +45,26 @@ export default function HoyPage() {
     setError(null);
     try {
       const ahora = new Date();
-      const [v, h] = await Promise.all([
+      const haceUnaSemana = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const [v, h, actuales, interaccionesSemana] = await Promise.all([
         listarEventosVencidos(startOfDay(ahora).toISOString(), usuarioIdParaFiltro),
         listarEventosDeHoy(startOfDay(ahora).toISOString(), endOfDay(ahora).toISOString(), usuarioIdParaFiltro),
+        obtenerLeadsActuales(usuarioIdParaFiltro),
+        obtenerInteraccionesPeriodo({
+          desdeIso: haceUnaSemana.toISOString(),
+          hastaIso: ahora.toISOString(),
+          usuarioId: usuarioIdParaFiltro,
+        }),
       ]);
       setVencidos(v);
       setDeHoy(h);
+      setLeadsActuales(actuales);
+      setContactadosSemana(new Set(interaccionesSemana.map((i) => i.lead_id)).size);
+      const llamadasSemana = interaccionesSemana.filter((i) => i.canal === "llamada");
+      const contestadasSemana = llamadasSemana.filter(llamadaContestada);
+      setTasaRespuestaSemana(
+        llamadasSemana.length > 0 ? Math.round((contestadasSemana.length / llamadasSemana.length) * 100) : 0
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido cargar la vista de hoy.");
     } finally {
@@ -61,6 +83,12 @@ export default function HoyPage() {
     setDeHoy((prev) => prev.map((e) => (e.id === id ? { ...e, ...actualizado } : e)));
   }
 
+  async function crearSeguimiento(valores: { lead_id: string; titulo: string; fecha_hora: string }) {
+    await crearEvento({ ...valores, usuario_id: usuarioActual?.id ?? null });
+    setNuevoSeguimientoAbierto(false);
+    await cargar();
+  }
+
   if (cargandoUsuario || !usuarioActual) return <LoadingState />;
 
   const pendientesHoy = deHoy.filter((e) => !e.completada);
@@ -68,6 +96,8 @@ export default function HoyPage() {
   const leadsQueRequierenAtencion = new Set(
     [...vencidos, ...pendientesHoy].map((e) => e.lead?.id).filter(Boolean)
   ).size;
+
+  const conteoPorEstado = contarPor(leadsActuales, (l) => l.estado);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 md:px-8">
@@ -105,7 +135,34 @@ export default function HoyPage() {
       {error ? <div className="mt-8"><ErrorState mensaje={error} onReintentar={cargar} /></div> : null}
 
       {!cargando && !error ? (
-        <div className="mt-6 flex flex-col gap-8 pb-10">
+        <div className="mt-8 flex flex-col gap-8 pb-10">
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-ink">Esta semana</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Metrica valor={contactadosSemana} etiqueta="Leads contactados" tono="brand" icono={IconTelefono} />
+              <Metrica valor={`${tasaRespuestaSemana}%`} etiqueta="Tasa de respuesta" tono="info" icono={IconCheck} />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {ESTADOS.map((estado) => (
+                <span
+                  key={estado}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium ${ESTADO_COLOR[estado] ?? ""}`}
+                >
+                  {ESTADO_LABEL[estado] ?? estado}
+                  <span className="ml-1.5 font-semibold">{conteoPorEstado[estado] ?? 0}</span>
+                </span>
+              ))}
+            </div>
+          </section>
+
+          <button
+            onClick={() => setNuevoSeguimientoAbierto(true)}
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface py-3 text-sm font-semibold text-ink2 hover:text-ink"
+          >
+            <IconMas className="h-4 w-4" />
+            Nuevo seguimiento
+          </button>
+
           <section>
             <h2 className="mb-3 text-base font-semibold text-ink">Vencidos</h2>
             {vencidos.length === 0 ? (
@@ -136,6 +193,12 @@ export default function HoyPage() {
           </section>
         </div>
       ) : null}
+
+      {nuevoSeguimientoAbierto ? (
+        <Modal titulo="Nuevo seguimiento" onClose={() => setNuevoSeguimientoAbierto(false)}>
+          <QuickEventForm onSubmit={crearSeguimiento} onCancelar={() => setNuevoSeguimientoAbierto(false)} />
+        </Modal>
+      ) : null}
     </div>
   );
 }
@@ -164,7 +227,7 @@ function Metrica({
   tono,
   icono: Icono,
 }: {
-  valor: number;
+  valor: number | string;
   etiqueta: string;
   tono: keyof typeof TONOS;
   icono: (props: { className?: string }) => React.ReactNode;
