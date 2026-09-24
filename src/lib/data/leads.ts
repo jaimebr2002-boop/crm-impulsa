@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { Lead, LeadInsert, LeadUpdate } from "@/lib/types";
+import { terminoBusquedaSeguro, traerTodo } from "./paginar";
 
 export type FiltrosLeads = {
   busqueda?: string;
@@ -8,27 +9,39 @@ export type FiltrosLeads = {
   segmento?: string;
   canal?: string;
   asignadoA?: string; // "todos" | usuarioId
+  /** Por defecto solo se listan leads activos; true lista solo los archivados. */
+  archivados?: boolean;
+  /** Ignora el filtro de archivado (p. ej. para detectar duplicados al importar). */
+  incluirArchivados?: boolean;
 };
 
 export async function listarLeads(filtros: FiltrosLeads = {}): Promise<Lead[]> {
-  let query = supabase.from("leads").select("*").order("updated_at", { ascending: false });
+  const termino = filtros.busqueda ? terminoBusquedaSeguro(filtros.busqueda) : "";
 
-  if (filtros.estado) query = query.eq("estado", filtros.estado);
-  if (filtros.origen) query = query.eq("origen", filtros.origen);
-  if (filtros.segmento) query = query.eq("segmento", filtros.segmento);
-  if (filtros.canal) query = query.eq("canal", filtros.canal);
-  if (filtros.asignadoA && filtros.asignadoA !== "todos") query = query.eq("asignado_a", filtros.asignadoA);
+  return traerTodo<Lead>((desde, hasta) => {
+    let query = supabase
+      .from("leads")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(desde, hasta);
 
-  if (filtros.busqueda && filtros.busqueda.trim()) {
-    const termino = filtros.busqueda.trim();
-    query = query.or(
-      `negocio.ilike.%${termino}%,nombre_contacto.ilike.%${termino}%,telefono.ilike.%${termino}%`
-    );
-  }
+    if (!filtros.incluirArchivados) query = query.eq("archivado", !!filtros.archivados);
+    if (filtros.estado) query = query.eq("estado", filtros.estado);
+    if (filtros.origen) query = query.eq("origen", filtros.origen);
+    if (filtros.segmento) query = query.eq("segmento", filtros.segmento);
+    if (filtros.canal) query = query.eq("canal", filtros.canal);
+    if (filtros.asignadoA && filtros.asignadoA !== "todos") query = query.eq("asignado_a", filtros.asignadoA);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    if (termino) {
+      query = query.or(
+        ["negocio", "nombre_contacto", "telefono", "email", "instagram", "ciudad"]
+          .map((campo) => `${campo}.ilike.%${termino}%`)
+          .join(",")
+      );
+    }
+    return query;
+  });
 }
 
 export async function obtenerLead(id: string): Promise<Lead | null> {
@@ -47,4 +60,50 @@ export async function actualizarLead(id: string, payload: LeadUpdate): Promise<L
   const { data, error } = await supabase.from("leads").update(payload).eq("id", id).select("*").single();
   if (error) throw new Error(error.message);
   return data;
+}
+
+/** Actualiza varios leads a la vez. RLS descarta en silencio los que el
+ * usuario no puede tocar, así que se devuelven solo los realmente cambiados. */
+export async function actualizarLeads(ids: string[], payload: LeadUpdate): Promise<Lead[]> {
+  if (ids.length === 0) return [];
+  const actualizados: Lead[] = [];
+  // Lotes pequeños para no superar el tamaño de URL con el filtro `in`.
+  for (let i = 0; i < ids.length; i += 100) {
+    const lote = ids.slice(i, i + 100);
+    const { data, error } = await supabase.from("leads").update(payload).in("id", lote).select("*");
+    if (error) throw new Error(error.message);
+    actualizados.push(...(data ?? []));
+  }
+  return actualizados;
+}
+
+/** Borrado definitivo (solo admin, lo exige la política RLS `leads_delete`).
+ * Sus interacciones y eventos se borran en cascada. */
+export async function eliminarLeads(ids: string[]): Promise<number> {
+  let borrados = 0;
+  for (let i = 0; i < ids.length; i += 100) {
+    const lote = ids.slice(i, i + 100);
+    const { data, error } = await supabase.from("leads").delete().in("id", lote).select("id");
+    if (error) throw new Error(error.message);
+    borrados += data?.length ?? 0;
+  }
+  return borrados;
+}
+
+/** Primer seguimiento pendiente de cada lead visible, indexado por lead_id. */
+export async function obtenerProximosSeguimientos(): Promise<Record<string, string>> {
+  const eventos = await traerTodo<{ lead_id: string; fecha_hora: string }>((desde, hasta) =>
+    supabase
+      .from("eventos")
+      .select("lead_id, fecha_hora")
+      .eq("completada", false)
+      .order("fecha_hora", { ascending: true })
+      .order("id", { ascending: true })
+      .range(desde, hasta)
+  );
+  const mapa: Record<string, string> = {};
+  for (const ev of eventos) {
+    if (!mapa[ev.lead_id]) mapa[ev.lead_id] = ev.fecha_hora;
+  }
+  return mapa;
 }

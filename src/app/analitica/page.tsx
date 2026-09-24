@@ -14,7 +14,7 @@ import {
   type EventoAnalitica,
 } from "@/lib/data/analitica";
 import type { Interaccion, Lead, Usuario } from "@/lib/types";
-import { CANAL_LABEL, ESTADO_LABEL, ESTADOS } from "@/lib/constants";
+import { CANAL_LABEL, ESTADO_LABEL, ESTADOS_ABIERTOS, formatEuros, sumarValor } from "@/lib/constants";
 import { PeriodSelector, calcularPeriodo, type Periodo } from "@/components/analitica/PeriodSelector";
 import { KpiCard } from "@/components/analitica/KpiCard";
 import { BarChart } from "@/components/analitica/BarChart";
@@ -23,7 +23,7 @@ import { TeamTable, type FilaEquipo } from "@/components/analitica/TeamTable";
 import { ActivityFeed, type ActividadItem } from "@/components/analitica/ActivityFeed";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
-import { IconLeads, IconTelefono, IconCalendario, IconCheck } from "@/components/Icons";
+import { IconLeads, IconTelefono, IconCalendario, IconCheck, IconTrendUp } from "@/components/Icons";
 
 // Estados que cuentan como "pipeline activo" en el funnel; se excluyen los
 // terminales negativos para que la barra final no quede aplastada por ellos.
@@ -115,6 +115,13 @@ export default function AnaliticaPage() {
 
   const cerrados = leads.filter((l) => l.estado === "cerrado");
   const cerradosAnterior = leadsAnterior.filter((l) => l.estado === "cerrado");
+
+  const facturado = sumarValor(cerrados);
+  const facturadoAnterior = sumarValor(cerradosAnterior);
+  const cerradosConValor = cerrados.filter((l) => l.valor != null).length;
+  const abiertos = leadsActuales.filter((l) => ESTADOS_ABIERTOS.has(l.estado));
+  const valorPipeline = sumarValor(abiertos);
+  const abiertosSinValor = abiertos.filter((l) => l.valor == null).length;
 
   const serieLeads = agruparPorDia(leads, (l) => l.created_at, periodo.desde, periodo.hasta).map((d) => d.valor);
   const serieDatos = agruparPorDia(leads, (l) => l.created_at, periodo.desde, periodo.hasta);
@@ -273,6 +280,23 @@ export default function AnaliticaPage() {
               valor={leadsActuales.length}
               icono={IconLeads}
               nota="Total actual, no depende del periodo"
+            />
+            <KpiCard
+              etiqueta="Facturación cerrada"
+              valor={formatEuros(facturado)}
+              variacion={variacionPct(facturado, facturadoAnterior)}
+              icono={IconTrendUp}
+              nota={cerradosConValor > 0 ? `Ticket medio ${formatEuros(facturado / cerradosConValor)}` : undefined}
+            />
+            <KpiCard
+              etiqueta="Valor en juego"
+              valor={formatEuros(valorPipeline)}
+              icono={IconTrendUp}
+              nota={
+                abiertosSinValor > 0
+                  ? `${abiertos.length} leads abiertos · ${abiertosSinValor} sin valor`
+                  : `${abiertos.length} leads abiertos · no depende del periodo`
+              }
             />
           </section>
 

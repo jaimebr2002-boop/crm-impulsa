@@ -77,7 +77,7 @@ export default function ImportarPage() {
     try {
       // La comprobación de duplicados se hace contra los leads que el usuario
       // puede ver: RLS ya limita esto a "los suyos" si es comercial.
-      const existentes = await listarLeads();
+      const existentes = await listarLeads({ incluirArchivados: true });
       final = marcarDuplicados(parseado, existentes);
     } catch {
       // Si falla la comprobación de duplicados no se bloquea la importación,

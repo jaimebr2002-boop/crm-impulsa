@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUsuario } from "@/context/UsuarioContext";
-import { actualizarLead, obtenerLead } from "@/lib/data/leads";
+import { actualizarLead, eliminarLeads, obtenerLead } from "@/lib/data/leads";
 import { crearInteraccion, listarInteracciones, type InteraccionConUsuario } from "@/lib/data/interacciones";
 import { crearEvento, listarEventosPorLead, marcarEventoCompletado } from "@/lib/data/eventos";
 import { listarUsuarios } from "@/lib/data/usuarios";
 import type { Evento, Lead, Usuario } from "@/lib/types";
-import { CANAL_LABEL, ESTADO_LABEL, ESTADO_COLOR, ORIGEN_LABEL, SEGMENTO_LABEL, SEGMENTO_COLOR } from "@/lib/constants";
+import { CANAL_LABEL, ESTADO_LABEL, ESTADO_COLOR, ORIGEN_LABEL, SEGMENTO_LABEL, SEGMENTO_COLOR, formatEuros } from "@/lib/constants";
 import { telHref, whatsappHref, esTelefonoFijoEspanol } from "@/lib/phone";
 import { instagramHref } from "@/lib/instagram";
 import { LoadingState } from "@/components/LoadingState";
@@ -38,7 +38,9 @@ export default function LeadDetallePage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [modal, setModal] = useState<"llamada" | "nota" | "evento" | "editar" | null>(null);
+  const [modal, setModal] = useState<"llamada" | "nota" | "evento" | "editar" | "eliminar" | null>(null);
+  const [procesando, setProcesando] = useState(false);
+  const [errorAccion, setErrorAccion] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     if (!params.id) return;
@@ -87,6 +89,33 @@ export default function LeadDetallePage() {
     const actualizado = await actualizarLead(lead!.id, valores);
     setLead(actualizado);
     setModal(null);
+  }
+
+  async function cambiarArchivado(archivado: boolean) {
+    setProcesando(true);
+    setErrorAccion(null);
+    try {
+      const actualizado = await actualizarLead(lead!.id, { archivado });
+      setLead(actualizado);
+    } catch (err) {
+      setErrorAccion(err instanceof Error ? err.message : "No se ha podido actualizar el lead.");
+    } finally {
+      setProcesando(false);
+    }
+  }
+
+  async function eliminar() {
+    setProcesando(true);
+    setErrorAccion(null);
+    try {
+      const borrados = await eliminarLeads([lead!.id]);
+      if (borrados === 0) throw new Error("No tienes permiso para eliminar este lead.");
+      router.replace("/leads");
+    } catch (err) {
+      setErrorAccion(err instanceof Error ? err.message : "No se ha podido eliminar el lead.");
+      setProcesando(false);
+      setModal(null);
+    }
   }
 
   async function toggleEvento(id: string, completada: boolean) {
@@ -151,6 +180,19 @@ export default function LeadDetallePage() {
           </span>
         </div>
       </div>
+
+      {lead.archivado ? (
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300">
+          <span className="font-medium">Lead archivado · no aparece en listas ni en el pipeline.</span>
+          <button
+            onClick={() => cambiarArchivado(false)}
+            disabled={procesando}
+            className="shrink-0 font-semibold underline disabled:opacity-60"
+          >
+            Restaurar
+          </button>
+        </div>
+      ) : null}
 
       <div className="mb-5 grid grid-cols-2 gap-3">
         <LeadStatusSelector value={lead.estado} onChange={cambiarEstado} />
@@ -244,6 +286,10 @@ export default function LeadDetallePage() {
             }
           />
           <Campo label="Oferta" valor={lead.oferta} />
+          <Campo
+            label={lead.estado === "cerrado" ? "Valor facturado" : "Valor estimado"}
+            valor={lead.valor != null ? formatEuros(lead.valor) : null}
+          />
           <Campo label="Email" valor={lead.email} />
           <Campo label="Demo" valor={lead.enlace_demo} />
         </dl>
@@ -270,6 +316,52 @@ export default function LeadDetallePage() {
         <h2 className="mb-3 text-base font-semibold text-ink">Historial</h2>
         <InteractionTimeline interacciones={interacciones} />
       </section>
+
+      {/* Zona de gestión */}
+      <section className="mt-8 border-t border-line pt-6">
+        {errorAccion ? <p className="mb-3 text-sm font-medium text-red-600">{errorAccion}</p> : null}
+        <div className="flex flex-wrap gap-3">
+          {!lead.archivado ? (
+            <button
+              onClick={() => cambiarArchivado(true)}
+              disabled={procesando}
+              className="rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink2 disabled:opacity-60"
+            >
+              Archivar lead
+            </button>
+          ) : null}
+          {esAdmin ? (
+            <button
+              onClick={() => setModal("eliminar")}
+              disabled={procesando}
+              className="rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-600 disabled:opacity-60 dark:border-red-500/30 dark:text-red-400"
+            >
+              Eliminar definitivamente
+            </button>
+          ) : null}
+        </div>
+      </section>
+
+      {modal === "eliminar" ? (
+        <Modal titulo="Eliminar lead" onClose={() => setModal(null)}>
+          <p className="text-sm text-ink2">
+            Se borrará <strong className="text-ink">{lead.negocio || lead.nombre_contacto || "este lead"}</strong> junto con todo su
+            historial y seguimientos. No se puede deshacer. Si solo quieres quitarlo de en medio, archívalo.
+          </p>
+          <div className="mt-5 flex gap-3">
+            <button onClick={() => setModal(null)} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+              Cancelar
+            </button>
+            <button
+              onClick={eliminar}
+              disabled={procesando}
+              className="flex-1 rounded-xl bg-red-600 py-3.5 text-base font-semibold text-white disabled:opacity-60"
+            >
+              {procesando ? "Eliminando…" : "Eliminar"}
+            </button>
+          </div>
+        </Modal>
+      ) : null}
 
       {modal === "llamada" ? (
         <Modal titulo="Registrar llamada" onClose={() => setModal(null)}>

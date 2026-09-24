@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Lead, Usuario } from "@/lib/types";
-import { ESTADO_COLOR, ESTADO_LABEL, ORIGEN_LABEL } from "@/lib/constants";
+import { ESTADO_COLOR, ESTADO_LABEL, ORIGEN_LABEL, formatEuros } from "@/lib/constants";
 import { PhoneIndicator } from "./PhoneIndicator";
 import { Avatar } from "./Avatar";
 import { formatFechaRelativa } from "@/lib/dates";
@@ -9,18 +9,35 @@ export function LeadCard({
   lead,
   asignado,
   proximoSeguimiento,
+  seleccionable = false,
+  seleccionado = false,
+  onToggleSeleccion,
 }: {
   lead: Lead;
   asignado?: Usuario | null;
   proximoSeguimiento?: string | null;
+  /** En modo selección la tarjeta marca/desmarca en vez de abrir el lead. */
+  seleccionable?: boolean;
+  seleccionado?: boolean;
+  onToggleSeleccion?: () => void;
 }) {
-  return (
-    <Link
-      href={`/leads/${lead.id}`}
-      className="block rounded-2xl border border-line bg-surface p-4 shadow-card transition-transform active:scale-[0.99]"
-    >
+  const clase = `block w-full rounded-2xl border bg-surface p-4 text-left shadow-card transition-transform active:scale-[0.99] ${
+    seleccionado ? "border-brand ring-2 ring-brand/40" : "border-line"
+  }`;
+  const contenido = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
+          {seleccionable ? (
+            <span
+              aria-hidden
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 text-xs font-bold ${
+                seleccionado ? "border-brand bg-brand text-white" : "border-line"
+              }`}
+            >
+              {seleccionado ? "✓" : ""}
+            </span>
+          ) : null}
           <Avatar nombre={lead.negocio || lead.nombre_contacto || "?"} />
           <div className="min-w-0">
             <p className="truncate text-base font-semibold text-ink">
@@ -55,7 +72,10 @@ export function LeadCard({
             "Sin asignar"
           )}
         </span>
-        <span>{lead.origen ? ORIGEN_LABEL[lead.origen] ?? lead.origen : ""}</span>
+        <span className="flex items-center gap-2">
+          {lead.origen ? ORIGEN_LABEL[lead.origen] ?? lead.origen : ""}
+          {lead.valor != null ? <span className="font-semibold text-ink">{formatEuros(lead.valor)}</span> : null}
+        </span>
       </div>
 
       {proximoSeguimiento ? (
@@ -63,6 +83,19 @@ export function LeadCard({
           Próximo seguimiento: {formatFechaRelativa(proximoSeguimiento)}
         </p>
       ) : null}
+    </>
+  );
+
+  if (seleccionable) {
+    return (
+      <button type="button" onClick={onToggleSeleccion} aria-pressed={seleccionado} className={clase}>
+        {contenido}
+      </button>
+    );
+  }
+  return (
+    <Link href={`/leads/${lead.id}`} className={clase}>
+      {contenido}
     </Link>
   );
 }

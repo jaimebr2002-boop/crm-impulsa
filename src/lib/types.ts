@@ -42,6 +42,9 @@ export type Lead = {
   asignado_a: string | null;
   email: string | null;
   enlace_demo: string | null;
+  /** Importe en euros: estimado si está abierto, facturado si está cerrado. */
+  valor: number | null;
+  archivado: boolean;
   created_at: string;
   updated_at: string;
 };

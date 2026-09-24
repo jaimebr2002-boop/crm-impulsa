@@ -37,6 +37,7 @@ const VACIO: LeadFormValores = {
   asignado_a: "",
   email: "",
   enlace_demo: "",
+  valor: null,
 };
 
 export function LeadForm({
@@ -205,9 +206,23 @@ export function LeadForm({
         </Campo>
       </div>
 
-      <Campo label="Oferta">
-        <input value={valores.oferta ?? ""} onChange={(e) => set("oferta", e.target.value)} className="input" />
-      </Campo>
+      <div className="grid grid-cols-2 gap-3">
+        <Campo label="Oferta">
+          <input value={valores.oferta ?? ""} onChange={(e) => set("oferta", e.target.value)} className="input" />
+        </Campo>
+        <Campo label="Valor (€)" nota={valores.estado === "cerrado" ? "Importe facturado" : "Importe estimado"}>
+          <input
+            value={valores.valor ?? ""}
+            onChange={(e) => set("valor", e.target.value === "" ? null : Math.max(0, Number(e.target.value)))}
+            className="input"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="any"
+            placeholder="0"
+          />
+        </Campo>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Campo label="Email">

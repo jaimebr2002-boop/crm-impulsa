@@ -35,6 +35,33 @@ export const ESTADO_COLOR: Record<string, string> = {
   "no contesta": "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30",
 };
 
+// Estados que siguen vivos en el pipeline: su valor cuenta como "en juego".
+export const ESTADOS_ABIERTOS = new Set(["pendiente", "contactado", "respondido", "interesado", "reunión", "no contesta"]);
+
+// Color del borde superior de cada columna del tablero Kanban.
+export const ESTADO_ACENTO: Record<string, string> = {
+  pendiente: "bg-ink3",
+  contactado: "bg-blue-500",
+  respondido: "bg-cyan-500",
+  interesado: "bg-amber-500",
+  reunión: "bg-violet-500",
+  cerrado: "bg-emerald-500",
+  descartado: "bg-red-500",
+  "no contesta": "bg-orange-500",
+};
+
+const FORMATO_EUROS = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+export function formatEuros(valor: number | string | null | undefined): string {
+  const n = Number(valor ?? 0);
+  return FORMATO_EUROS.format(Number.isFinite(n) ? n : 0);
+}
+
+/** Suma el valor de una lista de leads, ignorando los que no lo tienen. */
+export function sumarValor(leads: { valor: number | string | null }[]): number {
+  return leads.reduce((total, l) => total + (Number(l.valor) || 0), 0);
+}
+
 export const ORIGENES: OrigenLead[] = ["pipeline_automatico", "referido_personal", "reactivacion_web"];
 
 export const ORIGEN_LABEL: Record<string, string> = {
