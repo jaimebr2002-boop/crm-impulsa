@@ -259,7 +259,8 @@ export function CommandPalette() {
 function Resaltado({ texto, consulta }: { texto: string; consulta: string }) {
   const q = normalizar(consulta.trim());
   if (q.length < 2) return <>{texto}</>;
-  const i = normalizar(texto).indexOf(q);
+  // Carácter a carácter para que los índices coincidan aunque haya tildes.
+  const i = Array.from(texto).map((c) => normalizar(c) || c).join("").indexOf(q);
   if (i < 0) return <>{texto}</>;
   return (
     <>
