@@ -3,10 +3,10 @@
 import { VentasNav } from "@/components/VentasNav";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
-import { crearEvento, listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
+import { crearEvento, listarEventosDeHoy, listarEventosPorRango, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
 import { listarUsuarios } from "@/lib/data/usuarios";
 import { obtenerInteraccionesPeriodo, obtenerLeadsActuales, llamadaContestada, contarPor } from "@/lib/data/analitica";
-import { startOfDay, endOfDay } from "@/lib/dates";
+import { startOfDay, endOfDay, addDias } from "@/lib/dates";
 import type { EventoConLead, Lead, Usuario } from "@/lib/types";
 import { ESTADOS, ESTADO_LABEL, ESTADO_COLOR } from "@/lib/constants";
 import { EventCard } from "@/components/EventCard";
@@ -28,6 +28,7 @@ export default function HoyPage() {
   const [filtroUsuarioId, setFiltroUsuarioId] = useState<string>("todos");
   const [vencidos, setVencidos] = useState<EventoConLead[]>([]);
   const [deHoy, setDeHoy] = useState<EventoConLead[]>([]);
+  const [proximos, setProximos] = useState<EventoConLead[]>([]);
   const [leadsActuales, setLeadsActuales] = useState<Lead[]>([]);
   const [contactadosSemana, setContactadosSemana] = useState(0);
   const [tasaRespuestaSemana, setTasaRespuestaSemana] = useState(0);
@@ -52,9 +53,10 @@ export default function HoyPage() {
     try {
       const ahora = new Date();
       const haceUnaSemana = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const [v, h, actuales, interaccionesSemana] = await Promise.all([
+      const [v, h, p, actuales, interaccionesSemana] = await Promise.all([
         listarEventosVencidos(startOfDay(ahora).toISOString(), usuarioIdParaFiltro),
         listarEventosDeHoy(startOfDay(ahora).toISOString(), endOfDay(ahora).toISOString(), usuarioIdParaFiltro),
+        listarEventosPorRango(startOfDay(addDias(ahora, 1)).toISOString(), endOfDay(addDias(ahora, 7)).toISOString(), usuarioIdParaFiltro),
         obtenerLeadsActuales(usuarioIdParaFiltro),
         obtenerInteraccionesPeriodo({
           desdeIso: haceUnaSemana.toISOString(),
@@ -64,6 +66,7 @@ export default function HoyPage() {
       ]);
       setVencidos(v);
       setDeHoy(h);
+      setProximos(p.filter((e) => !e.completada));
       setLeadsActuales(actuales);
       setContactadosSemana(new Set(interaccionesSemana.map((i) => i.lead_id)).size);
       const llamadasSemana = interaccionesSemana.filter((i) => i.canal === "llamada");
@@ -87,6 +90,7 @@ export default function HoyPage() {
     // Un evento vencido que se completa deja de ser "vencido" (esa lista solo contiene pendientes).
     setVencidos((prev) => (completada ? prev.filter((e) => e.id !== id) : prev.map((e) => (e.id === id ? { ...e, ...actualizado } : e))));
     setDeHoy((prev) => prev.map((e) => (e.id === id ? { ...e, ...actualizado } : e)));
+    setProximos((prev) => prev.map((e) => (e.id === id ? { ...e, ...actualizado } : e)));
   }
 
   async function crearSeguimiento(valores: { lead_id: string; titulo: string; fecha_hora: string }) {
@@ -119,7 +123,7 @@ export default function HoyPage() {
       <VentasNav />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm capitalize text-ink2">
+        <p className="text-sm text-ink2 first-letter:uppercase">
           {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
         </p>
         {esAdmin ? (
@@ -188,6 +192,18 @@ export default function HoyPage() {
               )}
             </Panel>
           </div>
+
+          <Panel titulo="Próximos 7 días" contador={proximos.length}>
+            {proximos.length === 0 ? (
+              <EmptyState compacto titulo="Nada programado esta semana" />
+            ) : (
+              <div className="divide-y divide-line">
+                {proximos.map((e) => (
+                  <EventCard key={e.id} evento={e} mostrarLead onToggleCompletada={toggle} />
+                ))}
+              </div>
+            )}
+          </Panel>
 
           <Panel titulo="Pipeline actual" enlace={{ href: "/leads", texto: "Ver leads" }}>
             <div className="flex flex-wrap gap-1.5 px-4 py-3">

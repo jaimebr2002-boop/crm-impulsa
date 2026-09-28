@@ -33,6 +33,10 @@ export function formatFechaRelativa(iso: string | null | undefined): string {
   if (dias === 0) return `Hoy · ${formatHora(iso)}`;
   if (dias === 1) return `Mañana · ${formatHora(iso)}`;
   if (dias === -1) return `Ayer · ${formatHora(iso)}`;
+  if (Math.abs(dias) < 7) {
+    const dia = new Intl.DateTimeFormat("es-ES", { weekday: "short", day: "numeric" }).format(fecha).replace(".", "");
+    return `${dia.charAt(0).toUpperCase()}${dia.slice(1)} · ${formatHora(iso)}`;
+  }
   return formatFechaHora(iso);
 }
 

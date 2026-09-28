@@ -219,9 +219,10 @@ export default function ImportarPage() {
   const columnasDetectadas = filas ? camposDetectados(filas) : [];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-16 pt-6 md:px-8">
+    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-8">
       <Cabecera titulo="Ventas" />
       <VentasNav />
+      <div className="max-w-3xl">
       {/* Pasos: archivo → revisión (validación y duplicados) → resultado */}
       <ol className="mb-5 flex items-center gap-2 text-xs text-ink3" aria-label="Pasos de la importación">
         {["Archivo", "Revisión", "Resultado"].map((paso, i) => {
@@ -528,6 +529,7 @@ export default function ImportarPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

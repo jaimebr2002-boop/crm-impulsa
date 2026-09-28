@@ -233,10 +233,10 @@ export default function LeadsPage() {
       <VentasNav />
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <CampoBusqueda valor={busqueda} onChange={setBusqueda} placeholder="Negocio, contacto, teléfono, email…" etiqueta="Buscar leads" className="flex-1 md:max-w-sm" />
+        <CampoBusqueda valor={busqueda} onChange={setBusqueda} placeholder="Negocio, contacto, teléfono, email…" etiqueta="Buscar leads" className="w-full md:max-w-sm md:flex-1" />
         <LeadFilters filtros={filtros} onChange={setFiltros} />
         {esAdmin ? (
-          <select aria-label="Responsable" value={filtroAsignado} onChange={(e) => setFiltroAsignado(e.target.value)} className={SELECT_TOOLBAR}>
+          <select aria-label="Responsable" value={filtroAsignado} onChange={(e) => setFiltroAsignado(e.target.value)} className={`${SELECT_TOOLBAR} min-w-0 flex-1 md:flex-none`}>
             <option value="todos">Todos los responsables</option>
             {usuarios.map((u) => (
               <option key={u.id} value={u.id}>

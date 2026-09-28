@@ -98,7 +98,7 @@ export function ConvertirLead({ lead }: { lead: Lead }) {
                 <input type="date" value={entrega} onChange={(e) => setEntrega(e.target.value)} className="input" />
               </label>
             </div>
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? <p className="field-error">{error}</p> : null}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setAbierto(false)} className="btn-ghost">
                 Cancelar
