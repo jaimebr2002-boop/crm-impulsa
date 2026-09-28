@@ -4,13 +4,31 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useApp } from "@/context/AppContext";
 import { useUsuario } from "@/context/UsuarioContext";
-import { IconCalendario, IconCuenta, IconEnlace, IconLeads, IconProyectos, IconSeguimientos, IconTareas } from "../Icons";
+import {
+  IconCalendario,
+  IconCheck,
+  IconCuenta,
+  IconEnlace,
+  IconFinanzas,
+  IconLeads,
+  IconRecibo,
+  IconProyectos,
+  IconSeguimientos,
+  IconTareas,
+} from "../Icons";
 
-type Opcion = { id: string; label: string; icon: (p: { className?: string }) => ReactNode; accion: () => void };
+type Opcion = {
+  id: string;
+  label: string;
+  icon: (p: { className?: string }) => ReactNode;
+  accion: () => void;
+  /** Texto en la command palette si "Nuevo: …" no suena natural. */
+  enPaleta?: string;
+};
 
 /** Opciones de "+ Añadir": primero las propias del sitio donde estás (cuenta,
- * marca o proyecto) y después las generales. Ingresos, gastos y documentos
- * se sumarán cuando existan esos módulos. */
+ * marca, proyecto o factura) y después las generales. Documentos llegará en
+ * la Fase 4. Todo lo financiero es solo para admin. */
 export function useOpcionesAnadir(): { contexto: string | null; propias: Opcion[]; generales: Opcion[] } {
   const { esAdmin } = useUsuario();
   const { abrirAlta, contexto, pedirPestana } = useApp();
@@ -23,6 +41,7 @@ export function useOpcionesAnadir(): { contexto: string | null; propias: Opcion[
       { id: "c-tarea", label: "Tarea", icon: IconTareas, accion: () => abrirAlta({ tipo: "tarea", cuentaId: contexto.id }) },
       { id: "c-marca", label: "Marca", icon: IconCuenta, accion: () => abrirAlta({ tipo: "marca", cuentaId: contexto.id }) },
       { id: "c-reunion", label: "Reunión", icon: IconCalendario, accion: () => abrirAlta({ tipo: "evento", valores: { cuenta_id: contexto.id } }) },
+      { id: "c-factura", label: "Factura", icon: IconFinanzas, accion: () => abrirAlta({ tipo: "factura", cuentaId: contexto.id }) },
       { id: "c-nota", label: "Nota", icon: IconSeguimientos, accion: () => pedirPestana("notas") }
     );
   } else if (esAdmin && contexto?.tipo === "marca") {
@@ -51,9 +70,23 @@ export function useOpcionesAnadir(): { contexto: string | null; propias: Opcion[
       });
     }
     propias.push(
+      {
+        id: "p-factura",
+        label: "Añadir a factura",
+        icon: IconFinanzas,
+        accion: () => abrirAlta({ tipo: "factura", cuentaId: contexto.cuentaId ?? undefined, proyectoIds: [contexto.id] }),
+      },
+      {
+        id: "p-gasto",
+        label: "Gasto",
+        icon: IconRecibo,
+        accion: () => abrirAlta({ tipo: "gasto", valores: { proyecto_id: contexto.id, cuenta_id: contexto.cuentaId ?? undefined } }),
+      },
       { id: "p-enlace", label: "Enlace", icon: IconEnlace, accion: () => pedirPestana("enlaces") },
       { id: "p-nota", label: "Nota", icon: IconSeguimientos, accion: () => pedirPestana("notas") }
     );
+  } else if (esAdmin && contexto?.tipo === "factura" && contexto.pendiente > 0) {
+    propias.push({ id: "f-cobro", label: "Registrar cobro", icon: IconCheck, accion: () => abrirAlta({ tipo: "cobro", facturaId: contexto.id }) });
   }
 
   const generales: Opcion[] = [];
@@ -62,6 +95,9 @@ export function useOpcionesAnadir(): { contexto: string | null; propias: Opcion[
   generales.push({ id: "lead", label: "Lead", icon: IconLeads, accion: () => router.push("/leads/nuevo") });
   if (esAdmin) {
     generales.push(
+      { id: "factura", label: "Factura", icon: IconFinanzas, accion: () => abrirAlta({ tipo: "factura" }), enPaleta: "Crear factura" },
+      { id: "gasto", label: "Gasto", icon: IconRecibo, accion: () => abrirAlta({ tipo: "gasto" }), enPaleta: "Registrar gasto" },
+      { id: "cobro", label: "Cobro", icon: IconCheck, accion: () => abrirAlta({ tipo: "cobro" }), enPaleta: "Registrar cobro" },
       { id: "cuenta", label: "Cuenta", icon: IconCuenta, accion: () => abrirAlta({ tipo: "cuenta" }) },
       { id: "reunion", label: "Reunión o evento", icon: IconCalendario, accion: () => abrirAlta({ tipo: "evento" }) }
     );

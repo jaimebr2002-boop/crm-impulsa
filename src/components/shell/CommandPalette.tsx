@@ -6,7 +6,7 @@ import { useApp } from "@/context/AppContext";
 import { useUsuario } from "@/context/UsuarioContext";
 import { buscarGlobal, type ResultadoBusqueda } from "@/lib/data/busqueda";
 import { gruposVisibles } from "@/lib/navegacion";
-import { IconBuscar, IconCuenta, IconFlecha, IconLeads, IconProyectos, IconTareas } from "../Icons";
+import { IconBuscar, IconCalendario, IconCuenta, IconFinanzas, IconFlecha, IconLeads, IconProyectos, IconRecibo, IconTareas } from "../Icons";
 import { useOpcionesAnadir } from "./OpcionesAnadir";
 
 type Item = {
@@ -24,6 +24,9 @@ const ICONO_RESULTADO: Record<ResultadoBusqueda["tipo"], Item["icon"]> = {
   marca: IconCuenta,
   tarea: IconTareas,
   lead: IconLeads,
+  factura: IconFinanzas,
+  gasto: IconRecibo,
+  suscripcion: IconCalendario,
 };
 
 const GRUPO_RESULTADO: Record<ResultadoBusqueda["tipo"], string> = {
@@ -32,8 +35,11 @@ const GRUPO_RESULTADO: Record<ResultadoBusqueda["tipo"], string> = {
   marca: "Marcas",
   tarea: "Tareas",
   lead: "Leads",
+  factura: "Facturas",
+  gasto: "Gastos",
+  suscripcion: "Suscripciones",
 };
-const ORDEN_GRUPOS: ResultadoBusqueda["tipo"][] = ["proyecto", "cuenta", "marca", "tarea", "lead"];
+const ORDEN_GRUPOS: ResultadoBusqueda["tipo"][] = ["proyecto", "cuenta", "marca", "factura", "tarea", "lead", "gasto", "suscripcion"];
 
 function normalizar(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -107,7 +113,7 @@ export function CommandPalette() {
       ...generales.map((o) => ({
         id: `a-${o.id}`,
         grupo: "Crear",
-        titulo: `Nuevo: ${o.label.toLowerCase()}`,
+        titulo: o.enPaleta ?? `Nuevo: ${o.label.toLowerCase()}`,
         icon: o.icon,
         ejecutar: () => {
           cerrar();

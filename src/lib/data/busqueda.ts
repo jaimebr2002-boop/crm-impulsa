@@ -1,8 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import { terminoBusquedaSeguro } from "./paginar";
+import { eur } from "@/lib/finanzas";
+import { formatYMDCorta } from "@/lib/dates";
 
 export type ResultadoBusqueda = {
-  tipo: "proyecto" | "cuenta" | "marca" | "tarea" | "lead";
+  tipo: "proyecto" | "cuenta" | "marca" | "tarea" | "lead" | "factura" | "gasto" | "suscripcion";
   id: string;
   titulo: string;
   subtitulo?: string;
@@ -10,13 +12,14 @@ export type ResultadoBusqueda = {
 };
 
 /** Búsqueda global para la command palette. Cada tabla aporta hasta 6
- * resultados; RLS se encarga de que un comercial solo vea lo suyo. */
+ * resultados; RLS se encarga de que un comercial solo vea lo suyo (y nada
+ * de finanzas, que es solo admin). */
 export async function buscarGlobal(texto: string): Promise<ResultadoBusqueda[]> {
   const t = terminoBusquedaSeguro(texto);
   if (t.length < 2) return [];
   const patron = `%${t}%`;
 
-  const [proyectos, tareas, leads, cuentas, marcas] = await Promise.all([
+  const [proyectos, tareas, leads, cuentas, marcas, facturas, gastos, suscripciones] = await Promise.all([
     supabase
       .from("proyectos")
       .select("id, nombre, estado, cuenta:cuentas(nombre), marca:marcas(nombre)")
@@ -32,6 +35,19 @@ export async function buscarGlobal(texto: string): Promise<ResultadoBusqueda[]> 
       .limit(6),
     supabase.from("cuentas").select("id, nombre, tipo").ilike("nombre", patron).limit(4),
     supabase.from("marcas").select("id, nombre, cuenta:cuentas(nombre)").ilike("nombre", patron).limit(4),
+    supabase
+      .from("facturas_estado")
+      .select("id, numero, total, estado_cobro, cuenta:cuentas(nombre)")
+      .ilike("numero", patron)
+      .order("fecha_emision", { ascending: false })
+      .limit(5),
+    supabase
+      .from("gastos")
+      .select("id, concepto, importe, fecha, proveedor")
+      .or(`concepto.ilike.${patron},proveedor.ilike.${patron}`)
+      .order("fecha", { ascending: false })
+      .limit(4),
+    supabase.from("suscripciones").select("id, nombre, importe, periodicidad, activa").ilike("nombre", patron).limit(4),
   ]);
 
   const res: ResultadoBusqueda[] = [];
@@ -71,6 +87,33 @@ export async function buscarGlobal(texto: string): Promise<ResultadoBusqueda[]> 
       titulo: l.negocio || l.nombre_contacto || "Lead",
       subtitulo: l.negocio && l.nombre_contacto ? l.nombre_contacto : undefined,
       href: `/leads/${l.id}`,
+    });
+  }
+  for (const f of facturas.data ?? []) {
+    res.push({
+      tipo: "factura",
+      id: f.id,
+      titulo: `Factura ${f.numero}`,
+      subtitulo: [nombreDe(f.cuenta as ConNombre), eur(f.total)].filter(Boolean).join(" · "),
+      href: `/finanzas/facturas/${f.id}`,
+    });
+  }
+  for (const g of gastos.data ?? []) {
+    res.push({
+      tipo: "gasto",
+      id: g.id,
+      titulo: g.concepto,
+      subtitulo: [eur(g.importe), formatYMDCorta(g.fecha), g.proveedor].filter(Boolean).join(" · "),
+      href: `/finanzas/gastos?fecha=${g.fecha}`,
+    });
+  }
+  for (const s of suscripciones.data ?? []) {
+    res.push({
+      tipo: "suscripcion",
+      id: s.id,
+      titulo: s.nombre,
+      subtitulo: `${eur(s.importe)} · ${s.periodicidad}${s.activa ? "" : " · pausada"}`,
+      href: "/finanzas/suscripciones",
     });
   }
   return res;

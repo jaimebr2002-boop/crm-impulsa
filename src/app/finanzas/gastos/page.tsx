@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { actualizarGasto, eliminarGasto, listarGastos, listarSuscripciones } from "@/lib/data/finanzas";
 import { listarProyectos } from "@/lib/data/proyectos";
-import { formatYMDCorta } from "@/lib/dates";
+import { formatYMDCorta, ymdADate } from "@/lib/dates";
 import {
   agruparImportes,
   CATEGORIAS_GASTO,
@@ -33,14 +34,20 @@ type Tipo = "todos" | "puntuales" | "recurrentes";
 export default function GastosPage() {
   return (
     <SoloAdmin>
-      <Gastos />
+      <Suspense fallback={null}>
+        <Gastos />
+      </Suspense>
     </SoloAdmin>
   );
 }
 
 function Gastos() {
   const { abrirAlta, versionDatos, avisar } = useApp();
-  const [periodo, setPeriodo] = useState<Periodo>(() => periodoQueContiene("mes"));
+  const fecha = useSearchParams().get("fecha");
+  // ?fecha=YYYY-MM-DD (desde la búsqueda) abre el mes de ese gasto.
+  const [periodo, setPeriodo] = useState<Periodo>(() =>
+    periodoQueContiene("mes", fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? ymdADate(fecha) : new Date())
+  );
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
   const [proyectos, setProyectos] = useState<Record<string, ProyectoConRelaciones>>({});
