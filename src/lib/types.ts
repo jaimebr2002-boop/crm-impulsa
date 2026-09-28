@@ -234,3 +234,123 @@ export type Actividad = {
   proyecto_id: string | null;
   created_at: string;
 };
+
+// ============================================================
+// Company OS — finanzas (migración 0010)
+// ============================================================
+
+export type EstadoFactura = "borrador" | "emitida" | "cancelada";
+/** Estado visible, derivado en BD (vista facturas_estado). */
+export type EstadoCobro = "borrador" | "pendiente" | "parcial" | "cobrada" | "vencida" | "cancelada";
+export type MetodoCobro = "transferencia" | "tarjeta" | "efectivo" | "bizum" | "domiciliacion" | "otro";
+export type CategoriaGasto =
+  | "software"
+  | "hardware"
+  | "publicidad"
+  | "transporte"
+  | "comida"
+  | "gestoria"
+  | "formacion"
+  | "oficina"
+  | "otros";
+export type Periodicidad = "mensual" | "trimestral" | "anual";
+
+export type Factura = {
+  id: string;
+  numero: string | null;
+  cuenta_id: string;
+  estado: EstadoFactura;
+  fecha_emision: string;
+  fecha_vencimiento: string | null;
+  iva_pct: number;
+  irpf_pct: number;
+  base: number;
+  iva: number;
+  irpf: number;
+  total: number;
+  moneda: string;
+  enviada_en: string | null;
+  notas: string | null;
+  pdf_path: string | null;
+  creado_por: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FacturaEstado = Factura & {
+  cobrado: number;
+  pendiente: number;
+  estado_cobro: EstadoCobro;
+  vencida: boolean;
+  ultimo_cobro: string | null;
+};
+
+export type FacturaConCuenta = FacturaEstado & { cuenta: Pick<Cuenta, "id" | "nombre"> | null };
+
+export type FacturaLinea = {
+  id: string;
+  factura_id: string;
+  proyecto_id: string | null;
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+  importe: number;
+  orden: number;
+};
+
+export type FacturaLineaConProyecto = FacturaLinea & { proyecto: Pick<Proyecto, "id" | "nombre"> | null };
+
+/** Línea tal como se envía a guardar_factura. */
+export type LineaBorrador = {
+  proyecto_id: string | null;
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+};
+
+export type Cobro = {
+  id: string;
+  factura_id: string;
+  fecha: string;
+  importe: number;
+  metodo: MetodoCobro;
+  referencia: string | null;
+  notas: string | null;
+  created_at: string;
+};
+
+export type CobroConFactura = Cobro & { factura: { id: string; numero: string | null; cuenta_id: string } | null };
+
+export type Gasto = {
+  id: string;
+  concepto: string;
+  fecha: string;
+  importe: number;
+  categoria: CategoriaGasto;
+  proveedor: string | null;
+  cuenta_id: string | null;
+  proyecto_id: string | null;
+  suscripcion_id: string | null;
+  deducible: boolean;
+  notas: string | null;
+  justificante_path: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Suscripcion = {
+  id: string;
+  nombre: string;
+  proveedor: string | null;
+  categoria: CategoriaGasto;
+  importe: number;
+  periodicidad: Periodicidad;
+  fecha_inicio: string;
+  proxima_renovacion: string;
+  activa: boolean;
+  notas: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProyectoFacturacion = { proyecto_id: string; facturas: number; facturado: number; cobrado: number };
