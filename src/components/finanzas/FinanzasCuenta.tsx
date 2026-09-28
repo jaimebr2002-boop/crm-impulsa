@@ -111,8 +111,28 @@ export function FinanzasCuenta({
         {facturas.length === 0 ? (
           <p className="px-4 py-6 text-center text-sm text-ink3">Aún no hay facturas para esta cuenta.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
+          <>
+          <ul className="divide-y divide-line md:hidden">
+            {facturas.map((f) => (
+              <li key={f.id}>
+                <Link href={`/finanzas/facturas/${f.id}`} className="flex items-center gap-3 px-4 py-2.5 text-sm active:bg-mute">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium tabular-nums text-ink">{f.numero ?? "Borrador"}</span>
+                    <span className="block text-xs text-ink3">
+                      {formatYMDCorta(f.fecha_emision)}
+                      {f.estado === "emitida" && aCentimos(f.pendiente) > 0 ? ` · pendiente ${eur(f.pendiente)}` : ""}
+                    </span>
+                  </span>
+                  <span className="flex flex-col items-end gap-1">
+                    <span className="font-medium tabular-nums text-ink">{eur(f.total)}</span>
+                    <EstadoFacturaChip factura={f} />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs text-ink3">
                   <th className="px-4 py-2 font-medium">Factura</th>
@@ -145,6 +165,7 @@ export function FinanzasCuenta({
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Panel>
 

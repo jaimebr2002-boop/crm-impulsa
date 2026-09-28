@@ -16,7 +16,8 @@ import { SkeletonLineas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { TablaDocumentos } from "@/components/documentos/TablaDocumentos";
 import { ZonaSoltar } from "@/components/documentos/ZonaSoltar";
-import { IconBuscar, IconMas } from "@/components/Icons";
+import { IconMas } from "@/components/Icons";
+import { CampoBusqueda, SELECT_TOOLBAR } from "@/components/ui/CampoBusqueda";
 
 type Fecha = "" | "7" | "30" | "365";
 
@@ -116,7 +117,7 @@ function Documentos() {
     abrirAlta({ tipo: "documento", archivo: archivos[0] });
   };
 
-  const select = "rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm text-ink";
+  const select = SELECT_TOOLBAR;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 md:px-8">
@@ -132,16 +133,7 @@ function Documentos() {
       />
 
       <div className="mb-4 flex flex-col gap-2">
-        <div className="flex min-w-0 items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5 md:max-w-md">
-          <IconBuscar className="h-3.5 w-3.5 text-ink3" />
-          <input
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            placeholder="Buscar por nombre, cuenta, proyecto, categoría…"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink3"
-            aria-label="Buscar documentos"
-          />
-        </div>
+        <CampoBusqueda valor={texto} onChange={setTexto} placeholder="Buscar por nombre, cuenta, proyecto, categoría…" etiqueta="Buscar documentos" className="md:max-w-md" />
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
           <select aria-label="Categoría" value={categoria} onChange={(e) => setCategoria(e.target.value as CategoriaDocumento | "")} className={select}>
             <option value="">Todas las categorías</option>

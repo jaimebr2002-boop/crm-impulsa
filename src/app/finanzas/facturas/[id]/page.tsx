@@ -189,8 +189,23 @@ function FichaFactura() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-6">
           <Panel titulo="Líneas" contador={lineas.length}>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-sm">
+            {/* Móvil: cada línea apilada (concepto, cantidad × precio, importe). */}
+            <ul className="divide-y divide-line md:hidden">
+              {lineas.map((l) => (
+                <li key={l.id} className="flex items-start gap-3 px-4 py-2.5 text-sm">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-ink">{l.descripcion}</span>
+                    <span className="block text-xs text-ink3">
+                      {Number(l.cantidad)} × {eur(l.precio_unitario)}
+                      {l.proyecto && l.proyecto.nombre !== l.descripcion ? ` · ${l.proyecto.nombre}` : ""}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-medium tabular-nums text-ink">{eur(l.importe)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-line text-left text-xs text-ink3">
                     <th className="px-4 py-2 font-medium">Concepto</th>

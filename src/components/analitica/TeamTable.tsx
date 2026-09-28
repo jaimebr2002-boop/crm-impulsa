@@ -16,15 +16,15 @@ export function TeamTable({ filas }: { filas: FilaEquipo[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[520px] text-left text-sm">
+    <div>
+      <table className="w-full text-left text-sm">
         <thead>
           <tr className="text-xs text-ink3">
             <th className="pb-2 font-medium">Agente</th>
             <th className="pb-2 font-medium">Leads</th>
-            <th className="pb-2 font-medium">Interacciones</th>
-            <th className="pb-2 font-medium">Llam. contestadas</th>
-            <th className="pb-2 font-medium">Seguim. hechos</th>
+            <th className="hidden pb-2 font-medium sm:table-cell">Interacciones</th>
+            <th className="pb-2 font-medium">Respuestas</th>
+            <th className="hidden pb-2 font-medium sm:table-cell">Seguimientos</th>
             <th className="pb-2 font-medium">Ganados</th>
           </tr>
         </thead>
@@ -37,11 +37,11 @@ export function TeamTable({ filas }: { filas: FilaEquipo[] }) {
                   <span className="font-medium text-ink">{f.nombre}</span>
                 </div>
               </td>
-              <td className="py-2.5 text-ink2">{f.leads}</td>
-              <td className="py-2.5 text-ink2">{f.interacciones}</td>
-              <td className="py-2.5 text-ink2">{f.llamadasContestadas}</td>
-              <td className="py-2.5 text-ink2">{f.seguimientosCompletados}</td>
-              <td className="py-2.5 font-medium text-emerald-600 dark:text-emerald-400">{f.cerrados}</td>
+              <td className="py-2.5 tabular-nums text-ink2">{f.leads}</td>
+              <td className="hidden py-2.5 tabular-nums text-ink2 sm:table-cell">{f.interacciones}</td>
+              <td className="py-2.5 tabular-nums text-ink2">{f.llamadasContestadas}</td>
+              <td className="hidden py-2.5 tabular-nums text-ink2 sm:table-cell">{f.seguimientosCompletados}</td>
+              <td className="py-2.5 font-medium tabular-nums text-ink">{f.cerrados}</td>
             </tr>
           ))}
         </tbody>

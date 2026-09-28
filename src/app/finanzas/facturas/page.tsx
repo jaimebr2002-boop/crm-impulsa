@@ -1,5 +1,7 @@
 "use client";
 
+import { CampoBusqueda } from "@/components/ui/CampoBusqueda";
+
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -14,7 +16,7 @@ import { EstadoFacturaChip } from "@/components/finanzas/EstadoFactura";
 import { Cabecera, Segmentado } from "@/components/ui/Cabecera";
 import { SkeletonLineas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
-import { IconBuscar, IconMas } from "@/components/Icons";
+import { IconMas } from "@/components/Icons";
 
 type Filtro = "todas" | "pendientes" | "vencidas" | "cobradas" | "borradores" | "sinpdf";
 const FILTROS: Filtro[] = ["todas", "pendientes", "vencidas", "cobradas", "borradores", "sinpdf"];
@@ -102,15 +104,7 @@ function Facturas() {
             onChange={setFiltro}
           />
         </div>
-        <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5 md:max-w-xs">
-          <IconBuscar className="h-3.5 w-3.5 text-ink3" />
-          <input
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Número o cuenta"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink3"
-          />
-        </div>
+        <CampoBusqueda valor={busqueda} onChange={setBusqueda} placeholder="Número o cuenta" className="min-w-[180px] flex-1 md:max-w-xs" />
       </div>
 
       {error ? <ErrorState mensaje={error} onReintentar={cargar} /> : null}

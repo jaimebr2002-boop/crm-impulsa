@@ -1,5 +1,7 @@
 "use client";
 
+import { CampoBusqueda } from "@/components/ui/CampoBusqueda";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
@@ -15,7 +17,7 @@ import { Cabecera, Segmentado } from "@/components/ui/Cabecera";
 import { SkeletonLineas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { Avatar } from "@/components/Avatar";
-import { IconBuscar, IconMas } from "@/components/Icons";
+import { IconMas } from "@/components/Icons";
 
 type Filtro = "todas" | TipoCuenta | "archivadas";
 type Fila = { cuenta: Cuenta; marcas: Marca[]; resumen: ResumenProyectos; ultimo: string };
@@ -103,15 +105,7 @@ function Cuentas() {
             onChange={setFiltro}
           />
         </div>
-        <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5 md:max-w-xs">
-          <IconBuscar className="h-3.5 w-3.5 text-ink3" />
-          <input
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar cuenta o marca"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink3"
-          />
-        </div>
+        <CampoBusqueda valor={busqueda} onChange={setBusqueda} placeholder="Buscar cuenta o marca" className="min-w-[180px] flex-1 md:max-w-xs" />
       </div>
 
       {error ? <ErrorState mensaje={error} onReintentar={cargar} /> : null}

@@ -1,5 +1,7 @@
 "use client";
 
+import { CampoBusqueda } from "@/components/ui/CampoBusqueda";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -22,7 +24,7 @@ import { KanbanBoard } from "@/components/ui/KanbanBoard";
 import { SkeletonLineas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { EstadoProyectoInsignia, FechaLimite, PrioridadIcono } from "@/components/trabajo/Insignias";
-import { IconBuscar, IconMas } from "@/components/Icons";
+import { IconMas } from "@/components/Icons";
 
 type Vista = "lista" | "tablero";
 type Filtro = "activos" | "entregados" | "todos" | "archivados";
@@ -181,15 +183,7 @@ function Proyectos() {
             onChange={setFiltro}
           />
         ) : null}
-        <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-1.5 md:max-w-xs">
-          <IconBuscar className="h-3.5 w-3.5 text-ink3" />
-          <input
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Filtrar por nombre, cuenta o marca"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink3"
-          />
-        </div>
+        <CampoBusqueda valor={busqueda} onChange={setBusqueda} placeholder="Filtrar por nombre, cuenta o marca" className="min-w-[180px] flex-1 md:max-w-xs" />
         {cuentaFiltro ? (
           <button onClick={() => router.replace("/proyectos")} className="chip border-line bg-mute text-ink2">
             Cuenta: {nombreCuenta ?? "…"} ×
