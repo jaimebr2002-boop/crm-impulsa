@@ -63,9 +63,9 @@ export function QuickEventForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Lead</span>
+        <span className="field-label">Lead</span>
         {leadSeleccionado ? (
-          <div className="flex items-center justify-between rounded-xl border border-line bg-canvas px-3 py-3">
+          <div className="flex items-center justify-between rounded-lg border border-line bg-canvas px-3 py-2">
             <span className="text-base font-medium text-ink">
               {leadSeleccionado.negocio || leadSeleccionado.nombre_contacto}
             </span>
@@ -90,7 +90,7 @@ export function QuickEventForm({
               autoFocus
             />
             {busqueda.trim() ? (
-              <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-line bg-surface shadow-glass dark:shadow-glass-dark">
+              <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
                 {buscando ? (
                   <p className="px-3 py-2.5 text-sm text-ink3">Buscando…</p>
                 ) : resultados.length === 0 ? (
@@ -115,7 +115,7 @@ export function QuickEventForm({
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Título</span>
+        <span className="field-label">Título</span>
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
@@ -125,7 +125,7 @@ export function QuickEventForm({
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Fecha y hora</span>
+        <span className="field-label">Fecha y hora</span>
         <input
           type="datetime-local"
           value={fechaHoraLocal}
@@ -134,14 +134,14 @@ export function QuickEventForm({
         />
       </label>
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
-      <div className="mt-1 flex gap-3">
+      <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button
             type="button"
             onClick={onCancelar}
-            className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2"
+            className="btn-ghost"
           >
             Cancelar
           </button>
@@ -149,7 +149,7 @@ export function QuickEventForm({
         <button
           type="submit"
           disabled={enviando}
-          className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60"
+          className="btn-primary px-4"
         >
           {enviando ? "Guardando…" : "Crear seguimiento"}
         </button>

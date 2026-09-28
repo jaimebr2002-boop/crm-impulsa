@@ -81,18 +81,18 @@ export function EventoGenericoForm({
       />
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Tipo</span>
+          <span className="field-label">Tipo</span>
           <select value={tipo} onChange={(e) => setTipo(e.target.value as "reunion" | "evento")} className="input">
             <option value="reunion">Reunión</option>
             <option value="evento">Evento</option>
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Cuándo</span>
+          <span className="field-label">Cuándo</span>
           <input type="datetime-local" value={cuando} onChange={(e) => setCuando(e.target.value)} className="input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Cuenta</span>
+          <span className="field-label">Cuenta</span>
           <select
             value={cuentaId}
             onChange={(e) => {
@@ -110,7 +110,7 @@ export function EventoGenericoForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Proyecto</span>
+          <span className="field-label">Proyecto</span>
           <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value)} className="input">
             <option value="">Ninguno</option>
             {proyectosFiltrados.map((p) => (
@@ -122,10 +122,10 @@ export function EventoGenericoForm({
         </label>
       </div>
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Notas</span>
+        <span className="field-label">Notas</span>
         <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={2} className="input resize-y" />
       </label>
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">

@@ -61,11 +61,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
 
             <div className="flex flex-col gap-4">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Estado</span>
+                <span className="field-label">Estado</span>
                 <select
                   value={filtros.estado ?? ""}
                   onChange={(e) => set("estado", e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
+                  className="input"
                 >
                   <option value="">Todos</option>
                   {ESTADOS.map((e) => (
@@ -77,11 +77,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Origen</span>
+                <span className="field-label">Origen</span>
                 <select
                   value={filtros.origen ?? ""}
                   onChange={(e) => set("origen", e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
+                  className="input"
                 >
                   <option value="">Todos</option>
                   {ORIGENES.map((o) => (
@@ -93,11 +93,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Segmento</span>
+                <span className="field-label">Segmento</span>
                 <select
                   value={filtros.segmento ?? ""}
                   onChange={(e) => set("segmento", e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
+                  className="input"
                 >
                   <option value="">Todos</option>
                   {SEGMENTOS.map((s) => (
@@ -109,11 +109,11 @@ export function LeadFilters({ filtros, onChange }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Canal</span>
+                <span className="field-label">Canal</span>
                 <select
                   value={filtros.canal ?? ""}
                   onChange={(e) => set("canal", e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base"
+                  className="input"
                 >
                   <option value="">Todos</option>
                   {CANALES.map((c) => (

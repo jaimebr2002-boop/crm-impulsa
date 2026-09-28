@@ -201,7 +201,7 @@ export default function LeadDetallePage() {
           <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
         ) : (
           <div>
-            <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
+            <span className="field-label">Responsable</span>
             <div className="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-3 text-base font-medium text-ink2">
               {asignado?.nombre ?? "Sin asignar"}
             </div>
@@ -352,7 +352,7 @@ export default function LeadDetallePage() {
             historial y seguimientos. No se puede deshacer. Si solo quieres quitarlo de en medio, archívalo.
           </p>
           <div className="mt-5 flex gap-3">
-            <button onClick={() => setModal(null)} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+            <button onClick={() => setModal(null)} className="btn-ghost">
               Cancelar
             </button>
             <button

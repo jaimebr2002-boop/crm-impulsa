@@ -211,7 +211,7 @@ export function ProyectoForm({
         </button>
       )}
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
       <div className="flex justify-end gap-2 pt-1">
         {onCancelar ? (
@@ -230,7 +230,7 @@ export function ProyectoForm({
 function Campo({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-ink2">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );

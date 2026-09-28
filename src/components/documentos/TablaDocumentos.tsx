@@ -256,7 +256,7 @@ export function TablaDocumentos({
             <button onClick={() => setBorrando(null)} className="btn-ghost">
               Volver
             </button>
-            <button onClick={() => eliminar(borrando)} className="btn bg-red-600 text-white hover:bg-red-700">
+            <button onClick={() => eliminar(borrando)} className="btn-danger">
               Eliminar
             </button>
           </div>

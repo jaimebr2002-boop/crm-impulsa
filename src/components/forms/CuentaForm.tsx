@@ -44,7 +44,7 @@ export function CuentaForm({
         className="w-full border-0 bg-transparent p-0 text-lg font-semibold text-ink outline-none placeholder:font-normal placeholder:text-ink3"
       />
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Tipo</span>
+        <span className="field-label">Tipo</span>
         <select value={v.tipo} onChange={(e) => setV({ ...v, tipo: e.target.value as TipoCuenta })} className="input">
           {TIPOS_CUENTA.map((t) => (
             <option key={t} value={t}>
@@ -56,15 +56,15 @@ export function CuentaForm({
       </label>
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Email</span>
+          <span className="field-label">Email</span>
           <input type="email" value={v.email ?? ""} onChange={(e) => setV({ ...v, email: e.target.value })} className="input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Teléfono</span>
+          <span className="field-label">Teléfono</span>
           <input inputMode="tel" value={v.telefono ?? ""} onChange={(e) => setV({ ...v, telefono: e.target.value })} className="input" />
         </label>
       </div>
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">

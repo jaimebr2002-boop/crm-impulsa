@@ -126,7 +126,7 @@ export function TareaForm({
 
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Prioridad</span>
+          <span className="field-label">Prioridad</span>
           <select value={v.prioridad} onChange={(e) => set("prioridad", e.target.value as Prioridad)} className="input">
             {PRIORIDADES.map((p) => (
               <option key={p} value={p}>
@@ -137,7 +137,7 @@ export function TareaForm({
         </label>
         {esAdmin && !ocultarProyecto ? (
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Proyecto</span>
+            <span className="field-label">Proyecto</span>
             <select value={v.proyecto_id ?? ""} onChange={(e) => set("proyecto_id", e.target.value || null)} className="input">
               <option value="">Sin proyecto</option>
               {proyectos.map((p) => (
@@ -154,7 +154,7 @@ export function TareaForm({
         <>
           {esAdmin && usuarios.length > 1 ? (
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
+              <span className="field-label">Responsable</span>
               <select
                 value={v.responsable_id ?? ""}
                 onChange={(e) => set("responsable_id", e.target.value || null)}
@@ -170,7 +170,7 @@ export function TareaForm({
             </label>
           ) : null}
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Notas</span>
+            <span className="field-label">Notas</span>
             <textarea
               value={v.descripcion ?? ""}
               onChange={(e) => set("descripcion", e.target.value)}
@@ -185,7 +185,7 @@ export function TareaForm({
         </button>
       )}
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
       <div className="flex justify-end gap-2 pt-1">
         {onCancelar ? (

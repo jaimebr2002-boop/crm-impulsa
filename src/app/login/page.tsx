@@ -50,7 +50,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="glass-strong flex flex-col gap-4 rounded-2xl p-6 shadow-glass dark:shadow-glass-dark">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Email</span>
+            <span className="field-label">Email</span>
             <input
               type="email"
               autoComplete="email"
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Contraseña</span>
+            <span className="field-label">Contraseña</span>
             <input
               type="password"
               autoComplete="current-password"
@@ -76,7 +76,7 @@ export default function LoginPage() {
             />
           </label>
 
-          {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+          {error ? <p className="field-error">{error}</p> : null}
 
           <button
             type="submit"

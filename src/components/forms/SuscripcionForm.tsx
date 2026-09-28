@@ -77,7 +77,7 @@ export function SuscripcionForm({
       </div>
       <div className="grid grid-cols-3 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Cada</span>
+          <span className="field-label">Cada</span>
           <select value={periodicidad} onChange={(e) => setPeriodicidad(e.target.value as Periodicidad)} className="input">
             {PERIODICIDADES.map((p) => (
               <option key={p} value={p}>
@@ -87,11 +87,11 @@ export function SuscripcionForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Próxima renovación</span>
+          <span className="field-label">Próxima renovación</span>
           <input type="date" value={proxima} onChange={(e) => setProxima(e.target.value)} className="input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Categoría</span>
+          <span className="field-label">Categoría</span>
           <select value={categoria} onChange={(e) => setCategoria(e.target.value as CategoriaGasto)} className="input">
             {CATEGORIAS_GASTO.map((c) => (
               <option key={c} value={c}>
@@ -105,7 +105,7 @@ export function SuscripcionForm({
         <input value={proveedor} onChange={(e) => setProveedor(e.target.value)} placeholder="Proveedor (opcional)" className="input" />
         <input value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas (opcional)" className="input" />
       </div>
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">

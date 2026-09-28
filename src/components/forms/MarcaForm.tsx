@@ -58,7 +58,7 @@ export function MarcaForm({
       />
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Cuenta</span>
+          <span className="field-label">Cuenta</span>
           <select value={v.cuenta_id} onChange={(e) => setV({ ...v, cuenta_id: e.target.value })} className="input">
             <option value="">Elige…</option>
             {cuentas.map((c) => (
@@ -69,11 +69,11 @@ export function MarcaForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Web</span>
+          <span className="field-label">Web</span>
           <input value={v.web ?? ""} onChange={(e) => setV({ ...v, web: e.target.value })} placeholder="segurma.es" className="input" />
         </label>
       </div>
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">

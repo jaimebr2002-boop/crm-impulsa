@@ -275,7 +275,7 @@ export default function ImportarPage() {
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <button
               onClick={empezarOtraImportacion}
-              className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2"
+              className="btn-ghost"
             >
               Importar otro archivo
             </button>
@@ -399,7 +399,7 @@ export default function ImportarPage() {
 
           {esAdmin ? (
             <label className="mb-3 block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Asignar los leads importados a</span>
+              <span className="field-label">Asignar los leads importados a</span>
               <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
                 <option value="">Sin asignar</option>
                 {usuarios.map((u) => (
@@ -414,7 +414,7 @@ export default function ImportarPage() {
           )}
 
           <label className="mb-4 block">
-            <span className="mb-1 block text-xs font-medium text-ink2">
+            <span className="field-label">
               Origen para las filas que no traen origen propio
             </span>
             <select value={origenPorDefecto} onChange={(e) => setOrigenPorDefecto(e.target.value)} className="input">

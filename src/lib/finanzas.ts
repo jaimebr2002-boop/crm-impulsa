@@ -16,6 +16,8 @@
 // se replica su redondeo para la vista previa del formulario.
 
 import { addDias, aYMD, hoyYMD, ymdADate } from "./dates";
+import { formatDinero } from "./formato";
+import { TONO_CHIP, TONO_COBRO } from "./tonos";
 import type {
   CategoriaGasto,
   Cobro,
@@ -67,17 +69,15 @@ export function calcularTotales(lineas: Pick<LineaBorrador, "cantidad" | "precio
   return { base: deCentimos(baseC), iva: deCentimos(ivaC), irpf: deCentimos(irpfC), total: deCentimos(baseC + ivaC - irpfC) };
 }
 
-const FORMATO = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const FORMATO_ENTERO = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 /** Importe con céntimos (facturas, cobros, gastos). */
 export function eur(valor: number | string | null | undefined): string {
-  return FORMATO.format(aCentimos(valor) / 100);
+  return formatDinero(aCentimos(valor) / 100);
 }
 
 /** Importe redondeado para KPIs grandes. */
 export function eurCorto(valor: number | string | null | undefined): string {
-  return FORMATO_ENTERO.format(aCentimos(valor) / 100);
+  return formatDinero(aCentimos(valor) / 100, false);
 }
 
 // ---------- Estados y catálogos ----------
@@ -91,14 +91,7 @@ export const ESTADO_COBRO_LABEL: Record<EstadoCobro, string> = {
   cancelada: "Cancelada",
 };
 
-export const ESTADO_COBRO_ESTILO: Record<EstadoCobro, string> = {
-  borrador: "border-line bg-mute text-ink2",
-  pendiente: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200",
-  parcial: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
-  cobrada: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200",
-  vencida: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300",
-  cancelada: "border-line bg-canvas text-ink3 line-through",
-};
+export const ESTADO_COBRO_ESTILO = Object.fromEntries(Object.entries(TONO_COBRO).map(([e, t]) => [e, TONO_CHIP[t]])) as Record<EstadoCobro, string>;
 
 export const METODOS_COBRO: MetodoCobro[] = ["transferencia", "bizum", "tarjeta", "efectivo", "domiciliacion", "otro"];
 export const METODO_COBRO_LABEL: Record<MetodoCobro, string> = {

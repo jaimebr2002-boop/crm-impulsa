@@ -420,7 +420,7 @@ export default function LeadsPage() {
           <div className="mt-5 flex gap-3">
             <button
               onClick={() => setConfirmarBorrado(false)}
-              className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2"
+              className="btn-ghost"
             >
               Cancelar
             </button>

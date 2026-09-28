@@ -66,7 +66,7 @@ export default function ActualizarPasswordPage() {
           {!listo ? (
             <LoadingState texto="Comprobando enlace…" />
           ) : !sesionValida ? (
-            <p className="text-sm font-medium text-red-600">
+            <p className="field-error">
               Este enlace no es válido o ha caducado. Pide al administrador que te reenvíe la invitación.
             </p>
           ) : exito ? (
@@ -74,7 +74,7 @@ export default function ActualizarPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Nueva contraseña</span>
+                <span className="field-label">Nueva contraseña</span>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -88,7 +88,7 @@ export default function ActualizarPasswordPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Confirmar contraseña</span>
+                <span className="field-label">Confirmar contraseña</span>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -99,7 +99,7 @@ export default function ActualizarPasswordPage() {
                 />
               </label>
 
-              {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+              {error ? <p className="field-error">{error}</p> : null}
 
               <button
                 type="submit"

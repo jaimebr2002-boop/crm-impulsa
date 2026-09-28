@@ -127,19 +127,19 @@ export function ConfiguracionFacturacion() {
           }}
         >
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">IVA por defecto (%)</span>
+            <span className="field-label">IVA por defecto (%)</span>
             <input value={iva} onChange={(e) => setIva(e.target.value)} inputMode="decimal" className="input" aria-label="IVA por defecto" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">IRPF por defecto (%)</span>
+            <span className="field-label">IRPF por defecto (%)</span>
             <input value={irpf} onChange={(e) => setIrpf(e.target.value)} inputMode="decimal" className="input" aria-label="IRPF por defecto" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Vencimiento (días)</span>
+            <span className="field-label">Vencimiento (días)</span>
             <input value={dias} onChange={(e) => setDias(e.target.value)} inputMode="numeric" className="input" aria-label="Días de vencimiento" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Moneda</span>
+            <span className="field-label">Moneda</span>
             <input value="EUR (€)" disabled className="input opacity-60" />
           </label>
           <p className="col-span-2 text-xs text-ink3 sm:col-span-3">

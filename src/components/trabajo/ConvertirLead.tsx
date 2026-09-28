@@ -79,12 +79,12 @@ export function ConvertirLead({ lead }: { lead: Lead }) {
               proyecto enlazado a este lead{lead.valor != null ? " con su valor como importe" : ""}.
             </p>
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Nombre del proyecto</span>
+              <span className="field-label">Nombre del proyecto</span>
               <input autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} className="input" />
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Tipo</span>
+                <span className="field-label">Tipo</span>
                 <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoProyecto)} className="input">
                   {TIPOS_PROYECTO.map((t) => (
                     <option key={t} value={t}>
@@ -94,7 +94,7 @@ export function ConvertirLead({ lead }: { lead: Lead }) {
                 </select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Entrega</span>
+                <span className="field-label">Entrega</span>
                 <input type="date" value={entrega} onChange={(e) => setEntrega(e.target.value)} className="input" />
               </label>
             </div>

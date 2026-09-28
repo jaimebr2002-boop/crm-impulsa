@@ -508,7 +508,7 @@ function FichaProyecto() {
                   setModal(null);
                 }
               }}
-              className="btn bg-red-600 text-white hover:bg-red-700"
+              className="btn-danger"
             >
               Eliminar
             </button>

@@ -47,7 +47,7 @@ export function DatosFiscalesForm({
       <div className="grid grid-cols-6 gap-3">
         {campos.map((c) => (
           <label key={c.campo} className={`block ${span[c.ancho ?? "medio"]}`}>
-            <span className="mb-1 block text-xs font-medium text-ink2">{c.label}</span>
+            <span className="field-label">{c.label}</span>
             {c.tipo === "textarea" ? (
               <textarea
                 value={valores[c.campo]}
@@ -68,7 +68,7 @@ export function DatosFiscalesForm({
           </label>
         ))}
       </div>
-      {error ? <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">

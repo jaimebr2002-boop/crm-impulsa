@@ -351,7 +351,7 @@ function FichaFactura() {
             </button>
             <button
               onClick={() => accion(() => cambiarEstadoFactura(factura.id, "cancelada"), "Factura cancelada")}
-              className="btn bg-red-600 text-white hover:bg-red-700"
+              className="btn-danger"
             >
               Cancelar factura
             </button>
@@ -376,7 +376,7 @@ function FichaFactura() {
                   avisar(e instanceof Error ? e.message : "No se ha podido eliminar.", { tono: "error" });
                 }
               }}
-              className="btn bg-red-600 text-white hover:bg-red-700"
+              className="btn-danger"
             >
               Eliminar
             </button>
@@ -400,7 +400,7 @@ function FichaFactura() {
                 setCobroABorrar(null);
                 await accion(() => eliminarCobro(c.id), "Cobro eliminado");
               }}
-              className="btn bg-red-600 text-white hover:bg-red-700"
+              className="btn-danger"
             >
               Eliminar cobro
             </button>

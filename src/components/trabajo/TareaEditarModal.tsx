@@ -59,7 +59,7 @@ export function TareaEditarModal({
                   onEliminar(tarea);
                   onCerrar();
                 }}
-                className="btn bg-red-600 text-white hover:bg-red-700"
+                className="btn-danger"
               >
                 Eliminar
               </button>

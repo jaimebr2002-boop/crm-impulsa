@@ -246,15 +246,15 @@ export function LeadForm({
         </Campo>
       ) : null}
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
-      <div className="mt-2 flex gap-3">
+      <div className="flex justify-end gap-2">
         {onCancelar ? (
-          <button type="button" onClick={cancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+          <button type="button" onClick={cancelar} className="btn-ghost">
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="btn-primary px-4">
           {enviando ? "Guardando…" : botonTexto}
         </button>
       </div>
@@ -265,7 +265,7 @@ export function LeadForm({
 function Campo({ label, nota, children }: { label: string; nota?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-ink2">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
       {nota ? <span className="mt-1 block text-[11px] text-ink3">{nota}</span> : null}
     </label>

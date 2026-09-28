@@ -55,6 +55,16 @@ body {
   height: 100%;
 }
 
+/* Foco visible y consistente para teclado (no aparece al hacer clic). */
+:focus-visible {
+  outline: 2px solid #aaff00;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.input:focus-visible {
+  outline: none;
+}
+
 body {
   color: rgb(var(--ink));
   background-color: rgb(var(--canvas));
@@ -68,8 +78,36 @@ textarea {
 }
 
 @layer components {
+  /* Campos: misma altura (40 px), borde, foco y placeholder en toda la app.
+     16 px en móvil evita el zoom de iOS; 14 px en escritorio para densidad. */
   .input {
-    @apply w-full rounded-xl border border-line bg-surface px-3 py-3 text-base text-ink outline-none transition-colors focus:border-brand;
+    @apply block w-full rounded-lg border border-line bg-surface px-3 py-2 text-base text-ink outline-none transition-colors placeholder:text-ink3 focus:border-ink/40 focus:ring-2 focus:ring-brand/40 disabled:opacity-60 md:text-sm;
+    min-height: 2.5rem;
+  }
+  select.input {
+    @apply pr-8;
+  }
+  .field-label {
+    @apply mb-1 block text-xs font-medium text-ink2;
+  }
+  .field-help {
+    @apply mt-1 block text-xs text-ink3;
+  }
+  .field-error {
+    @apply text-sm font-medium text-red-600 dark:text-red-400;
+  }
+  /* Tipografía: jerarquía única. */
+  .t-page {
+    @apply font-display text-2xl font-bold tracking-tight text-ink;
+  }
+  .t-section {
+    @apply text-sm font-semibold text-ink;
+  }
+  .t-eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-wider text-ink3;
+  }
+  .t-kpi {
+    @apply font-display text-2xl font-bold tabular-nums tracking-tight text-ink;
   }
 
   /* Superficie de panel. Antes era un cristal translúcido con desenfoque; el
@@ -95,7 +133,10 @@ textarea {
 
   /* Botones y controles base del sistema. */
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50;
+    @apply inline-flex min-h-[2.25rem] items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
   }
   .btn-primary {
     @apply btn bg-brand text-brand-ink hover:bg-[#9BEF00];

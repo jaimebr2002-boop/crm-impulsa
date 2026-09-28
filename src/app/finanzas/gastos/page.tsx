@@ -309,7 +309,7 @@ function Gastos() {
                   avisar(e instanceof Error ? e.message : "No se ha podido eliminar.", { tono: "error" });
                 }
               }}
-              className="btn bg-red-600 text-white hover:bg-red-700"
+              className="btn-danger"
             >
               Eliminar
             </button>

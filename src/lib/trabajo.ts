@@ -1,3 +1,4 @@
+import { TONO_PROYECTO, TONO_PUNTO, TONO_TAREA } from "./tonos";
 import type { EstadoProyecto, EstadoTarea, Prioridad, TipoCuenta, TipoProyecto } from "./types";
 
 // ---------- Proyectos ----------
@@ -23,15 +24,7 @@ export const ESTADO_PROYECTO_LABEL: Record<EstadoProyecto, string> = {
 };
 
 /** Punto de color de cada estado (mismo lenguaje que Linear: un punto, no un chip de color). */
-export const ESTADO_PROYECTO_PUNTO: Record<EstadoProyecto, string> = {
-  pendiente: "bg-ink3",
-  preparado: "bg-sky-400",
-  en_progreso: "bg-blue-500",
-  esperando: "bg-amber-500",
-  revision: "bg-violet-500",
-  entregado: "bg-emerald-500",
-  cancelado: "bg-red-400",
-};
+export const ESTADO_PROYECTO_PUNTO = Object.fromEntries(Object.entries(TONO_PROYECTO).map(([e, t]) => [e, TONO_PUNTO[t]])) as Record<EstadoProyecto, string>;
 
 /** Estados en los que un proyecto sigue "vivo". */
 export const ESTADOS_PROYECTO_ACTIVOS = new Set<EstadoProyecto>(["pendiente", "preparado", "en_progreso", "esperando", "revision"]);
@@ -104,12 +97,7 @@ export const ESTADO_TAREA_LABEL: Record<EstadoTarea, string> = {
   completada: "Completada",
 };
 
-export const ESTADO_TAREA_PUNTO: Record<EstadoTarea, string> = {
-  pendiente: "bg-ink3",
-  en_progreso: "bg-blue-500",
-  esperando: "bg-amber-500",
-  completada: "bg-emerald-500",
-};
+export const ESTADO_TAREA_PUNTO = Object.fromEntries(Object.entries(TONO_TAREA).map(([e, t]) => [e, TONO_PUNTO[t]])) as Record<EstadoTarea, string>;
 
 // ---------- Cuentas ----------
 

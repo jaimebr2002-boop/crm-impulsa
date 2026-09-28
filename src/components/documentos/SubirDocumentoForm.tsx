@@ -169,7 +169,7 @@ export function SubirDocumentoForm({
       {archivo ? (
         <>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Nombre</span>
+            <span className="field-label">Nombre</span>
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={200} className="input" disabled={subiendo} />
           </label>
 
@@ -282,7 +282,7 @@ export function SubirDocumentoForm({
       ) : null}
 
       {error ? (
-        <p className="text-sm font-medium text-red-600 dark:text-red-400" role="alert">
+        <p className="field-error" role="alert">
           {error}
         </p>
       ) : null}

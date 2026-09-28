@@ -46,7 +46,7 @@ export function EventForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Título</span>
+        <span className="field-label">Título</span>
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
@@ -57,7 +57,7 @@ export function EventForm({
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Fecha y hora</span>
+        <span className="field-label">Fecha y hora</span>
         <input
           type="datetime-local"
           value={fechaHoraLocal}
@@ -67,7 +67,7 @@ export function EventForm({
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
+        <span className="field-label">Responsable</span>
         <select value={usuarioId} onChange={(e) => setUsuarioId(e.target.value)} className="input">
           <option value="">Sin asignar</option>
           {usuarios.map((u) => (
@@ -78,15 +78,15 @@ export function EventForm({
         </select>
       </label>
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
-      <div className="mt-1 flex gap-3">
+      <div className="flex justify-end gap-2">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+          <button type="button" onClick={onCancelar} className="btn-ghost">
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="btn-primary px-4">
           {enviando ? "Guardando…" : "Crear seguimiento"}
         </button>
       </div>

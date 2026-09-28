@@ -177,7 +177,7 @@ export function FacturaForm({
       {/* Cabecera */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <label className="col-span-2 block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Cuenta</span>
+          <span className="field-label">Cuenta</span>
           <select
             value={cuentaId}
             onChange={(e) => {
@@ -197,11 +197,11 @@ export function FacturaForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Emisión</span>
+          <span className="field-label">Emisión</span>
           <input type="date" value={emision} onChange={(e) => setEmision(e.target.value)} className="input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Vencimiento</span>
+          <span className="field-label">Vencimiento</span>
           <input type="date" value={vencimiento} onChange={(e) => setVencimiento(e.target.value)} className="input" />
         </label>
       </div>
@@ -328,7 +328,7 @@ export function FacturaForm({
         <div className="flex flex-col gap-2 text-sm md:max-w-xs">
           {numeroManual ? (
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Número</span>
+              <span className="field-label">Número</span>
               <input value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="2026-015" className="input" />
             </label>
           ) : (
@@ -393,7 +393,7 @@ export function FacturaForm({
         </dl>
       </div>
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
       <div className="flex flex-wrap justify-end gap-2">
         {onCancelar ? (

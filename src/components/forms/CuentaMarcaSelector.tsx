@@ -82,7 +82,7 @@ export function CuentaMarcaSelector({
   if (creando) {
     return (
       <div>
-        <span className="mb-1 block text-xs font-medium text-ink2">{creando === "cuenta" ? "Nueva cuenta" : "Nueva marca"}</span>
+        <span className="field-label">{creando === "cuenta" ? "Nueva cuenta" : "Nueva marca"}</span>
         <div className="flex gap-2">
           <input
             autoFocus
@@ -116,7 +116,7 @@ export function CuentaMarcaSelector({
   return (
     <div className="grid grid-cols-2 gap-3">
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Cuenta</span>
+        <span className="field-label">Cuenta</span>
         <select
           value={cuentaId ?? ""}
           onChange={(e) => {
@@ -136,7 +136,7 @@ export function CuentaMarcaSelector({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">Marca</span>
+        <span className="field-label">Marca</span>
         <select
           value={marcaId ?? ""}
           disabled={!cuentaId}

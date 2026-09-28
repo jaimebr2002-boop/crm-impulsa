@@ -88,11 +88,11 @@ export function GastoForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Fecha</span>
+          <span className="field-label">Fecha</span>
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Categoría</span>
+          <span className="field-label">Categoría</span>
           <select value={categoria} onChange={(e) => setCategoria(e.target.value as CategoriaGasto)} className="input">
             {CATEGORIAS_GASTO.map((c) => (
               <option key={c} value={c}>
@@ -106,11 +106,11 @@ export function GastoForm({
         <>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Proveedor</span>
+              <span className="field-label">Proveedor</span>
               <input value={proveedor} onChange={(e) => setProveedor(e.target.value)} className="input" />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Proyecto</span>
+              <span className="field-label">Proyecto</span>
               <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value)} className="input">
                 <option value="">Ninguno</option>
                 {proyectos.map((p) => (
@@ -132,7 +132,7 @@ export function GastoForm({
           + Proveedor, proyecto, notas
         </button>
       )}
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">

@@ -67,7 +67,7 @@ export function CobroForm({
         </p>
       ) : (
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Factura</span>
+          <span className="field-label">Factura</span>
           <select
             value={seleccion}
             onChange={(e) => {
@@ -90,7 +90,7 @@ export function CobroForm({
 
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Importe (€)</span>
+          <span className="field-label">Importe (€)</span>
           <input
             type="number"
             inputMode="decimal"
@@ -103,7 +103,7 @@ export function CobroForm({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Fecha</span>
+          <span className="field-label">Fecha</span>
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="input" />
         </label>
       </div>
@@ -124,7 +124,7 @@ export function CobroForm({
 
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Método</span>
+          <span className="field-label">Método</span>
           <select value={metodo} onChange={(e) => setMetodo(e.target.value as MetodoCobro)} className="input">
             {METODOS_COBRO.map((m) => (
               <option key={m} value={m}>
@@ -134,12 +134,12 @@ export function CobroForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink2">Referencia</span>
+          <span className="field-label">Referencia</span>
           <input value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Opcional" className="input" />
         </label>
       </div>
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
       <div className="flex justify-end gap-2">
         {onCancelar ? (
           <button type="button" onClick={onCancelar} className="btn-ghost">
