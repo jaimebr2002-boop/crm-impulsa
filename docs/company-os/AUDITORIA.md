@@ -121,7 +121,7 @@ Principal   Inicio (/inicio)
 Trabajo     Proyectos (/proyectos) · Tareas (/tareas) · Calendario (/calendario)
 Ventas      Leads (/leads) · Seguimientos (/hoy) · Importar (/importar)
 Negocio     Ventas (/leads) · Cuentas (/cuentas) · Finanzas (/finanzas: Resumen · Facturas · Gastos · Suscripciones)
-Información Documentos (/documentos, F4) · Analítica (/analitica)
+Información Documentos (/documentos) · Actividad (/actividad) · Analítica (/analitica)
 Sistema     Configuración (/perfil)
 ```
 
@@ -171,6 +171,14 @@ Sistema     Configuración (/perfil)
 - Probado con PostgreSQL 16 + PostgREST 12 simulando Supabase:
   - Base de datos: migraciones 0001–0010 en limpio y 0010 re-ejecutada, con cálculo fiscal y redondeo, numeración, cobros parciales o excesivos, vencidas, borradores, número duplicado, edición con cobros, renovaciones duplicadas, actividad, y RLS de comercial y anónimo.
   - Navegador, 36 comprobaciones: factura multi-proyecto desde Fer, cobros, emitir, editar, enviar, cancelar, borrar borrador, filtros, gasto desde proyecto, suscripciones, KPIs contrastados con la BD, Inicio, calendario, actividad, ⌘K, Analítica y un comercial sin acceso por URL ni por búsqueda. También escritorio, móvil y modo oscuro.
+
+**Fase 4 — completada** (misma rama). Migración `0011_company_os_documents.sql`. Detalle en [`DOCUMENTOS.md`](./DOCUMENTOS.md).
+
+- Documentos centralizados sobre Supabase Storage (bucket privado `documentos`, solo admin por RLS y políticas de Storage, signed URLs cortas), integrados en cuentas, proyectos, facturas, gastos, ⌘K, actividad e Inicio.
+- PDF de factura generado en el servidor (pdf-lib) con datos del emisor (Configuración) y del receptor (cuenta); huella para detectar PDFs desactualizados; regenerar sustituye.
+- Corrección de Fase 3: «Por facturar» descuenta lo que ya está en un borrador sin contarlo como facturado.
+- Decisiones: una relación directa por documento y contexto deducido en vista; rutas por id; borrar fila antes que archivo (los huérfanos se detectan y limpian); validación por firma real además de extensión y MIME.
+- Probado en local contra una simulación de Storage que aplica las políticas reales en PostgreSQL; lo que queda por validar contra Supabase real está listado en DOCUMENTOS.md §10.
 
 ## 13. Roadmap
 

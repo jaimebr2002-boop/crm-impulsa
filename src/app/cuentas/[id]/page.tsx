@@ -76,7 +76,7 @@ function DatosFacturacionCuenta({ cuenta, onEditar }: { cuenta: Cuenta; onEditar
       <span className="text-[11px] font-medium uppercase tracking-wider text-ink3">Datos de facturación</span>
       <span className="min-w-0 flex-1 truncate text-ink2">{cuenta.fiscal_nif || cuenta.fiscal_direccion ? linea : "Sin datos fiscales"}</span>
       {falta.length ? <span className="text-xs text-amber-700 dark:text-amber-400">Para el PDF falta: {falta.join(", ")}</span> : null}
-      <button onClick={onEditar} className="btn-ghost py-1 text-xs">
+      <button onClick={onEditar} className="btn-ghost py-1 text-xs" aria-label="Editar datos de facturación">
         {cuenta.fiscal_nif ? "Editar" : "Añadir"}
       </button>
     </div>

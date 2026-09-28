@@ -256,7 +256,7 @@ function Gastos() {
               )}
             </Panel>
           </div>
-          <p className="text-xs text-ink3">Importes pagados (IVA incluido). El justificante se podrá adjuntar con el módulo de Documentos.</p>
+          <p className="text-xs text-ink3">Importes pagados (IVA incluido). El clip indica si el gasto tiene justificante; púlsalo para verlo o adjuntarlo.</p>
         </div>
       ) : null}
 

@@ -32,6 +32,7 @@ CRM interno de Impulsa Studio para gestionar los leads de Jaime, Laura y Reyes: 
    - [`supabase/migrations/0008_company_os_base.sql`](supabase/migrations/0008_company_os_base.sql) — Company OS: cuentas, marcas, proyectos, enlaces, tareas y actividad global (con RLS). También deja de leer el rol de `user_metadata`: toda cuenta nueva es `comercial` y se asciende a admin con `update usuarios set rol = 'admin' where email = '…';` desde el SQL Editor.
    - [`supabase/migrations/0009_company_os_operations.sql`](supabase/migrations/0009_company_os_operations.sql) — Fase 2: subproyectos de un nivel, reuniones y eventos manuales en `eventos` (lead opcional), y actividad enlazada a cuenta/proyecto (rellena también la actividad ya registrada).
    - [`supabase/migrations/0010_company_os_finance.sql`](supabase/migrations/0010_company_os_finance.sql) — Fase 3: facturas con líneas (varios proyectos por factura), cobros parciales, gastos y suscripciones, con totales y estados calculados en la base de datos. Solo admin.
+   - [`supabase/migrations/0011_company_os_documents.sql`](supabase/migrations/0011_company_os_documents.sql) — Fase 4: documentos (bucket privado de Storage `documentos` con políticas solo admin), datos de facturación del emisor y de las cuentas, PDF de factura y detección de PDFs desactualizados. Ver `docs/company-os/DOCUMENTOS.md`.
 3. Crea las cuentas de Auth para Jaime (`admin`), Laura y Reyes (`comercial`) — por API (`auth.admin.inviteUserByEmail`, recomendado) o desde el dashboard (**Authentication → Users → Invite user**), pasando `user_metadata: { nombre, rol }`. Un trigger (`handle_new_user`) crea automáticamente su fila en `usuarios` con esos datos.
 4. En **Authentication → URL Configuration**, configura el **Site URL** y añade a **Redirect URLs** el dominio de producción (p. ej. `https://tu-app.vercel.app/**`) — si no, los enlaces de invitación/recuperación de contraseña redirigen a `localhost`.
 5. En **Project Settings → API**, copia la **Project URL** y la **anon/publishable key**.
@@ -75,7 +76,7 @@ La app ya no es solo un CRM: es el panel interno de Impulsa. La auditoría, el m
 - **Calendario** unificado: seguimientos CRM, reuniones y eventos, tareas con fecha y entregas de proyectos, con filtros.
 - **Actividad** (`/actividad`, solo admin): la base de datos registra sola los cambios de proyectos, tareas, cuentas, marcas, reuniones y estados de leads.
 
-> **Orden de despliegue:** ejecuta primero las migraciones pendientes (0007, 0008, 0009 y 0010, en ese orden) en el SQL Editor de Supabase y después despliega el código. El código nuevo consulta columnas y tablas que no existen hasta entonces.
+> **Orden de despliegue:** ejecuta primero las migraciones pendientes (0007, 0008, 0009, 0010 y 0011, en ese orden) en el SQL Editor de Supabase y después despliega el código. El código nuevo consulta columnas y tablas que no existen hasta entonces.
 
 ## 7. Pipeline, valor y gestión de leads
 

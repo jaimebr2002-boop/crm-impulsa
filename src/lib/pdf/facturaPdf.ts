@@ -217,7 +217,9 @@ export async function crearPdfFactura(f: DatosFacturaPdf, emisor: DatosEmisor, r
 
   for (const l of f.lineas) {
     const renglones = partir(l.descripcion, normal, 9.5, anchoConcepto);
-    const alto = renglones.length * 12 + 8;
+    // Alto de la fila: renglones + margen; el separador va por debajo de los descendentes.
+    const ultimo = (renglones.length - 1) * 12;
+    const alto = ultimo + 21;
     if (y - alto < 170) {
       pag = pdf.addPage(A4);
       paginas.push(pag);
@@ -227,8 +229,9 @@ export async function crearPdfFactura(f: DatosFacturaPdf, emisor: DatosEmisor, r
     escribir(pag, cantidadPdf(l.cantidad), col.cantidad, y, { tam: 9.5, alinear: "der" });
     escribir(pag, importePdf(l.precio_unitario), col.precio, y, { tam: 9.5, alinear: "der" });
     escribir(pag, importePdf(l.importe), col.importe - 8, y, { tam: 9.5, alinear: "der" });
+    const separador = y - ultimo - 7;
+    pag.drawLine({ start: { x: MARGEN, y: separador }, end: { x: derecha, y: separador }, thickness: 0.4, color: GRIS_CLARO });
     y -= alto;
-    pag.drawLine({ start: { x: MARGEN, y: y + 6 }, end: { x: derecha, y: y + 6 }, thickness: 0.4, color: GRIS_CLARO });
   }
 
   // ----- Totales -----
@@ -255,7 +258,8 @@ export async function crearPdfFactura(f: DatosFacturaPdf, emisor: DatosEmisor, r
   // ----- Pago y texto legal (pie de la última página) -----
   let yp = 110;
   const pie: string[] = [];
-  if (emisor.iban) pie.push(`Forma de pago: transferencia bancaria a ${emisor.iban.replace(/(.{4})/g, "$1 ").trim()}${f.fecha_vencimiento ? `, antes del ${fechaPdf(f.fecha_vencimiento)}` : ""}.`);
+  // En una factura anulada no se indica forma de pago.
+  if (emisor.iban && f.estado !== "cancelada") pie.push(`Forma de pago: transferencia bancaria a ${emisor.iban.replace(/(.{4})/g, "$1 ").trim()}${f.fecha_vencimiento ? `, antes del ${fechaPdf(f.fecha_vencimiento)}` : ""}.`);
   if (emisor.texto_legal) pie.push(emisor.texto_legal);
   if (pie.length) {
     pag.drawLine({ start: { x: MARGEN, y: yp + 16 }, end: { x: derecha, y: yp + 16 }, thickness: 0.5, color: GRIS_CLARO });

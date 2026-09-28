@@ -232,7 +232,8 @@ function Documentos() {
           </div>
           {docs.length ? (
             <p className="mt-2 text-xs text-ink3">
-              {docs.length} documento{docs.length === 1 ? "" : "s"} · {formatTamano(total)} · Arrastra archivos sobre la lista para subirlos.
+              {docs.length} documento{docs.length === 1 ? "" : "s"} · {formatTamano(total)}
+              <span className="hidden md:inline"> · Arrastra archivos sobre la lista para subirlos.</span>
             </p>
           ) : null}
         </ZonaSoltar>
