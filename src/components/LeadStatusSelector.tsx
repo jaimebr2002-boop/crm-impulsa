@@ -14,7 +14,7 @@ export function LeadStatusSelector({
 
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-ink2">Estado</span>
+      <span className="field-label">Estado</span>
       <select
         value={value}
         disabled={guardando}
@@ -26,8 +26,10 @@ export function LeadStatusSelector({
             setGuardando(false);
           }
         }}
-        className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base font-medium text-ink disabled:opacity-60"
+        className="input font-medium"
       >
+        {/* Estado antiguo sin equivalente (p. ej. "En negociación"): se muestra tal cual. */}
+        {!(ESTADOS as readonly string[]).includes(value) ? <option value={value}>{value}</option> : null}
         {ESTADOS.map((estado) => (
           <option key={estado} value={estado}>
             {ESTADO_LABEL[estado]}

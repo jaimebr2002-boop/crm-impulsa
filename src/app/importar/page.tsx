@@ -1,5 +1,7 @@
 "use client";
 
+import { VentasNav } from "@/components/VentasNav";
+import { Cabecera } from "@/components/ui/Cabecera";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -77,7 +79,7 @@ export default function ImportarPage() {
     try {
       // La comprobación de duplicados se hace contra los leads que el usuario
       // puede ver: RLS ya limita esto a "los suyos" si es comercial.
-      const existentes = await listarLeads();
+      const existentes = await listarLeads({ incluirArchivados: true });
       final = marcarDuplicados(parseado, existentes);
     } catch {
       // Si falla la comprobación de duplicados no se bloquea la importación,
@@ -217,17 +219,37 @@ export default function ImportarPage() {
   const columnasDetectadas = filas ? camposDetectados(filas) : [];
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
-      <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-ink3">
-        ← Volver
-      </button>
+    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-8">
+      <Cabecera titulo="Ventas" />
+      <VentasNav />
+      <div className="max-w-3xl">
+      {/* Pasos: archivo → revisión (validación y duplicados) → resultado */}
+      <ol className="mb-5 flex items-center gap-2 text-xs text-ink3" aria-label="Pasos de la importación">
+        {["Archivo", "Revisión", "Resultado"].map((paso, i) => {
+          const actual = resultado ? 2 : filas ? 1 : 0;
+          return (
+            <li key={paso} className="flex items-center gap-2">
+              {i > 0 ? <span aria-hidden className="h-px w-6 bg-line" /> : null}
+              <span
+                aria-current={i === actual ? "step" : undefined}
+                className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  i < actual ? "bg-emerald-500 text-white" : i === actual ? "bg-ink text-canvas" : "bg-mute text-ink3"
+                }`}
+              >
+                {i < actual ? "✓" : i + 1}
+              </span>
+              <span className={i === actual ? "font-medium text-ink" : ""}>{paso}</span>
+            </li>
+          );
+        })}
+      </ol>
 
       {resultado ? (
-        <div className="rounded-2xl border border-line bg-surface p-6 text-center">
+        <div className="rounded-xl border border-line bg-surface p-6 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
             <IconCheck className="h-6 w-6" />
           </div>
-          <h1 className="font-display text-xl font-bold text-ink">Importación completada</h1>
+          <h2 className="t-section text-base">Importación completada</h2>
           <p className="mt-1 text-sm text-ink2">Los leads importados ya están disponibles en el CRM.</p>
 
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -270,16 +292,16 @@ export default function ImportarPage() {
             </details>
           ) : null}
 
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-6 flex justify-center gap-2">
             <button
               onClick={empezarOtraImportacion}
-              className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2"
+              className="btn-ghost"
             >
               Importar otro archivo
             </button>
             <Link
               href="/leads"
-              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-center text-base font-semibold text-brand-ink"
+              className="btn-primary px-4"
             >
               Ver leads importados
             </Link>
@@ -287,25 +309,23 @@ export default function ImportarPage() {
         </div>
       ) : !filas ? (
         <>
-          <h1 className="mb-1 font-display text-2xl font-bold text-ink">Importar leads</h1>
+          <h2 className="t-section mb-1 text-base">Importar leads</h2>
           <p className="mb-5 text-sm text-ink2">
             No se inventa ningún dato: solo se guarda lo que traiga el archivo.
           </p>
 
-          <div className="mb-5 flex rounded-xl bg-mute p-1">
+          <div className="mb-5 inline-flex rounded-lg border border-line bg-surface p-0.5 text-sm">
             <button
               onClick={() => cambiarModo("csv")}
-              className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-                modo === "csv" ? "bg-surface text-ink shadow-card" : "text-ink2"
-              }`}
+              aria-pressed={modo === "csv"}
+              className={`rounded-md px-2.5 py-1 font-medium ${modo === "csv" ? "bg-mute text-ink" : "text-ink3 hover:text-ink"}`}
             >
               CSV / TSV
             </button>
             <button
               onClick={() => cambiarModo("html")}
-              className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-                modo === "html" ? "bg-surface text-ink shadow-card" : "text-ink2"
-              }`}
+              aria-pressed={modo === "html"}
+              className={`rounded-md px-2.5 py-1 font-medium ${modo === "html" ? "bg-mute text-ink" : "text-ink3 hover:text-ink"}`}
             >
               Archivo HTML
             </button>
@@ -314,8 +334,8 @@ export default function ImportarPage() {
           {modo === "csv" ? (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-medium text-ink2">Datos a importar</span>
-                <button onClick={() => inputArchivoCsv.current?.click()} className="text-xs font-semibold text-brand-dark">
+                <span className="field-label mb-0">Pega los datos o sube un archivo</span>
+                <button onClick={() => inputArchivoCsv.current?.click()} className="btn-secondary py-1 text-xs">
                   Subir archivo CSV/TSV
                 </button>
                 <input ref={inputArchivoCsv} type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={cargarArchivoCsv} />
@@ -333,12 +353,12 @@ export default function ImportarPage() {
                 vacías.
               </p>
 
-              {error ? <p className="mt-3 text-sm font-medium text-red-600">{error}</p> : null}
+              {error ? <p className="field-error mt-3">{error}</p> : null}
 
               <button
                 onClick={previsualizarCsv}
                 disabled={!texto.trim() || preparando}
-                className="mt-5 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-50"
+                className="btn-primary mt-4 px-4"
               >
                 {preparando ? "Analizando…" : "Previsualizar"}
               </button>
@@ -348,10 +368,10 @@ export default function ImportarPage() {
               <button
                 onClick={() => inputArchivoHtml.current?.click()}
                 disabled={preparando}
-                className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-surface px-6 py-10 text-center disabled:opacity-60"
+                className="flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-surface px-6 py-10 text-center hover:bg-mute/40 disabled:opacity-60"
               >
-                <IconImportar className="h-6 w-6 text-brand-dark" />
-                <span className="text-sm font-semibold text-brand-dark">
+                <IconImportar className="h-5 w-5 text-ink3" />
+                <span className="text-sm font-medium text-ink">
                   {preparando ? "Analizando…" : nombreArchivoHtml ? nombreArchivoHtml : "Seleccionar archivo HTML"}
                 </span>
                 <span className="text-xs text-ink3">Exportación de una herramienta anterior (.html)</span>
@@ -363,15 +383,15 @@ export default function ImportarPage() {
                 ciudad, nicho).
               </p>
 
-              {error ? <p className="mt-3 text-sm font-medium text-red-600">{error}</p> : null}
+              {error ? <p className="field-error mt-3">{error}</p> : null}
             </>
           )}
         </>
       ) : (
         <>
-          <h1 className="mb-1 font-display text-2xl font-bold text-ink">
+          <h2 className="t-section mb-1 text-base">
             Se {validas.length === 1 ? "ha" : "han"} encontrado {filas.length} lead{filas.length === 1 ? "" : "s"}
-          </h1>
+          </h2>
           {columnasDetectadas.length > 0 ? (
             <p className="mb-4 text-xs text-ink3">
               Columnas reconocidas: {columnasDetectadas.map((c) => ETIQUETA_CAMPO[c] ?? c).join(", ")}
@@ -379,16 +399,16 @@ export default function ImportarPage() {
           ) : null}
 
           <div className="mb-4 grid grid-cols-3 gap-2">
-            <div className="rounded-2xl border border-line bg-surface p-3 text-center">
-              <p className="font-display text-2xl font-bold text-ink">{validas.length}</p>
+            <div className="rounded-xl border border-line bg-surface p-3 text-center">
+              <p className="t-kpi">{validas.length}</p>
               <p className="text-[11px] text-ink2">Válidos</p>
             </div>
-            <div className="rounded-2xl border border-line bg-surface p-3 text-center">
-              <p className={`text-2xl font-semibold ${invalidas > 0 ? "text-amber-600" : "text-ink"}`}>{invalidas}</p>
+            <div className="rounded-xl border border-line bg-surface p-3 text-center">
+              <p className={`text-2xl font-semibold ${invalidas > 0 ? "text-amber-700 dark:text-amber-400" : "text-ink"}`}>{invalidas}</p>
               <p className="text-[11px] text-ink2">Con errores</p>
             </div>
-            <div className="rounded-2xl border border-line bg-surface p-3 text-center">
-              <p className={`text-2xl font-semibold ${duplicadosEnValidas > 0 ? "text-amber-600" : "text-ink"}`}>
+            <div className="rounded-xl border border-line bg-surface p-3 text-center">
+              <p className={`text-2xl font-semibold ${duplicadosEnValidas > 0 ? "text-amber-700 dark:text-amber-400" : "text-ink"}`}>
                 {duplicadosEnValidas}
               </p>
               <p className="text-[11px] text-ink2">Posibles duplicados</p>
@@ -397,7 +417,7 @@ export default function ImportarPage() {
 
           {esAdmin ? (
             <label className="mb-3 block">
-              <span className="mb-1 block text-xs font-medium text-ink2">Asignar los leads importados a</span>
+              <span className="field-label">Asignar los leads importados a</span>
               <select value={asignadoA} onChange={(e) => setAsignadoA(e.target.value)} className="input">
                 <option value="">Sin asignar</option>
                 {usuarios.map((u) => (
@@ -412,7 +432,7 @@ export default function ImportarPage() {
           )}
 
           <label className="mb-4 block">
-            <span className="mb-1 block text-xs font-medium text-ink2">
+            <span className="field-label">
               Origen para las filas que no traen origen propio
             </span>
             <select value={origenPorDefecto} onChange={(e) => setOrigenPorDefecto(e.target.value)} className="input">
@@ -443,7 +463,7 @@ export default function ImportarPage() {
             </label>
           ) : null}
 
-          <div className="max-h-96 overflow-auto rounded-2xl border border-line bg-surface">
+          <div className="max-h-96 overflow-auto rounded-xl border border-line bg-surface">
             <table className="w-full text-left text-xs">
               <thead className="sticky top-0 bg-canvas text-ink2">
                 <tr>
@@ -470,7 +490,7 @@ export default function ImportarPage() {
                     <td className="max-w-[8rem] truncate px-3 py-2">
                       {f.negocio || "—"}
                       {f.posibleDuplicado ? (
-                        <span className="ml-1.5 rounded-full bg-orange-100 px-1.5 py-0.5 text-[9px] font-semibold text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
+                        <span className="ml-1.5 chip border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                           duplicado
                         </span>
                       ) : null}
@@ -486,25 +506,21 @@ export default function ImportarPage() {
             </table>
           </div>
 
-          {error ? <p className="mt-3 text-sm font-medium text-red-600">{error}</p> : null}
+          {error ? <p className="field-error mt-3">{error}</p> : null}
           {importando ? (
             <p className="mt-3 text-sm text-ink2">
               Importando {progreso}/{omitirDuplicados ? validas.length - duplicadosEnValidas : validas.length}…
             </p>
           ) : null}
 
-          <div className="mt-5 flex gap-3">
-            <button
-              onClick={() => setFilas(null)}
-              disabled={importando}
-              className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2 disabled:opacity-50"
-            >
+          <div className="mt-5 flex justify-end gap-2">
+            <button onClick={() => setFilas(null)} disabled={importando} className="btn-ghost">
               Cancelar
             </button>
             <button
               onClick={confirmarImportacion}
               disabled={importando || validas.length === 0}
-              className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-50"
+              className="btn-primary px-4"
             >
               {importando
                 ? "Importando…"
@@ -513,6 +529,7 @@ export default function ImportarPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

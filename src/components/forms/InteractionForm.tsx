@@ -69,7 +69,7 @@ export function InteractionForm({
       {variante === "llamada" ? (
         <>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Canal</span>
+            <span className="field-label">Canal</span>
             <select value={canal} onChange={(e) => setCanal(e.target.value)} className="input">
               {CANALES.map((c) => (
                 <option key={c} value={c}>
@@ -87,10 +87,9 @@ export function InteractionForm({
                   key={r}
                   type="button"
                   onClick={() => setResultado(r)}
-                  className={`rounded-full border px-3 py-2 text-sm font-medium ${
-                    resultado === r
-                      ? "border-brand bg-brand-light text-brand-dark"
-                      : "border-line text-ink2"
+                  aria-pressed={resultado === r}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                    resultado === r ? "border-ink bg-ink text-canvas" : "border-line text-ink2 hover:bg-mute"
                   }`}
                 >
                   {r}
@@ -102,7 +101,7 @@ export function InteractionForm({
       ) : null}
 
       <label className="block">
-        <span className="mb-1 block text-xs font-medium text-ink2">
+        <span className="field-label">
           Nota {variante === "llamada" ? "(opcional)" : ""}
         </span>
         <textarea
@@ -121,13 +120,13 @@ export function InteractionForm({
       </label>
 
       {crearSeguimiento ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-line p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Título</span>
+            <span className="field-label">Título</span>
             <input value={tituloSeguimiento} onChange={(e) => setTituloSeguimiento(e.target.value)} className="input" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Fecha y hora</span>
+            <span className="field-label">Fecha y hora</span>
             <input
               type="datetime-local"
               value={fechaSeguimiento}
@@ -138,15 +137,15 @@ export function InteractionForm({
         </div>
       ) : null}
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
-      <div className="mt-1 flex gap-3">
+      <div className="flex justify-end gap-2">
         {onCancelar ? (
-          <button type="button" onClick={onCancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+          <button type="button" onClick={onCancelar} className="btn-ghost">
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="btn-primary px-4">
           {enviando ? "Guardando…" : variante === "llamada" ? "Registrar llamada" : "Guardar nota"}
         </button>
       </div>

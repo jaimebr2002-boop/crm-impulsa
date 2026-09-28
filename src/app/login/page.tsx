@@ -29,7 +29,7 @@ export default function LoginPage() {
         setError(MENSAJES_ERROR[err.message] ?? "No se ha podido iniciar sesión. Inténtalo de nuevo.");
         return;
       }
-      router.replace("/hoy");
+      router.replace("/inicio");
       router.refresh();
     } finally {
       setEnviando(false);
@@ -48,9 +48,9 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-ink2">Accede a tu panel de Impulsa Studio</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-strong flex flex-col gap-4 rounded-2xl p-6 shadow-glass dark:shadow-glass-dark">
+        <form onSubmit={handleSubmit} className="glass-strong flex flex-col gap-4 rounded-xl p-6 shadow-lg">
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Email</span>
+            <span className="field-label">Email</span>
             <input
               type="email"
               autoComplete="email"
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-ink2">Contraseña</span>
+            <span className="field-label">Contraseña</span>
             <input
               type="password"
               autoComplete="current-password"
@@ -76,12 +76,12 @@ export default function LoginPage() {
             />
           </label>
 
-          {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+          {error ? <p className="field-error">{error}</p> : null}
 
           <button
             type="submit"
             disabled={enviando}
-            className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink shadow-lg shadow-brand/30 disabled:opacity-60"
+            className="btn-primary mt-2 w-full py-2.5"
           >
             {enviando ? "Entrando…" : "Iniciar sesión"}
           </button>

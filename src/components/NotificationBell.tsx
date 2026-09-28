@@ -17,7 +17,7 @@ export function NotificationBell({
   onAbrir?: (id: string) => void;
   onMarcarLeida: (id: string) => void;
   onMarcarTodas: () => void;
-  /** El dock de escritorio vive al fondo de la pantalla: el panel debe abrirse hacia arriba para no salirse del viewport. */
+  /** En el pie de la sidebar el panel se abre hacia arriba y a la derecha para no salirse del viewport. */
   abrirHaciaArriba?: boolean;
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -46,7 +46,7 @@ export function NotificationBell({
         type="button"
         onClick={() => setAbierto((v) => !v)}
         aria-label="Notificaciones"
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-ink2 transition-colors hover:text-brand-dark"
+        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-ink2 transition-colors hover:bg-mute hover:text-ink"
       >
         <IconCampana className="h-4 w-4" />
         {total > 0 ? (
@@ -58,8 +58,8 @@ export function NotificationBell({
 
       {abierto ? (
         <div
-          className={`absolute right-0 z-30 max-h-[70dvh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-line bg-surface p-2 shadow-glass dark:shadow-glass-dark ${
-            abrirHaciaArriba ? "bottom-14" : "top-11"
+          className={`absolute z-50 max-h-[70dvh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-line bg-surface p-2 shadow-lg ${
+            abrirHaciaArriba ? "bottom-11 left-0" : "right-0 top-11"
           }`}
         >
           <div className="flex items-center justify-between px-2 py-1.5">
@@ -82,7 +82,7 @@ export function NotificationBell({
               {eventos.map((ev) => (
                 <Link
                   key={ev.id}
-                  href={ev.lead?.id ? `/leads/${ev.lead.id}` : "/hoy"}
+                  href={ev.lead?.id ? `/leads/${ev.lead.id}` : "/calendario"}
                   onClick={() => {
                     onMarcarLeida(ev.id);
                     onAbrir?.(ev.id);
@@ -90,7 +90,7 @@ export function NotificationBell({
                   }}
                   className="rounded-xl px-2 py-2 text-sm hover:bg-mute"
                 >
-                  <p className="font-medium text-ink">{ev.lead?.negocio || ev.lead?.nombre_contacto || "Lead"}</p>
+                  <p className="font-medium text-ink">{ev.lead ? ev.lead.negocio || ev.lead.nombre_contacto || "Lead" : "Reunión / evento"}</p>
                   <p className="text-xs text-ink2">{ev.titulo}</p>
                   <p className="mt-0.5 text-xs font-semibold text-red-600">{formatFechaRelativa(ev.fecha_hora)}</p>
                 </Link>

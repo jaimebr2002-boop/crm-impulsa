@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUsuario } from "@/context/UsuarioContext";
-import { actualizarLead, obtenerLead } from "@/lib/data/leads";
+import { actualizarLead, eliminarLeads, obtenerLead } from "@/lib/data/leads";
 import { crearInteraccion, listarInteracciones, type InteraccionConUsuario } from "@/lib/data/interacciones";
 import { crearEvento, listarEventosPorLead, marcarEventoCompletado } from "@/lib/data/eventos";
 import { listarUsuarios } from "@/lib/data/usuarios";
 import type { Evento, Lead, Usuario } from "@/lib/types";
-import { CANAL_LABEL, ESTADO_LABEL, ESTADO_COLOR, ORIGEN_LABEL, SEGMENTO_LABEL, SEGMENTO_COLOR } from "@/lib/constants";
+import { CANAL_LABEL, ORIGEN_LABEL, SEGMENTO_LABEL, SEGMENTO_COLOR, formatEuros } from "@/lib/constants";
+import Link from "next/link";
+import { Panel } from "@/components/ui/Panel";
+import { EmptyState } from "@/components/EmptyState";
+import { EstadoLead } from "@/components/ventas/TablaLeads";
 import { telHref, whatsappHref, esTelefonoFijoEspanol } from "@/lib/phone";
 import { instagramHref } from "@/lib/instagram";
 import { LoadingState } from "@/components/LoadingState";
@@ -25,6 +29,7 @@ import { InteractionForm } from "@/components/forms/InteractionForm";
 import { EventForm } from "@/components/forms/EventForm";
 import { LeadForm, type LeadFormValores } from "@/components/forms/LeadForm";
 import { IconTelefono, IconWhatsapp } from "@/components/Icons";
+import { ConvertirLead } from "@/components/trabajo/ConvertirLead";
 
 export default function LeadDetallePage() {
   const params = useParams<{ id: string }>();
@@ -38,7 +43,9 @@ export default function LeadDetallePage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [modal, setModal] = useState<"llamada" | "nota" | "evento" | "editar" | null>(null);
+  const [modal, setModal] = useState<"llamada" | "nota" | "evento" | "editar" | "eliminar" | null>(null);
+  const [procesando, setProcesando] = useState(false);
+  const [errorAccion, setErrorAccion] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     if (!params.id) return;
@@ -66,8 +73,8 @@ export default function LeadDetallePage() {
     cargar();
   }, [cargar]);
 
-  if (cargando) return <LoadingState texto="Cargando lead…" />;
-  if (error) return <div className="p-6"><ErrorState mensaje={error} onReintentar={cargar} /></div>;
+  if (cargando) return <LoadingState />;
+  if (error) return <div className="mx-auto max-w-3xl p-6"><ErrorState mensaje="No se ha podido cargar el lead." onReintentar={cargar} /></div>;
   if (!lead) return <div className="p-6"><ErrorState mensaje="Este lead no existe o ha sido eliminado." /></div>;
 
   const asignado = usuarios.find((u) => u.id === lead.asignado_a) ?? null;
@@ -87,6 +94,33 @@ export default function LeadDetallePage() {
     const actualizado = await actualizarLead(lead!.id, valores);
     setLead(actualizado);
     setModal(null);
+  }
+
+  async function cambiarArchivado(archivado: boolean) {
+    setProcesando(true);
+    setErrorAccion(null);
+    try {
+      const actualizado = await actualizarLead(lead!.id, { archivado });
+      setLead(actualizado);
+    } catch (err) {
+      setErrorAccion(err instanceof Error ? err.message : "No se ha podido actualizar el lead.");
+    } finally {
+      setProcesando(false);
+    }
+  }
+
+  async function eliminar() {
+    setProcesando(true);
+    setErrorAccion(null);
+    try {
+      const borrados = await eliminarLeads([lead!.id]);
+      if (borrados === 0) throw new Error("No tienes permiso para eliminar este lead.");
+      router.replace("/leads");
+    } catch (err) {
+      setErrorAccion(err instanceof Error ? err.message : "No se ha podido eliminar el lead.");
+      setProcesando(false);
+      setModal(null);
+    }
   }
 
   async function toggleEvento(id: string, completada: boolean) {
@@ -130,146 +164,189 @@ export default function LeadDetallePage() {
 
   const eventosOrdenados = [...eventos].sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime());
 
-  return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
-      <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-ink3">
-        ← Volver
-      </button>
+  const nombre = lead.negocio || lead.nombre_contacto || "Sin negocio";
+  const pendientes = eventosOrdenados.filter((e) => !e.completada);
+  const hechos = eventosOrdenados.filter((e) => e.completada);
 
-      {/* Cabecera */}
-      <div className="mb-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar nombre={lead.negocio || lead.nombre_contacto || "?"} size="lg" />
-            <div className="min-w-0">
-              <h1 className="truncate font-display text-2xl font-bold text-ink">{lead.negocio || "Sin negocio"}</h1>
-              <p className="mt-0.5 truncate text-base text-ink2">{lead.nombre_contacto || "Sin contacto"}</p>
-            </div>
+  return (
+    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-8">
+      <nav aria-label="Migas" className="mb-3 flex items-center gap-1.5 text-sm text-ink3">
+        <Link href="/leads" className="hover:text-ink">
+          Ventas
+        </Link>
+        <span aria-hidden>/</span>
+        <span className="truncate text-ink2">{nombre}</span>
+      </nav>
+
+      {/* Cabecera: quién es, en qué estado está, cuánto vale y cómo contactar */}
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar nombre={nombre} size="lg" />
+          <div className="min-w-0">
+            <h1 className="t-page truncate">{nombre}</h1>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink2">
+              {lead.negocio && lead.nombre_contacto ? <span>{lead.nombre_contacto}</span> : null}
+              <EstadoLead estado={lead.estado} />
+              {lead.valor != null ? <span className="font-medium tabular-nums text-ink">{formatEuros(lead.valor)}</span> : null}
+              {asignado ? <span className="text-ink3">· {asignado.nombre}</span> : null}
+            </p>
           </div>
-          <span className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${ESTADO_COLOR[lead.estado] ?? ""}`}>
-            {ESTADO_LABEL[lead.estado] ?? lead.estado}
-          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {lead.telefono ? (
+            <a href={telHref(lead.telefono)} className="btn-secondary" aria-label={`Llamar a ${lead.telefono}`}>
+              <IconTelefono className="h-4 w-4" />
+              Llamar
+            </a>
+          ) : null}
+          {lead.telefono && !esFijo ? (
+            <a href={whatsappHref(lead.telefono)} target="_blank" rel="noreferrer" className="btn-secondary">
+              <IconWhatsapp className="h-4 w-4" />
+              WhatsApp
+            </a>
+          ) : null}
+          {lead.email ? (
+            <a href={`mailto:${lead.email}`} className="btn-secondary">
+              Email
+            </a>
+          ) : null}
+          <button onClick={() => setModal("llamada")} className="btn-primary">
+            Registrar llamada
+          </button>
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        <LeadStatusSelector value={lead.estado} onChange={cambiarEstado} />
-        {esAdmin ? (
-          <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
-        ) : (
-          <div>
-            <span className="mb-1 block text-xs font-medium text-ink2">Responsable</span>
-            <div className="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-3 text-base font-medium text-ink2">
-              {asignado?.nombre ?? "Sin asignar"}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mb-5">
-        <ReferralBanner referidoPor={lead.referido_por} />
-      </div>
-
-      {/* Teléfono */}
-      {lead.telefono ? (
-        <div className="mb-5 rounded-2xl border border-line bg-surface p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-base font-medium text-ink">{lead.telefono}</p>
-              <div className="mt-1"><PhoneIndicator telefono={lead.telefono} /></div>
-            </div>
-            <div className="flex gap-2">
-              <a href={telHref(lead.telefono)} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-brand-ink">
-                <IconTelefono className="h-5 w-5" />
-              </a>
-              {!esFijo ? (
-                <a
-                  href={whatsappHref(lead.telefono)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white"
-                >
-                  <IconWhatsapp className="h-5 w-5" />
-                </a>
-              ) : null}
-            </div>
-          </div>
+      {lead.archivado ? (
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <span className="font-medium">Lead archivado · no aparece en listas ni en el pipeline.</span>
+          <button onClick={() => cambiarArchivado(false)} disabled={procesando} className="shrink-0 font-semibold underline disabled:opacity-60">
+            Restaurar
+          </button>
         </div>
       ) : null}
 
-      {/* Acciones rápidas */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
-        <button onClick={() => setModal("llamada")} className="rounded-2xl bg-brand-gradient py-4 text-sm font-semibold text-brand-ink">
-          Registrar llamada
-        </button>
-        <button onClick={() => setModal("nota")} className="rounded-2xl border border-line bg-surface py-4 text-sm font-semibold text-ink">
-          + Añadir nota
-        </button>
-        <button onClick={() => setModal("evento")} className="col-span-2 rounded-2xl border border-line bg-surface py-4 text-sm font-semibold text-ink">
-          + Crear seguimiento
-        </button>
+      {/* Móvil (uso durante una llamada): estado → seguimientos → historial → datos.
+          Escritorio: columna principal + lateral con estado y datos. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px] lg:grid-rows-[auto_1fr]">
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-line bg-surface p-4 lg:col-start-2 lg:row-start-1 lg:grid-cols-1">
+          <LeadStatusSelector value={lead.estado} onChange={cambiarEstado} />
+          {esAdmin ? (
+            <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
+          ) : (
+            <div>
+              <span className="field-label">Responsable</span>
+              <p className="text-sm font-medium text-ink">{asignado?.nombre ?? "Sin asignar"}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          {esAdmin ? <ConvertirLead lead={lead} /> : null}
+          <ReferralBanner referidoPor={lead.referido_por} />
+
+          <Panel titulo="Seguimientos" contador={pendientes.length} accion={{ texto: "Nuevo", onClick: () => setModal("evento") }}>
+            {eventosOrdenados.length === 0 ? (
+              <EmptyState
+                compacto
+                titulo="Sin seguimientos programados"
+                accion={
+                  <button onClick={() => setModal("evento")} className="btn-secondary">
+                    Programar seguimiento
+                  </button>
+                }
+              />
+            ) : (
+              <div className="divide-y divide-line">
+                {[...pendientes, ...hechos].map((ev) => (
+                  <EventCard key={ev.id} evento={ev} onToggleCompletada={toggleEvento} />
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          <Panel titulo="Historial" contador={interacciones.length} accion={{ texto: "Añadir nota", onClick: () => setModal("nota") }}>
+            <div className="px-4 py-1">
+              <InteractionTimeline interacciones={interacciones} />
+            </div>
+          </Panel>
+        </div>
+
+        {/* Propiedades */}
+        <aside className="flex flex-col gap-4 lg:col-start-2 lg:row-start-2">
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="t-eyebrow">Datos</h2>
+              <button onClick={() => setModal("editar")} className="btn-ghost -my-1 px-2 py-1 text-xs">
+                Editar
+              </button>
+            </div>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm lg:grid-cols-1">
+              <Campo label="Teléfono" valor={lead.telefono ? <span className="inline-flex items-center gap-1.5">{lead.telefono} <PhoneIndicator telefono={lead.telefono} /></span> : null} />
+              <Campo label="Email" valor={lead.email} />
+              <Campo label={lead.estado === "cerrado" ? "Valor ganado" : "Valor estimado"} valor={lead.valor != null ? formatEuros(lead.valor) : null} />
+              <Campo label="Nicho" valor={lead.nicho} />
+              <Campo label="Ciudad" valor={lead.ciudad} />
+              <Campo label="Canal" valor={lead.canal ? CANAL_LABEL[lead.canal] ?? lead.canal : null} />
+              <Campo label="Origen" valor={lead.origen ? ORIGEN_LABEL[lead.origen] ?? lead.origen : null} />
+              <Campo
+                label="Segmento"
+                valor={lead.segmento ? <span className={`chip ${SEGMENTO_COLOR[lead.segmento] ?? ""}`}>{SEGMENTO_LABEL[lead.segmento] ?? lead.segmento}</span> : null}
+              />
+              <Campo
+                label="Instagram"
+                valor={
+                  lead.instagram ? (
+                    <a href={instagramHref(lead.instagram)} target="_blank" rel="noreferrer" className="text-ink underline decoration-line underline-offset-2 hover:decoration-ink">
+                      {lead.instagram}
+                    </a>
+                  ) : null
+                }
+              />
+              <Campo label="Oferta" valor={lead.oferta} />
+              <Campo
+                label="Demo"
+                valor={
+                  lead.enlace_demo ? (
+                    <a href={lead.enlace_demo} target="_blank" rel="noreferrer" className="break-all text-ink underline decoration-line underline-offset-2">
+                      {lead.enlace_demo}
+                    </a>
+                  ) : null
+                }
+              />
+            </dl>
+          </div>
+          <div className="flex flex-wrap gap-2 px-1">
+            {errorAccion ? <p className="field-error w-full">{errorAccion}</p> : null}
+            {!lead.archivado ? (
+              <button onClick={() => cambiarArchivado(true)} disabled={procesando} className="btn-ghost">
+                Archivar
+              </button>
+            ) : null}
+            {esAdmin ? (
+              <button onClick={() => setModal("eliminar")} disabled={procesando} className="btn-ghost text-red-600 dark:text-red-400">
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+        </aside>
       </div>
 
-      {/* Información */}
-      <section className="mb-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-ink">Información</h2>
-          <button onClick={() => setModal("editar")} className="text-sm font-medium text-brand-dark">
-            Editar
-          </button>
-        </div>
-        <dl className="grid grid-cols-2 gap-3 rounded-2xl border border-line bg-surface p-4 text-sm">
-          <Campo label="Nicho" valor={lead.nicho} />
-          <Campo label="Ciudad" valor={lead.ciudad} />
-          <Campo label="Canal" valor={lead.canal ? CANAL_LABEL[lead.canal] ?? lead.canal : null} />
-          <Campo
-            label="Instagram"
-            valor={
-              lead.instagram ? (
-                <a href={instagramHref(lead.instagram)} target="_blank" rel="noreferrer" className="text-brand-dark">
-                  {lead.instagram}
-                </a>
-              ) : null
-            }
-          />
-          <Campo label="Origen" valor={lead.origen ? ORIGEN_LABEL[lead.origen] ?? lead.origen : null} />
-          <Campo
-            label="Segmento"
-            valor={
-              lead.segmento ? (
-                <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${SEGMENTO_COLOR[lead.segmento] ?? ""}`}>
-                  {SEGMENTO_LABEL[lead.segmento] ?? lead.segmento}
-                </span>
-              ) : null
-            }
-          />
-          <Campo label="Oferta" valor={lead.oferta} />
-          <Campo label="Email" valor={lead.email} />
-          <Campo label="Demo" valor={lead.enlace_demo} />
-        </dl>
-      </section>
-
-      {/* Seguimientos */}
-      <section className="mb-6">
-        <h2 className="mb-3 text-base font-semibold text-ink">Seguimientos</h2>
-        {eventosOrdenados.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-line bg-surface p-4 text-center text-sm text-ink3">
-            Sin seguimientos programados.
+      {modal === "eliminar" ? (
+        <Modal titulo="Eliminar lead" onClose={() => setModal(null)}>
+          <p className="text-sm text-ink2">
+            Se borrará <strong className="text-ink">{lead.negocio || lead.nombre_contacto || "este lead"}</strong> junto con todo su
+            historial y seguimientos. No se puede deshacer. Si solo quieres quitarlo de en medio, archívalo.
           </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {eventosOrdenados.map((ev) => (
-              <EventCard key={ev.id} evento={ev} onToggleCompletada={toggleEvento} />
-            ))}
+          <div className="mt-5 flex justify-end gap-2">
+            <button onClick={() => setModal(null)} className="btn-ghost">
+              Cancelar
+            </button>
+            <button onClick={eliminar} disabled={procesando} className="btn-danger">
+              {procesando ? "Eliminando…" : "Eliminar"}
+            </button>
           </div>
-        )}
-      </section>
-
-      {/* Historial */}
-      <section>
-        <h2 className="mb-3 text-base font-semibold text-ink">Historial</h2>
-        <InteractionTimeline interacciones={interacciones} />
-      </section>
+        </Modal>
+      ) : null}
 
       {modal === "llamada" ? (
         <Modal titulo="Registrar llamada" onClose={() => setModal(null)}>
@@ -307,7 +384,7 @@ export default function LeadDetallePage() {
       ) : null}
 
       {modal === "editar" && usuarioActual ? (
-        <Modal titulo="Editar lead" onClose={() => setModal(null)}>
+        <Modal titulo="Editar lead" onClose={() => setModal(null)} ancho="max-w-lg">
           <LeadForm
             usuarios={usuarios}
             usuarioActualId={usuarioActual.id}

@@ -18,7 +18,7 @@ export function AssigneeSelector({
 
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-ink2">{label}</span>
+      <span className="field-label">{label}</span>
       <select
         value={value ?? ""}
         disabled={guardando}
@@ -30,7 +30,7 @@ export function AssigneeSelector({
             setGuardando(false);
           }
         }}
-        className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-base font-medium text-ink disabled:opacity-60"
+        className="input font-medium"
       >
         <option value="" disabled>
           Sin asignar

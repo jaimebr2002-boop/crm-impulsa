@@ -55,6 +55,16 @@ body {
   height: 100%;
 }
 
+/* Foco visible y consistente para teclado (no aparece al hacer clic). */
+:focus-visible {
+  outline: 2px solid #aaff00;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.input:focus-visible {
+  outline: none;
+}
+
 body {
   color: rgb(var(--ink));
   background-color: rgb(var(--canvas));
@@ -68,25 +78,80 @@ textarea {
 }
 
 @layer components {
+  /* Campos: misma altura (40 px), borde, foco y placeholder en toda la app.
+     16 px en móvil evita el zoom de iOS; 14 px en escritorio para densidad. */
   .input {
-    @apply w-full rounded-xl border border-line bg-surface px-3 py-3 text-base text-ink outline-none transition-colors focus:border-brand;
+    @apply block w-full rounded-lg border border-line bg-surface px-3 py-2 text-base text-ink outline-none transition-colors placeholder:text-ink3 focus:border-ink/40 focus:ring-2 focus:ring-brand/40 disabled:opacity-60 md:text-sm;
+    min-height: 2.5rem;
+  }
+  select.input {
+    @apply pr-8;
+  }
+  .field-label {
+    @apply mb-1 block text-xs font-medium text-ink2;
+  }
+  .field-help {
+    @apply mt-1 block text-xs text-ink3;
+  }
+  .field-error {
+    @apply text-sm font-medium text-red-600 dark:text-red-400;
+  }
+  /* Tipografía: jerarquía única. */
+  .t-page {
+    @apply font-display text-2xl font-bold tracking-tight text-ink;
+  }
+  .t-section {
+    @apply text-sm font-semibold text-ink;
+  }
+  .t-eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-wider text-ink3;
+  }
+  .t-kpi {
+    @apply font-display text-2xl font-bold tabular-nums tracking-tight text-ink;
   }
 
-  /* Superficie de cristal: usada en tarjetas destacadas (KPIs, sidebar,
-     login). El resto de la UI usa bg-surface plano para mantener jerarquía
-     visual entre fondo / contenedor / tarjeta / elemento destacado. */
+  /* Superficie de panel. Antes era un cristal translúcido con desenfoque; el
+     Company OS usa superficies planas con borde fino (más serio y más
+     rápido de pintar). El nombre se conserva para no tocar cada pantalla. */
   .glass {
-    background-color: rgb(var(--glass-surface) / var(--glass-alpha));
-    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
+    background-color: rgb(var(--surface));
+    border: 1px solid rgb(var(--line));
+  }
+
+  /* Cristal real, reservado a elementos flotantes sobre contenido
+     (barra inferior móvil, barras de acciones, tooltips). */
+  .glass-strong {
+    background-color: rgb(var(--glass-surface) / 0.88);
+    border: 1px solid rgb(var(--line));
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
   }
 
-  .glass-strong {
-    background-color: rgb(var(--glass-surface) / 0.85);
-    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
+  .skeleton {
+    @apply animate-pulse rounded-md bg-mute;
+  }
+
+  /* Botones y controles base del sistema. */
+  .btn {
+    @apply inline-flex min-h-[2.25rem] items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-brand-ink hover:bg-[#9BEF00];
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-surface text-ink hover:bg-mute;
+  }
+  .btn-ghost {
+    @apply btn text-ink2 hover:bg-mute hover:text-ink;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium leading-4;
+  }
+  .kbd {
+    @apply rounded border border-line bg-canvas px-1.5 py-px font-sans text-[10px] font-medium text-ink3;
   }
 
   /* Manchas ambientales fijas en las esquinas — decorativas, sin datos. */

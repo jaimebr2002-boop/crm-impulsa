@@ -31,7 +31,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       onClick={alternarTema}
       aria-label={esOscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-      className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-ink2 transition-colors hover:text-brand-dark ${className ?? ""}`}
+      className={`relative flex h-8 w-8 items-center justify-center rounded-lg text-ink2 transition-colors hover:bg-mute hover:text-ink ${className ?? ""}`}
     >
       {esOscuro ? <IconSol className="h-4 w-4" /> : <IconLuna className="h-4 w-4" />}
     </button>

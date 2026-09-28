@@ -6,7 +6,7 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={onChange}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? "bg-brand-gradient" : "bg-mute"}`}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? "bg-brand" : "bg-mute"}`}
     >
       <span
         className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${

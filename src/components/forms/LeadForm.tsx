@@ -37,6 +37,7 @@ const VACIO: LeadFormValores = {
   asignado_a: "",
   email: "",
   enlace_demo: "",
+  valor: null,
 };
 
 export function LeadForm({
@@ -158,6 +159,7 @@ export function LeadForm({
         <Campo label="Canal">
           <select value={valores.canal ?? ""} onChange={(e) => set("canal", e.target.value)} className="input">
             <option value="">Sin especificar</option>
+            <OpcionAntigua valor={valores.canal} validos={CANALES} />
             {CANALES.map((c) => (
               <option key={c} value={c}>
                 {CANAL_LABEL[c]}
@@ -168,6 +170,7 @@ export function LeadForm({
         <Campo label="Origen">
           <select value={valores.origen ?? ""} onChange={(e) => set("origen", e.target.value)} className="input">
             <option value="">Sin especificar</option>
+            <OpcionAntigua valor={valores.origen} validos={ORIGENES} />
             {ORIGENES.map((o) => (
               <option key={o} value={o}>
                 {ORIGEN_LABEL[o]}
@@ -187,6 +190,7 @@ export function LeadForm({
         <Campo label="Segmento">
           <select value={valores.segmento ?? ""} onChange={(e) => set("segmento", e.target.value)} className="input">
             <option value="">Sin especificar</option>
+            <OpcionAntigua valor={valores.segmento} validos={SEGMENTOS} />
             {SEGMENTOS.map((s) => (
               <option key={s} value={s}>
                 {SEGMENTO_LABEL[s]}
@@ -196,6 +200,7 @@ export function LeadForm({
         </Campo>
         <Campo label="Estado">
           <select value={valores.estado ?? "pendiente"} onChange={(e) => set("estado", e.target.value)} className="input">
+            <OpcionAntigua valor={valores.estado} validos={ESTADOS} />
             {ESTADOS.map((estado) => (
               <option key={estado} value={estado}>
                 {ESTADO_LABEL[estado]}
@@ -205,9 +210,23 @@ export function LeadForm({
         </Campo>
       </div>
 
-      <Campo label="Oferta">
-        <input value={valores.oferta ?? ""} onChange={(e) => set("oferta", e.target.value)} className="input" />
-      </Campo>
+      <div className="grid grid-cols-2 gap-3">
+        <Campo label="Oferta">
+          <input value={valores.oferta ?? ""} onChange={(e) => set("oferta", e.target.value)} className="input" />
+        </Campo>
+        <Campo label="Valor (€)" nota={valores.estado === "cerrado" ? "Importe ganado" : "Importe estimado"}>
+          <input
+            value={valores.valor ?? ""}
+            onChange={(e) => set("valor", e.target.value === "" ? null : Math.max(0, Number(e.target.value)))}
+            className="input"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="any"
+            placeholder="0"
+          />
+        </Campo>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Campo label="Email">
@@ -231,15 +250,15 @@ export function LeadForm({
         </Campo>
       ) : null}
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
 
-      <div className="mt-2 flex gap-3">
+      <div className="flex justify-end gap-2">
         {onCancelar ? (
-          <button type="button" onClick={cancelar} className="flex-1 rounded-xl border border-line py-3.5 text-base font-medium text-ink2">
+          <button type="button" onClick={cancelar} className="btn-ghost">
             Cancelar
           </button>
         ) : null}
-        <button type="submit" disabled={enviando} className="flex-1 rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60">
+        <button type="submit" disabled={enviando} className="btn-primary px-4">
           {enviando ? "Guardando…" : botonTexto}
         </button>
       </div>
@@ -250,9 +269,16 @@ export function LeadForm({
 function Campo({ label, nota, children }: { label: string; nota?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-ink2">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
       {nota ? <span className="mt-1 block text-[11px] text-ink3">{nota}</span> : null}
     </label>
   );
+}
+
+/** Valor guardado que no está entre las opciones (datos antiguos importados):
+ * se muestra tal cual para que el formulario no aparente otro valor. */
+function OpcionAntigua({ valor, validos }: { valor: string | null | undefined; validos: readonly string[] }) {
+  if (!valor || validos.includes(valor)) return null;
+  return <option value={valor}>{valor}</option>;
 }

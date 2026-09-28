@@ -182,3 +182,152 @@ export function IconUsuarios({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconInicio({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19v-8.5Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconProyectos({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V7.5Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconTareas({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+      <path d="m8.5 12 2.5 2.5 4.5-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconVentas({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconSeguimientos({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M5 4.5h14M5 9.5h9M5 14.5h6" strokeLinecap="round" />
+      <circle cx="17" cy="17" r="3.5" />
+      <path d="M17 15.5V17l1 1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconAjustes({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M4 7h10M18 7h2M4 17h2M10 17h10" strokeLinecap="round" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="8" cy="17" r="2" />
+    </svg>
+  );
+}
+
+export function IconPanelLateral({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="M9.5 4.5v15" />
+    </svg>
+  );
+}
+
+export function IconMenu({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconEnlace({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" strokeLinecap="round" />
+      <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconCuenta({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <rect x="4" y="7" width="16" height="13" rx="2" />
+      <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12.5h16" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconFlecha({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconPapelera({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M4.5 7h15M10 11v6M14 11v6M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5h6V7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconActividad({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M3.5 12h4l2.5-6 4 12 2.5-6h4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconFinanzas({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <rect x="3.5" y="6" width="17" height="12" rx="2" />
+      <path d="M3.5 10h17M7.5 14.5h3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconRecibo({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M6 3.5h12v17l-2.5-1.5-2 1.5-1.5-1.5-1.5 1.5-2-1.5L6 20.5z" strokeLinejoin="round" />
+      <path d="M9 8.5h6M9 12h6M9 15.5h3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconDocumento({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M13.5 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5z" strokeLinejoin="round" />
+      <path d="M13.5 3.5v5h5M9 13h6M9 16.5h4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconClip({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M20 11.5l-7.8 7.8a4.5 4.5 0 0 1-6.4-6.4l8.1-8.1a3 3 0 0 1 4.2 4.2l-8 8a1.5 1.5 0 0 1-2.1-2.1l7.3-7.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

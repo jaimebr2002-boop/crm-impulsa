@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Interaccion, Lead } from "@/lib/types";
+import { traerTodo } from "./paginar";
+import { conEstadoCanonico } from "@/lib/constants";
 
 export type FiltroAnalitica = {
   desdeIso: string;
@@ -30,50 +32,57 @@ export function llamadaContestada(i: Pick<Interaccion, "canal" | "resultado">): 
 }
 
 export async function obtenerLeadsPeriodo(filtro: FiltroAnalitica): Promise<Lead[]> {
-  let query = supabase
-    .from("leads")
-    .select("*")
-    .gte("created_at", filtro.desdeIso)
-    .lte("created_at", filtro.hastaIso);
-  if (filtro.usuarioId) query = query.eq("asignado_a", filtro.usuarioId);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  return (await traerTodo<Lead>((desde, hasta) => {
+    let query = supabase
+      .from("leads")
+      .select("*")
+      .gte("created_at", filtro.desdeIso)
+      .lte("created_at", filtro.hastaIso)
+      .order("id")
+      .range(desde, hasta);
+    if (filtro.usuarioId) query = query.eq("asignado_a", filtro.usuarioId);
+    return query;
+  })).map(conEstadoCanonico);
 }
 
 /** Snapshot actual del pipeline: todos los leads visibles (RLS ya limita a
  * un comercial a los suyos), sin filtrar por fecha de creación — un funnel
- * representa dónde está todo el mundo ahora, no quién entró en el periodo. */
+ * representa dónde está todo el mundo ahora, no quién entró en el periodo.
+ * Los leads archivados quedan fuera del pipeline. */
 export async function obtenerLeadsActuales(usuarioId?: string): Promise<Lead[]> {
-  let query = supabase.from("leads").select("*");
-  if (usuarioId) query = query.eq("asignado_a", usuarioId);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  return (await traerTodo<Lead>((desde, hasta) => {
+    let query = supabase.from("leads").select("*").eq("archivado", false).order("id").range(desde, hasta);
+    if (usuarioId) query = query.eq("asignado_a", usuarioId);
+    return query;
+  })).map(conEstadoCanonico);
 }
 
 export async function obtenerInteraccionesPeriodo(filtro: FiltroAnalitica): Promise<Interaccion[]> {
-  let query = supabase
-    .from("interacciones")
-    .select("*")
-    .gte("fecha", filtro.desdeIso)
-    .lte("fecha", filtro.hastaIso);
-  if (filtro.usuarioId) query = query.eq("usuario_id", filtro.usuarioId);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  return traerTodo<Interaccion>((desde, hasta) => {
+    let query = supabase
+      .from("interacciones")
+      .select("*")
+      .gte("fecha", filtro.desdeIso)
+      .lte("fecha", filtro.hastaIso)
+      .order("id")
+      .range(desde, hasta);
+    if (filtro.usuarioId) query = query.eq("usuario_id", filtro.usuarioId);
+    return query;
+  });
 }
 
 export async function obtenerEventosPeriodo(filtro: FiltroAnalitica): Promise<EventoAnalitica[]> {
-  let query = supabase
-    .from("eventos")
-    .select("id, lead_id, usuario_id, completada, created_at, fecha_hora")
-    .gte("created_at", filtro.desdeIso)
-    .lte("created_at", filtro.hastaIso);
-  if (filtro.usuarioId) query = query.eq("usuario_id", filtro.usuarioId);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  return traerTodo<EventoAnalitica>((desde, hasta) => {
+    let query = supabase
+      .from("eventos")
+      .select("id, lead_id, usuario_id, completada, created_at, fecha_hora")
+      .gte("created_at", filtro.desdeIso)
+      .lte("created_at", filtro.hastaIso)
+      .order("id")
+      .range(desde, hasta);
+    if (filtro.usuarioId) query = query.eq("usuario_id", filtro.usuarioId);
+    return query;
+  });
 }
 
 export function agruparPorDia<T>(filas: T[], obtenerFecha: (fila: T) => string, desde: Date, hasta: Date) {

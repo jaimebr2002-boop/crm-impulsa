@@ -1,14 +1,18 @@
+import { TONO_CHIP, TONO_LEAD, TONO_PUNTO } from "./tonos";
+import { formatDinero } from "./formato";
 import type { CanalContacto, EstadoLead, OrigenLead, SegmentoLead } from "./types";
 
+// Orden del pipeline. Los valores guardados no cambian ("cerrado",
+// "descartado"); solo su etiqueta visible pasa a Ganado / Perdido.
 export const ESTADOS: EstadoLead[] = [
   "pendiente",
   "contactado",
+  "no contesta",
   "respondido",
   "interesado",
   "reunión",
   "cerrado",
   "descartado",
-  "no contesta",
 ];
 
 export const ESTADO_LABEL: Record<string, string> = {
@@ -17,23 +21,59 @@ export const ESTADO_LABEL: Record<string, string> = {
   respondido: "Respondido",
   interesado: "Interesado",
   reunión: "Reunión",
-  cerrado: "Cerrado",
-  descartado: "Descartado",
+  cerrado: "Ganado",
+  descartado: "Perdido",
   "no contesta": "No contesta",
 };
 
-// Colores de acento discretos, no arcoíris. Cada estado tiene su propia
-// variante para modo oscuro (tinte translúcido en vez del pastel plano).
-export const ESTADO_COLOR: Record<string, string> = {
-  pendiente: "bg-mute text-ink border-line",
-  contactado: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30",
-  respondido: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30",
-  interesado: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
-  reunión: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/30",
-  cerrado: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30",
-  descartado: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30",
-  "no contesta": "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30",
-};
+// Datos antiguos (importados de hojas de cálculo) guardan el estado con otra
+// forma: "Contactado", "Cerrado"… Al leer se traduce al identificador del
+// pipeline si la equivalencia es inequívoca (mayúsculas, tildes o etiqueta
+// visible). Lo demás ("En negociación") se deja tal cual y se muestra aparte.
+// No cambia nada en la base de datos.
+const quitarTildes = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+const ESTADO_POR_TEXTO = new Map<string, string>(
+  ESTADOS.flatMap((e) => [
+    [quitarTildes(e), e],
+    [quitarTildes(ESTADO_LABEL[e] ?? e), e],
+  ])
+);
+// "Ganado" nunca se deduce de un texto antiguo: en producción los "Cerrado"
+// son "No tocar" y podrían ser perdidos. Se muestran tal cual hasta decidirlo.
+const NO_DEDUCIR = new Set(["cerrado"]);
+export function estadoCanonico(estado: string | null | undefined): string {
+  if (!estado) return "pendiente";
+  const canonico = ESTADO_POR_TEXTO.get(quitarTildes(estado));
+  if (!canonico || (canonico !== estado && NO_DEDUCIR.has(canonico))) return estado;
+  return canonico;
+}
+export function conEstadoCanonico<T extends { estado: string | null }>(lead: T): T {
+  const estado = estadoCanonico(lead.estado);
+  return estado === lead.estado ? lead : { ...lead, estado };
+}
+
+// Estilo de cada estado: derivado de la semántica común (lib/tonos.ts).
+export const ESTADO_COLOR: Record<string, string> = Object.fromEntries(
+  Object.entries(TONO_LEAD).map(([e, t]) => [e, TONO_CHIP[t]])
+);
+
+// Estados que siguen vivos en el pipeline: su valor cuenta como "en juego".
+export const ESTADOS_ABIERTOS = new Set(["pendiente", "contactado", "respondido", "interesado", "reunión", "no contesta"]);
+
+// Punto de color de cada columna del tablero Kanban.
+export const ESTADO_ACENTO: Record<string, string> = Object.fromEntries(
+  Object.entries(TONO_LEAD).map(([e, t]) => [e, TONO_PUNTO[t]])
+);
+
+/** Importe redondeado (valor de leads y proyectos): "4.000 €". Mismo formato que Finanzas. */
+export function formatEuros(valor: number | string | null | undefined): string {
+  return formatDinero(valor, false);
+}
+
+/** Suma el valor de una lista de leads, ignorando los que no lo tienen. */
+export function sumarValor(leads: { valor: number | string | null }[]): number {
+  return leads.reduce((total, l) => total + (Number(l.valor) || 0), 0);
+}
 
 export const ORIGENES: OrigenLead[] = ["pipeline_automatico", "referido_personal", "reactivacion_web"];
 
@@ -54,11 +94,11 @@ export const SEGMENTO_LABEL: Record<string, string> = {
 };
 
 export const SEGMENTO_COLOR: Record<string, string> = {
-  caliente: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30",
-  timing: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
-  frio: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30",
-  ghost: "bg-mute text-ink2 border-line",
-  off: "bg-mute text-ink3 border-line",
+  caliente: TONO_CHIP.atencion,
+  timing: TONO_CHIP.info,
+  frio: TONO_CHIP.neutro,
+  ghost: TONO_CHIP.inactivo,
+  off: TONO_CHIP.inactivo,
 };
 
 export const CANALES: CanalContacto[] = ["llamada", "whatsapp", "instagram", "email", "linkedin"];

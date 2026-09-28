@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { addDias, startOfDay, endOfDay } from "@/lib/dates";
+import { SELECT_TOOLBAR } from "../ui/CampoBusqueda";
 
 export type Periodo = { desde: Date; hasta: Date; etiqueta: string };
 
@@ -63,42 +64,23 @@ export function PeriodSelector({ onChange }: { onChange: (periodo: Periodo) => v
   }
 
   return (
-    <div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="flex flex-wrap items-center gap-2">
+      <select aria-label="Periodo" value={opcion} onChange={(e) => elegir(e.target.value as Opcion)} className={SELECT_TOOLBAR}>
         {OPCIONES.map((o) => (
-          <button
-            key={o}
-            onClick={() => elegir(o)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
-              opcion === o ? "bg-brand-gradient text-brand-ink shadow-md shadow-brand/25" : "border border-line bg-surface text-ink2 hover:text-ink"
-            }`}
-          >
-            {o}
-          </button>
+          <option key={o} value={o}>
+            {o === "7 días" ? "Últimos 7 días" : o === "30 días" ? "Últimos 30 días" : o}
+          </option>
         ))}
-      </div>
+      </select>
       {opcion === "Personalizado" ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <input
-            type="date"
-            value={personalDesde}
-            onChange={(e) => setPersonalDesde(e.target.value)}
-            className="input w-auto text-xs"
-          />
+        <>
+          <input type="date" aria-label="Desde" value={personalDesde} onChange={(e) => setPersonalDesde(e.target.value)} className={SELECT_TOOLBAR} />
           <span className="text-xs text-ink3">a</span>
-          <input
-            type="date"
-            value={personalHasta}
-            onChange={(e) => setPersonalHasta(e.target.value)}
-            className="input w-auto text-xs"
-          />
-          <button
-            onClick={aplicarPersonalizado}
-            className="rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-brand-ink"
-          >
+          <input type="date" aria-label="Hasta" value={personalHasta} onChange={(e) => setPersonalHasta(e.target.value)} className={SELECT_TOOLBAR} />
+          <button onClick={aplicarPersonalizado} disabled={!personalDesde || !personalHasta} className="btn-secondary">
             Aplicar
           </button>
-        </div>
+        </>
       ) : null}
     </div>
   );

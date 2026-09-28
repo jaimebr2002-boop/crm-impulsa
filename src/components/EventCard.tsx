@@ -6,6 +6,10 @@ import type { Evento, EventoConLead } from "@/lib/types";
 import { formatFechaRelativa } from "@/lib/dates";
 import { IconCheck } from "./Icons";
 
+/**
+ * Fila de seguimiento (mismo patrón que TareaFila): casilla redonda, título,
+ * cuándo (rojo si vencido), lead y responsable. Sin tarjetas grandes.
+ */
 export function EventCard({
   evento,
   mostrarLead = false,
@@ -29,55 +33,40 @@ export function EventCard({
     }
   }
 
-  const contenido = (
-    <div
-      className={`flex items-start gap-3 rounded-2xl border p-4 ${
-        evento.completada
-          ? "border-line bg-canvas"
-          : vencido
-          ? "border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10"
-          : "border-line bg-surface"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggle();
-        }}
-        disabled={guardando}
-        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
-          evento.completada ? "border-emerald-500 bg-emerald-500 text-white" : "border-ink3 text-transparent"
-        }`}
-      >
-        <IconCheck className="h-3.5 w-3.5" />
-      </button>
-
-      <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${evento.completada ? "text-ink3 line-through" : "text-ink"}`}>
-          {evento.titulo}
-        </p>
-        <p
-          className={`mt-0.5 text-xs ${
-            vencido && !evento.completada ? "font-semibold text-red-600 dark:text-red-400" : "text-ink2"
-          }`}
-        >
-          {formatFechaRelativa(evento.fecha_hora)}
-          {vencido && !evento.completada ? " · Vencido" : ""}
-        </p>
-        {mostrarLead && conLead?.lead ? (
-          <p className="mt-1 truncate text-xs text-ink2">
-            {conLead.lead.negocio || conLead.lead.nombre_contacto || "Lead"}
-          </p>
-        ) : null}
-        {conLead?.usuario ? <p className="mt-0.5 text-xs text-ink3">Responsable: {conLead.usuario.nombre}</p> : null}
-      </div>
-    </div>
+  const leadNombre = conLead?.lead ? conLead.lead.negocio || conLead.lead.nombre_contacto || "Lead" : null;
+  const texto = (
+    <span className="min-w-0 flex-1">
+      <span className={`block truncate text-sm ${evento.completada ? "text-ink3 line-through" : "font-medium text-ink"}`}>{evento.titulo}</span>
+      <span className="block truncate text-xs text-ink3">
+        {[mostrarLead ? leadNombre : null, conLead?.usuario?.nombre].filter(Boolean).join(" · ")}
+      </span>
+    </span>
   );
 
-  if (mostrarLead && conLead?.lead?.id) {
-    return <Link href={`/leads/${conLead.lead.id}`}>{contenido}</Link>;
-  }
-  return contenido;
+  return (
+    <div className="group flex items-center gap-3 px-3 py-2.5 hover:bg-mute/40">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={guardando || !onToggleCompletada}
+        aria-label={evento.completada ? `Marcar «${evento.titulo}» como pendiente` : `Completar «${evento.titulo}»`}
+        aria-pressed={evento.completada}
+        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
+          evento.completada ? "border-emerald-500 bg-emerald-500 text-white" : "border-ink3 text-transparent hover:border-ink hover:text-ink3"
+        }`}
+      >
+        <IconCheck className="h-3 w-3" />
+      </button>
+      {mostrarLead && conLead?.lead?.id ? (
+        <Link href={`/leads/${conLead.lead.id}`} className="flex min-w-0 flex-1 hover:underline">
+          {texto}
+        </Link>
+      ) : (
+        texto
+      )}
+      <span className={`shrink-0 text-xs ${vencido ? "font-medium text-red-600 dark:text-red-400" : "text-ink2"}`}>
+        {formatFechaRelativa(evento.fecha_hora)}
+      </span>
+    </div>
+  );
 }

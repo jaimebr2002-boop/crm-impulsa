@@ -29,16 +29,8 @@ const config: Config = {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
       },
-      backgroundImage: {
-        // Un único tono (con una variación sutil para dar algo de
-        // profundidad) — el sistema real de Impulsa Studio usa el verde
-        // lima como color sólido, no un degradado de dos tonos.
-        "brand-gradient": "linear-gradient(135deg, #AAFF00, #93E000)",
-      },
       boxShadow: {
         card: "0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)",
-        glass: "0 1px 1px 0 rgb(0 0 0 / 0.03), 0 8px 24px -8px rgb(0 0 0 / 0.12)",
-        "glass-dark": "0 1px 1px 0 rgb(0 0 0 / 0.2), 0 12px 32px -8px rgb(0 0 0 / 0.55)",
       },
       backdropBlur: {
         xs: "2px",

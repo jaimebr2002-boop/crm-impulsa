@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Impulsa CRM",
-    short_name: "Impulsa CRM",
+    name: "Impulsa OS",
+    short_name: "Impulsa",
     description: "CRM interno de Impulsa Studio",
     start_url: "/",
     scope: "/",

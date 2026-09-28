@@ -14,16 +14,21 @@ import {
   type EventoAnalitica,
 } from "@/lib/data/analitica";
 import type { Interaccion, Lead, Usuario } from "@/lib/types";
-import { CANAL_LABEL, ESTADO_LABEL, ESTADOS } from "@/lib/constants";
+import { CANAL_LABEL, ESTADO_LABEL, ESTADOS_ABIERTOS, ORIGEN_LABEL, formatEuros, sumarValor } from "@/lib/constants";
 import { PeriodSelector, calcularPeriodo, type Periodo } from "@/components/analitica/PeriodSelector";
-import { KpiCard } from "@/components/analitica/KpiCard";
 import { BarChart } from "@/components/analitica/BarChart";
 import { FunnelChart } from "@/components/analitica/FunnelChart";
 import { TeamTable, type FilaEquipo } from "@/components/analitica/TeamTable";
-import { ActivityFeed, type ActividadItem } from "@/components/analitica/ActivityFeed";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
-import { IconLeads, IconTelefono, IconCalendario, IconCheck } from "@/components/Icons";
+import { Cabecera } from "@/components/ui/Cabecera";
+import { SELECT_TOOLBAR } from "@/components/ui/CampoBusqueda";
+import { Panel } from "@/components/ui/Panel";
+import { SkeletonTarjetas } from "@/components/ui/Skeleton";
+import { FilaKpis } from "@/components/trabajo/FilaKpis";
+import { BarrasImporte } from "@/components/finanzas/SelectorPeriodo";
+import { AnaliticaOperaciones } from "@/components/analitica/AnaliticaOperaciones";
+import { AnaliticaFinanzas } from "@/components/finanzas/AnaliticaFinanzas";
 
 // Estados que cuentan como "pipeline activo" en el funnel; se excluyen los
 // terminales negativos para que la barra final no quede aplastada por ellos.
@@ -116,7 +121,13 @@ export default function AnaliticaPage() {
   const cerrados = leads.filter((l) => l.estado === "cerrado");
   const cerradosAnterior = leadsAnterior.filter((l) => l.estado === "cerrado");
 
-  const serieLeads = agruparPorDia(leads, (l) => l.created_at, periodo.desde, periodo.hasta).map((d) => d.valor);
+  const facturado = sumarValor(cerrados);
+  const facturadoAnterior = sumarValor(cerradosAnterior);
+  const cerradosConValor = cerrados.filter((l) => l.valor != null).length;
+  const abiertos = leadsActuales.filter((l) => ESTADOS_ABIERTOS.has(l.estado));
+  const valorPipeline = sumarValor(abiertos);
+  const abiertosSinValor = abiertos.filter((l) => l.valor == null).length;
+
   const serieDatos = agruparPorDia(leads, (l) => l.created_at, periodo.desde, periodo.hasta);
 
   const funnelData = ETAPAS_FUNNEL.map((estado) => ({
@@ -144,174 +155,116 @@ export default function AnaliticaPage() {
     }))
     .sort((a, b) => b.cerrados - a.cerrados || b.interacciones - a.interacciones);
 
-  // --- Actividad reciente: mezcla real de interacciones + eventos del periodo ---
-  const leadsPorId: Record<string, Lead> = {};
-  for (const l of leadsActuales) leadsPorId[l.id] = l;
-  const usuariosPorId: Record<string, Usuario> = {};
-  for (const u of usuarios) usuariosPorId[u.id] = u;
-  const nombreLead = (leadId: string) => {
-    const l = leadsPorId[leadId];
-    return l?.negocio || l?.nombre_contacto || "Lead";
-  };
-  const nombreUsuarioDe = (usuarioId: string | null) => (usuarioId ? usuariosPorId[usuarioId]?.nombre ?? "—" : "—");
+  const pct = (v: number | null) => (v === null ? "nuevo" : `${v >= 0 ? "+" : "−"}${Math.abs(Math.round(v))} %`);
+  const vs = (actual: number, anterior: number) => `${pct(variacionPct(actual, anterior))} vs. periodo anterior`;
+  const conversion = leads.length > 0 ? Math.round((cerrados.length / leads.length) * 100) : 0;
 
-  const actividadInteracciones: ActividadItem[] = interacciones.map((i) => {
-    if (i.canal === "llamada") {
-      const contestada = llamadaContestada(i);
-      return {
-        id: `int-${i.id}`,
-        texto: `Llamada${i.resultado ? `: ${i.resultado}` : ""} — ${nombreLead(i.lead_id)}`,
-        quien: nombreUsuarioDe(i.usuario_id),
-        cuandoIso: i.fecha,
-        colorDot: contestada ? "bg-emerald-500" : "bg-red-400",
-        colorTexto: contestada ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
-        etiqueta: "Llamada",
-      };
-    }
-    if (i.canal === "nota") {
-      return {
-        id: `int-${i.id}`,
-        texto: `${i.nota || "Nota añadida"} — ${nombreLead(i.lead_id)}`,
-        quien: nombreUsuarioDe(i.usuario_id),
-        cuandoIso: i.fecha,
-        colorDot: "bg-brand",
-        colorTexto: "text-brand-dark dark:text-brand",
-        etiqueta: "Nota",
-      };
-    }
-    const etiquetaCanal = (i.canal && CANAL_LABEL[i.canal]) || "Interacción";
-    return {
-      id: `int-${i.id}`,
-      texto: `${etiquetaCanal}${i.resultado ? `: ${i.resultado}` : ""} — ${nombreLead(i.lead_id)}`,
-      quien: nombreUsuarioDe(i.usuario_id),
-      cuandoIso: i.fecha,
-      colorDot: "bg-sky-500",
-      colorTexto: "text-sky-600 dark:text-sky-400",
-      etiqueta: etiquetaCanal,
-    };
-  });
-
-  const actividadEventos: ActividadItem[] = eventos.map((e) => ({
-    id: `ev-${e.id}`,
-    texto: `Seguimiento ${e.completada ? "completado" : "programado"} — ${nombreLead(e.lead_id)}`,
-    quien: nombreUsuarioDe(e.usuario_id),
-    cuandoIso: e.completada ? e.fecha_hora : e.created_at,
-    colorDot: e.completada ? "bg-emerald-500" : "bg-amber-400",
-    colorTexto: e.completada ? "text-emerald-600 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400",
-    etiqueta: e.completada ? "Seguimiento" : "Programado",
-  }));
-
-  const actividad = [...actividadInteracciones, ...actividadEventos]
-    .sort((a, b) => new Date(b.cuandoIso).getTime() - new Date(a.cuandoIso).getTime())
-    .slice(0, 15);
+  const origenes = Object.entries(contarPor(leads, (l) => l.origen ?? "sin_origen"))
+    .sort((a, b) => b[1] - a[1])
+    .map(([o, n]) => ({ clave: o, etiqueta: o === "sin_origen" ? "Sin origen" : ORIGEN_LABEL[o] ?? o, importe: n }));
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-6 md:px-8">
-      <h1 className="font-display text-2xl font-bold text-ink">Analítica</h1>
-      <p className="mt-0.5 text-sm text-ink2">{periodo.etiqueta}, comparado con el periodo anterior equivalente.</p>
+    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-8">
+      <Cabecera titulo="Analítica" subtitulo={`${periodo.etiqueta}, comparado con el periodo anterior equivalente.`} />
 
-      {esAdmin ? (
-        <div className="mt-5 flex gap-2 overflow-x-auto">
-          {[{ id: "todos", nombre: "Todos" }, ...usuarios].map((u) => (
-            <button
-              key={u.id}
-              onClick={() => setFiltroUsuarioId(u.id)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
-                filtroUsuarioId === u.id ? "bg-brand-gradient text-brand-ink shadow-md shadow-brand/25" : "border border-line bg-surface text-ink2"
-              }`}
-            >
-              {u.nombre}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="mt-4">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         <PeriodSelector onChange={setPeriodo} />
+        {esAdmin ? (
+          <select aria-label="Persona" value={filtroUsuarioId} onChange={(e) => setFiltroUsuarioId(e.target.value)} className={SELECT_TOOLBAR}>
+            <option value="todos">Todo el equipo</option>
+            {usuarios.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nombre}
+              </option>
+            ))}
+          </select>
+        ) : null}
       </div>
 
-      {cargando ? <div className="mt-10"><LoadingState texto="Calculando métricas…" /></div> : null}
-      {error ? <div className="mt-10"><ErrorState mensaje={error} onReintentar={cargar} /></div> : null}
+      <div className="flex flex-col gap-10">
+        {esAdmin ? (
+          <Seccion titulo="Negocio" descripcion="Facturado, cobrado, gastos y caja por mes, trimestre o año (su propio periodo, de calendario).">
+            <AnaliticaFinanzas />
+          </Seccion>
+        ) : null}
 
-      {!cargando && !error ? (
-        <div className="mt-6 flex flex-col gap-8">
-          <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <KpiCard
-              etiqueta="Leads nuevos"
-              valor={leads.length}
-              variacion={variacionPct(leads.length, leadsAnterior.length)}
-              serie={serieLeads}
-              icono={IconLeads}
-            />
-            <KpiCard
-              etiqueta="Llamadas registradas"
-              valor={llamadas.length}
-              variacion={variacionPct(llamadas.length, llamadasAnterior.length)}
-              icono={IconTelefono}
-            />
-            <KpiCard
-              etiqueta="Llamadas contestadas"
-              valor={contestadas.length}
-              variacion={variacionPct(contestadas.length, contestadasAnterior.length)}
-              icono={IconCheck}
-              nota={`${tasaRespuesta}% de tasa de respuesta`}
-            />
-            <KpiCard
-              etiqueta="Seguimientos completados"
-              valor={seguimientosCompletados.length}
-              variacion={variacionPct(seguimientosCompletados.length, seguimientosCompletadosAnterior.length)}
-              icono={IconCalendario}
-            />
-            <KpiCard
-              etiqueta="Leads cerrados"
-              valor={cerrados.length}
-              variacion={variacionPct(cerrados.length, cerradosAnterior.length)}
-              icono={IconCheck}
-            />
-            <KpiCard
-              etiqueta="Leads en pipeline"
-              valor={leadsActuales.length}
-              icono={IconLeads}
-              nota="Total actual, no depende del periodo"
-            />
-          </section>
+        {esAdmin ? (
+          <Seccion titulo="Operaciones">
+            <AnaliticaOperaciones desde={periodo.desde} hasta={periodo.hasta} />
+          </Seccion>
+        ) : null}
 
-          <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-            <h2 className="mb-4 font-display text-sm font-bold text-ink">Leads nuevos por día</h2>
-            <BarChart
-              datos={serieDatos.map((d) => ({ etiqueta: d.fecha, valor: d.valor }))}
-              formatoEtiqueta={(f) => new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "2-digit" }).format(new Date(f))}
-            />
-          </section>
-
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_1fr]">
-            <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-display text-sm font-bold text-ink">Pipeline actual</h2>
-                {perdidos > 0 ? <span className="text-xs text-ink3">{perdidos} descartados / sin contestar</span> : null}
+        <Seccion titulo="Ventas">
+          {error ? <ErrorState mensaje="No se han podido cargar las métricas de ventas." onReintentar={cargar} /> : null}
+          {cargando && !error ? <SkeletonTarjetas n={6} /> : null}
+          {!cargando && !error ? (
+            <div className="flex flex-col gap-4">
+              <FilaKpis
+                kpis={[
+                  { etiqueta: "Leads nuevos", valor: leads.length, nota: vs(leads.length, leadsAnterior.length) },
+                  { etiqueta: "Llamadas", valor: llamadas.length, nota: vs(llamadas.length, llamadasAnterior.length) },
+                  { etiqueta: "Respuestas", valor: contestadas.length, nota: `${tasaRespuesta} % contestadas · ${pct(variacionPct(contestadas.length, contestadasAnterior.length))}` },
+                  { etiqueta: "Seguimientos hechos", valor: seguimientosCompletados.length, nota: vs(seguimientosCompletados.length, seguimientosCompletadosAnterior.length) },
+                  { etiqueta: "Ganados", valor: cerrados.length, nota: `${conversion} % de conversión · ${pct(variacionPct(cerrados.length, cerradosAnterior.length))}` },
+                  {
+                    etiqueta: "Valor ganado",
+                    valor: formatEuros(facturado),
+                    nota: cerradosConValor > 0 ? `Ticket medio ${formatEuros(facturado / cerradosConValor)}` : vs(facturado, facturadoAnterior),
+                  },
+                ]}
+              />
+              <Panel titulo="Leads nuevos por día">
+                <div className="px-4 pb-3 pt-10">
+                  <BarChart
+                    datos={serieDatos.map((d) => ({ etiqueta: d.fecha, valor: d.valor }))}
+                    formatoEtiqueta={(f) => new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(new Date(f))}
+                  />
+                </div>
+              </Panel>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Panel titulo={`Pipeline actual · ${leadsActuales.length} leads`}>
+                  <div className="px-4 py-3">
+                    <FunnelChart etapas={funnelData} />
+                    <p className="mt-3 text-xs text-ink3">
+                      {formatEuros(valorPipeline)} en juego en {abiertos.length} leads abiertos
+                      {abiertosSinValor ? ` (${abiertosSinValor} sin valor)` : ""}
+                      {perdidos ? ` · ${perdidos} perdidos o sin contestar` : ""}. No depende del periodo.
+                    </p>
+                  </div>
+                </Panel>
+                <Panel titulo="Interacciones por canal">
+                  <BarrasImporte filas={datosCanal.map((d) => ({ clave: d.etiqueta, etiqueta: d.etiqueta, importe: d.valor }))} formato={(n) => String(n)} />
+                </Panel>
               </div>
-              <FunnelChart etapas={funnelData} />
-            </section>
-
-            <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-              <h2 className="mb-2 font-display text-sm font-bold text-ink">Actividad reciente</h2>
-              <ActivityFeed items={actividad} />
-            </section>
-          </div>
-
-          <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-            <h2 className="mb-4 font-display text-sm font-bold text-ink">Interacciones por canal</h2>
-            <BarChart datos={datosCanal} />
-          </section>
-
-          {esAdmin ? (
-            <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
-              <h2 className="mb-4 font-display text-sm font-bold text-ink">Rendimiento del equipo</h2>
-              <TeamTable filas={equipo} />
-            </section>
+              {esAdmin ? (
+                <Panel titulo="Equipo">
+                  <div className="px-4 py-3">
+                    <TeamTable filas={equipo} />
+                  </div>
+                </Panel>
+              ) : null}
+            </div>
           ) : null}
-        </div>
-      ) : null}
+        </Seccion>
+
+        <Seccion titulo="Distribución" descripcion="Por cuenta, marca y tipo en Negocio; aquí, de dónde vienen los leads del periodo.">
+          <Panel titulo="Leads nuevos por origen">
+            <BarrasImporte filas={origenes} formato={(n) => String(n)} vacio="Sin leads nuevos en este periodo." />
+          </Panel>
+        </Seccion>
+      </div>
     </div>
+  );
+}
+
+function Seccion({ titulo, descripcion, children }: { titulo: string; descripcion?: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div>
+        <h2 className="font-display text-lg font-bold tracking-tight text-ink">{titulo}</h2>
+        {descripcion ? <p className="text-sm text-ink3">{descripcion}</p> : null}
+      </div>
+      {children}
+    </section>
   );
 }

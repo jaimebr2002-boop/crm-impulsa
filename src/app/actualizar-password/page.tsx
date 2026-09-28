@@ -45,7 +45,7 @@ export default function ActualizarPasswordPage() {
       }
       setExito(true);
       setTimeout(() => {
-        router.replace("/hoy");
+        router.replace("/inicio");
         router.refresh();
       }, 1200);
     } finally {
@@ -62,11 +62,11 @@ export default function ActualizarPasswordPage() {
           <p className="mt-1 text-sm text-ink2">Es la única vez que la necesitarás introducir aquí</p>
         </div>
 
-        <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
+        <div className="rounded-xl border border-line bg-surface p-6 shadow-card">
           {!listo ? (
             <LoadingState texto="Comprobando enlace…" />
           ) : !sesionValida ? (
-            <p className="text-sm font-medium text-red-600">
+            <p className="field-error">
               Este enlace no es válido o ha caducado. Pide al administrador que te reenvíe la invitación.
             </p>
           ) : exito ? (
@@ -74,7 +74,7 @@ export default function ActualizarPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Nueva contraseña</span>
+                <span className="field-label">Nueva contraseña</span>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -88,7 +88,7 @@ export default function ActualizarPasswordPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-ink2">Confirmar contraseña</span>
+                <span className="field-label">Confirmar contraseña</span>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -99,12 +99,12 @@ export default function ActualizarPasswordPage() {
                 />
               </label>
 
-              {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+              {error ? <p className="field-error">{error}</p> : null}
 
               <button
                 type="submit"
                 disabled={enviando}
-                className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60"
+                className="btn-primary mt-2 w-full py-2.5"
               >
                 {enviando ? "Guardando…" : "Guardar contraseña"}
               </button>

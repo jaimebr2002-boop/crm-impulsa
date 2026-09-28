@@ -14,15 +14,15 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Impulsa CRM",
-  description: "CRM interno de Impulsa Studio",
+  title: "Impulsa OS",
+  description: "Panel interno de Impulsa Studio",
   // iOS ignora "display: standalone" del manifest al añadir a pantalla de
   // inicio si falta esta meta tag — sin ella se abre como Safari normal,
   // con barra de URL, aunque el manifest esté bien configurado.
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Impulsa CRM",
+    title: "Impulsa OS",
   },
 };
 
@@ -31,8 +31,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f6fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a10" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f7f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
   ],
 };
 

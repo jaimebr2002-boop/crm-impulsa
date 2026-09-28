@@ -29,6 +29,11 @@ export async function updateSession(request: NextRequest) {
   const esRaiz = request.nextUrl.pathname === "/";
   const esRutaPublica = esRaiz || RUTAS_PUBLICAS.some((ruta) => request.nextUrl.pathname.startsWith(ruta));
 
+  // Las API responden con JSON, no con una redirección a /login.
+  if (!user && request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });
+  }
+
   if (!user && !esRutaPublica) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -37,7 +42,8 @@ export async function updateSession(request: NextRequest) {
 
   if (user && (request.nextUrl.pathname === "/login" || esRaiz)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/hoy";
+    // /inicio reenvía a los comerciales a su CRM (/hoy).
+    url.pathname = "/inicio";
     return NextResponse.redirect(url);
   }
 
