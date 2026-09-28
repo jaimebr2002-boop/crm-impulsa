@@ -37,7 +37,8 @@ export async function updateSession(request: NextRequest) {
 
   if (user && (request.nextUrl.pathname === "/login" || esRaiz)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/hoy";
+    // /inicio reenvía a los comerciales a su CRM (/hoy).
+    url.pathname = "/inicio";
     return NextResponse.redirect(url);
   }
 

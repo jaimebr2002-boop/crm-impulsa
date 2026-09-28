@@ -337,7 +337,7 @@ export default function LeadsPage() {
 
       {modoSeleccion ? (
         <div
-          className="glass-strong fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-30 mx-auto max-w-3xl rounded-2xl p-3 shadow-glass dark:shadow-glass-dark md:bottom-28"
+          className="glass-strong fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-30 mx-auto max-w-3xl rounded-2xl p-3 shadow-glass dark:shadow-glass-dark md:bottom-6"
         >
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="font-semibold text-ink">{seleccion.size} seleccionado{seleccion.size === 1 ? "" : "s"}</span>

@@ -72,21 +72,45 @@ textarea {
     @apply w-full rounded-xl border border-line bg-surface px-3 py-3 text-base text-ink outline-none transition-colors focus:border-brand;
   }
 
-  /* Superficie de cristal: usada en tarjetas destacadas (KPIs, sidebar,
-     login). El resto de la UI usa bg-surface plano para mantener jerarquía
-     visual entre fondo / contenedor / tarjeta / elemento destacado. */
+  /* Superficie de panel. Antes era un cristal translúcido con desenfoque; el
+     Company OS usa superficies planas con borde fino (más serio y más
+     rápido de pintar). El nombre se conserva para no tocar cada pantalla. */
   .glass {
-    background-color: rgb(var(--glass-surface) / var(--glass-alpha));
-    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
+    background-color: rgb(var(--surface));
+    border: 1px solid rgb(var(--line));
+  }
+
+  /* Cristal real, reservado a elementos flotantes sobre contenido
+     (barra inferior móvil, barras de acciones, tooltips). */
+  .glass-strong {
+    background-color: rgb(var(--glass-surface) / 0.88);
+    border: 1px solid rgb(var(--line));
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
   }
 
-  .glass-strong {
-    background-color: rgb(var(--glass-surface) / 0.85);
-    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
+  .skeleton {
+    @apply animate-pulse rounded-md bg-mute;
+  }
+
+  /* Botones y controles base del sistema. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-brand-ink hover:bg-[#9BEF00];
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-surface text-ink hover:bg-mute;
+  }
+  .btn-ghost {
+    @apply btn text-ink2 hover:bg-mute hover:text-ink;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium leading-4;
+  }
+  .kbd {
+    @apply rounded border border-line bg-canvas px-1.5 py-px font-sans text-[10px] font-medium text-ink3;
   }
 
   /* Manchas ambientales fijas en las esquinas — decorativas, sin datos. */

@@ -45,7 +45,7 @@ export default function ActualizarPasswordPage() {
       }
       setExito(true);
       setTimeout(() => {
-        router.replace("/hoy");
+        router.replace("/inicio");
         router.refresh();
       }, 1200);
     } finally {

@@ -29,7 +29,7 @@ export default function LoginPage() {
         setError(MENSAJES_ERROR[err.message] ?? "No se ha podido iniciar sesión. Inténtalo de nuevo.");
         return;
       }
-      router.replace("/hoy");
+      router.replace("/inicio");
       router.refresh();
     } finally {
       setEnviando(false);

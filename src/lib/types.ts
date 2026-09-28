@@ -93,3 +93,128 @@ export type EventoConLead = Evento & {
   lead: Pick<Lead, "id" | "negocio" | "nombre_contacto" | "telefono"> | null;
   usuario: Usuario | null;
 };
+
+// ============================================================
+// Company OS — trabajo (migración 0008)
+// ============================================================
+
+export type TipoCuenta = "intermediario" | "cliente_directo" | "interno";
+
+export type Cuenta = {
+  id: string;
+  nombre: string;
+  tipo: TipoCuenta;
+  email: string | null;
+  telefono: string | null;
+  notas: string | null;
+  lead_id: string | null;
+  archivada: boolean;
+  creado_por: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Marca = {
+  id: string;
+  cuenta_id: string;
+  nombre: string;
+  web: string | null;
+  notas: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EstadoProyecto = "pendiente" | "preparado" | "en_progreso" | "esperando" | "revision" | "entregado" | "cancelado";
+export type Prioridad = "baja" | "normal" | "alta" | "urgente";
+export type TipoProyecto =
+  | "video"
+  | "campana"
+  | "creativo"
+  | "web"
+  | "app"
+  | "automatizacion"
+  | "anuncio"
+  | "tecnico"
+  | "contenido"
+  | "revision"
+  | "otro";
+
+export type Proyecto = {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  cuenta_id: string | null;
+  marca_id: string | null;
+  lead_id: string | null;
+  tipo: TipoProyecto;
+  estado: EstadoProyecto;
+  prioridad: Prioridad;
+  responsable_id: string | null;
+  fecha_inicio: string | null; // YYYY-MM-DD
+  fecha_entrega: string | null; // YYYY-MM-DD
+  entregado_en: string | null;
+  importe: number | null;
+  notas: string | null;
+  archivado: boolean;
+  creado_por: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Proyecto con su cuenta y marca embebidas (select con joins). */
+export type ProyectoConRelaciones = Proyecto & {
+  cuenta: Pick<Cuenta, "id" | "nombre" | "tipo"> | null;
+  marca: Pick<Marca, "id" | "nombre"> | null;
+};
+
+export type ProyectoInsert = Partial<Omit<Proyecto, "id" | "created_at" | "updated_at" | "entregado_en" | "creado_por">> & {
+  nombre: string;
+};
+export type ProyectoUpdate = Partial<Omit<Proyecto, "id" | "created_at" | "updated_at" | "creado_por">>;
+
+export type ProyectoEnlace = {
+  id: string;
+  proyecto_id: string;
+  titulo: string;
+  url: string;
+  created_at: string;
+};
+
+export type EstadoTarea = "pendiente" | "en_progreso" | "esperando" | "completada";
+
+export type Tarea = {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  proyecto_id: string | null;
+  lead_id: string | null;
+  responsable_id: string | null;
+  estado: EstadoTarea;
+  prioridad: Prioridad;
+  fecha_limite: string | null; // YYYY-MM-DD
+  completada_en: string | null;
+  creado_por: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TareaConRelaciones = Tarea & {
+  proyecto: Pick<Proyecto, "id" | "nombre"> | null;
+  lead: Pick<Lead, "id" | "negocio" | "nombre_contacto"> | null;
+};
+
+export type TareaInsert = Partial<Omit<Tarea, "id" | "created_at" | "updated_at" | "completada_en" | "creado_por">> & {
+  titulo: string;
+};
+export type TareaUpdate = Partial<Omit<Tarea, "id" | "created_at" | "updated_at" | "creado_por">>;
+
+export type Actividad = {
+  id: string;
+  actor_id: string | null;
+  entidad: string;
+  entidad_id: string | null;
+  accion: string;
+  titulo: string | null;
+  datos: Record<string, unknown>;
+  created_at: string;
+};
