@@ -121,7 +121,7 @@ function Suscripciones() {
                   return (
                     <div
                       key={s.id}
-                      className={`grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-4 py-3 text-sm md:grid-cols-[1fr_110px_130px_150px_110px_170px] ${
+                      className={`grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-4 py-3 text-sm md:grid-cols-[1fr_100px_120px_170px_100px_210px] ${
                         s.activa ? "" : "opacity-60"
                       }`}
                     >
@@ -150,7 +150,7 @@ function Suscripciones() {
                           <button
                             onClick={() => registrar(s)}
                             disabled={registrando === s.id}
-                            className={toca ? "btn-primary py-1 text-xs" : "btn-secondary py-1 text-xs"}
+                            className={`whitespace-nowrap py-1 text-xs ${toca ? "btn-primary" : "btn-secondary"}`}
                             title={`Crea el gasto de ${eur(s.importe)} del ${formatYMDCorta(s.proxima_renovacion)} y pasa a la siguiente renovación`}
                           >
                             {registrando === s.id ? "Registrando…" : "Registrar periodo"}

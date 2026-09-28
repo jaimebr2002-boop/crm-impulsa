@@ -35,7 +35,7 @@ export function GraficoMensual({ puntos }: { puntos: PuntoMensual[] }) {
         ))}
         {sel ? <span className="ml-auto capitalize text-ink3">{sel.etiqueta} {sel.mes.slice(0, 4)}</span> : null}
       </div>
-      <div className="relative" style={{ height: alto }}>
+      <div className="relative mt-5" style={{ height: alto }}>
         {[0, 1, 2, 3].map((i) => {
           const v = (tope / 3) * i;
           if (v > tope) return null;

@@ -132,7 +132,7 @@ export function FinanzasCuenta({
           <ul className="divide-y divide-line">
             {cobros.map((c) => (
               <li key={c.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-                <span className="w-12 shrink-0 tabular-nums text-ink3">{formatYMDCorta(c.fecha)}</span>
+                <span className="w-14 shrink-0 whitespace-nowrap tabular-nums text-ink3">{formatYMDCorta(c.fecha)}</span>
                 <span className="min-w-0 flex-1 truncate text-ink2">
                   {c.factura ? (
                     <Link href={`/finanzas/facturas/${c.factura.id}`} className="font-medium text-ink hover:underline">

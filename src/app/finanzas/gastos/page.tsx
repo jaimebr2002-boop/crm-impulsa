@@ -175,7 +175,7 @@ function Gastos() {
                     const p = g.proyecto_id ? proyectos[g.proyecto_id] : null;
                     return (
                       <div key={g.id} className="group flex items-center gap-3 px-4 py-2.5 text-sm">
-                        <span className="w-12 shrink-0 tabular-nums text-ink3">{formatYMDCorta(g.fecha)}</span>
+                        <span className="w-14 shrink-0 whitespace-nowrap tabular-nums text-ink3">{formatYMDCorta(g.fecha)}</span>
                         <button onClick={() => setEditando(g)} className="min-w-0 flex-1 text-left">
                           <span className="block truncate font-medium text-ink hover:underline">{g.concepto}</span>
                           <span className="block truncate text-xs text-ink3">

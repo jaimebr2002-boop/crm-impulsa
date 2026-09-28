@@ -35,7 +35,15 @@ export default function FinanzasPage() {
   );
 }
 
-type Proximo = { clave: string; fecha: string; titulo: string; detalle: string; importe: number; href: string; tipo: "factura" | "renovacion" };
+type Proximo = {
+  clave: string;
+  fecha: string;
+  titulo: string;
+  detalle: string;
+  importe: number;
+  href: string;
+  tipo: "factura" | "renovacion";
+};
 
 function Resumen() {
   const { abrirAlta, versionDatos } = useApp();
@@ -162,21 +170,36 @@ function Resumen() {
                 nota: k.numFacturas ? `${eur(k.facturadoBase)} base · ${k.numFacturas} fact.` : "Sin facturas emitidas",
                 href: "/finanzas/facturas",
               },
-              { etiqueta: "Cobrado", valor: eur(k.cobrado), nota: "Cobros recibidos en el periodo" },
+              {
+                etiqueta: "Cobrado",
+                valor: eur(k.cobrado),
+                nota: "Recibido en el periodo",
+              },
               {
                 etiqueta: "Pendiente de cobro",
                 valor: eur(k.pendiente),
-                nota: k.numVencidas ? `${eur(k.vencido)} vencido · ${k.numVencidas} fact.` : `${k.numPendientes} factura${k.numPendientes === 1 ? "" : "s"} · a hoy`,
+                nota: k.numVencidas
+                  ? `${eur(k.vencido)} vencido · ${k.numVencidas} fact.`
+                  : `${k.numPendientes} factura${k.numPendientes === 1 ? "" : "s"} · a hoy`,
                 alerta: k.numVencidas > 0,
                 href: k.numVencidas ? "/finanzas/facturas?estado=vencidas" : "/finanzas/facturas?estado=pendientes",
               },
-              { etiqueta: "Gastos", valor: eur(k.gastos), nota: "Pagados en el periodo", href: "/finanzas/gastos" },
+              {
+                etiqueta: "Gastos",
+                valor: eur(k.gastos),
+                nota: "Pagados en el periodo",
+                href: "/finanzas/gastos",
+              },
               {
                 etiqueta: "Caja neta (aprox.)",
                 valor: <span className={k.cajaNeta < 0 ? "text-red-600 dark:text-red-400" : ""}>{eur(k.cajaNeta)}</span>,
                 nota: "Cobrado − gastos",
               },
-              { etiqueta: "Ticket medio", valor: k.numFacturas ? eur(k.ticketMedio) : "—", nota: "Por factura emitida" },
+              {
+                etiqueta: "Ticket medio",
+                valor: k.numFacturas ? eur(k.ticketMedio) : "—",
+                nota: "Por factura emitida",
+              },
             ]}
           />
 
@@ -185,42 +208,73 @@ function Resumen() {
           </Panel>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-            <Panel titulo="Pendiente de cobro" contador={pendientes.length} enlace={{ href: "/finanzas/facturas?estado=pendientes", texto: "Todas" }}>
+            <Panel
+              titulo="Pendiente de cobro"
+              contador={pendientes.length}
+              enlace={{
+                href: "/finanzas/facturas?estado=pendientes",
+                texto: "Todas",
+              }}
+            >
               {pendientes.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-ink3">Todo cobrado. No hay facturas pendientes.</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[560px] text-sm">
-                    <thead>
-                      <tr className="border-b border-line text-left text-xs text-ink3">
-                        <th className="px-4 py-2 font-medium">Factura</th>
-                        <th className="px-3 py-2 font-medium">Cuenta</th>
-                        <th className="px-3 py-2 text-right font-medium">Total</th>
-                        <th className="px-3 py-2 text-right font-medium">Cobrado</th>
-                        <th className="px-3 py-2 text-right font-medium">Pendiente</th>
-                        <th className="px-4 py-2 font-medium">Vence</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pendientes.slice(0, 8).map((f) => (
-                        <tr key={f.id} className="group border-b border-line last:border-0 hover:bg-mute/50">
-                          <td className="px-4 py-2">
-                            <Link href={`/finanzas/facturas/${f.id}`} className="font-medium tabular-nums text-ink group-hover:underline">
-                              {f.numero}
-                            </Link>
-                          </td>
-                          <td className="max-w-[10rem] truncate px-3 py-2 text-ink2">{f.cuenta?.nombre}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-ink2">{eur(f.total)}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-ink2">{eur(f.cobrado)}</td>
-                          <td className="px-3 py-2 text-right font-medium tabular-nums text-ink">{eur(f.pendiente)}</td>
-                          <td className={`whitespace-nowrap px-4 py-2 ${f.vencida ? "font-medium text-red-600 dark:text-red-400" : "text-ink2"}`}>
-                            {f.fecha_vencimiento ? formatYMDRelativa(f.fecha_vencimiento) : "—"}
-                          </td>
+                <>
+                  <ul className="divide-y divide-line md:hidden">
+                    {pendientes.slice(0, 8).map((f) => (
+                      <li key={f.id}>
+                        <Link href={`/finanzas/facturas/${f.id}`} className="flex items-center gap-3 px-4 py-2.5 text-sm active:bg-mute">
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium text-ink">
+                              {f.cuenta?.nombre} <span className="font-normal tabular-nums text-ink3">· {f.numero}</span>
+                            </span>
+                            <span className={`block text-xs ${f.vencida ? "font-medium text-red-600 dark:text-red-400" : "text-ink3"}`}>
+                              {f.fecha_vencimiento
+                                ? `${f.vencida ? "Vencida" : "Vence"} ${formatYMDRelativa(f.fecha_vencimiento).toLowerCase()}`
+                                : "Sin vencimiento"}
+                              {aCentimos(f.cobrado) > 0 ? ` · cobrado ${eur(f.cobrado)}` : ""}
+                            </span>
+                          </span>
+                          <span className="font-medium tabular-nums text-ink">{eur(f.pendiente)}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden md:block">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-line text-left text-xs text-ink3">
+                          <th className="px-4 py-2 font-medium">Factura</th>
+                          <th className="px-3 py-2 font-medium">Cuenta</th>
+                          <th className="px-3 py-2 text-right font-medium">Total</th>
+                          <th className="px-3 py-2 text-right font-medium">Cobrado</th>
+                          <th className="px-3 py-2 text-right font-medium">Pendiente</th>
+                          <th className="px-4 py-2 font-medium">Vence</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {pendientes.slice(0, 8).map((f) => (
+                          <tr key={f.id} className="group border-b border-line last:border-0 hover:bg-mute/50">
+                            <td className="px-4 py-2">
+                              <Link href={`/finanzas/facturas/${f.id}`} className="font-medium tabular-nums text-ink group-hover:underline">
+                                {f.numero}
+                              </Link>
+                            </td>
+                            <td className="max-w-[10rem] truncate px-3 py-2 text-ink2">{f.cuenta?.nombre}</td>
+                            <td className="px-3 py-2 text-right tabular-nums text-ink2">{eur(f.total)}</td>
+                            <td className="px-3 py-2 text-right tabular-nums text-ink2">{eur(f.cobrado)}</td>
+                            <td className="px-3 py-2 text-right font-medium tabular-nums text-ink">{eur(f.pendiente)}</td>
+                            <td
+                              className={`whitespace-nowrap px-4 py-2 ${f.vencida ? "font-medium text-red-600 dark:text-red-400" : "text-ink2"}`}
+                            >
+                              {f.fecha_vencimiento ? formatYMDRelativa(f.fecha_vencimiento) : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </Panel>
 
@@ -234,7 +288,9 @@ function Resumen() {
                     return (
                       <li key={p.clave}>
                         <Link href={p.href} className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-mute/50">
-                          <span className={`w-12 shrink-0 tabular-nums ${d < 0 ? "font-medium text-red-600 dark:text-red-400" : "text-ink3"}`}>
+                          <span
+                            className={`w-14 shrink-0 whitespace-nowrap tabular-nums ${d < 0 ? "font-medium text-red-600 dark:text-red-400" : "text-ink3"}`}
+                          >
                             {formatYMDCorta(p.fecha)}
                           </span>
                           <span className="min-w-0 flex-1">

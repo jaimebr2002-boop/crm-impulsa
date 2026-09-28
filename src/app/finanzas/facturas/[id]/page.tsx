@@ -194,7 +194,7 @@ function FichaFactura() {
                         <span className="block text-ink">{l.descripcion}</span>
                         {l.proyecto ? (
                           <Link href={`/proyectos/${l.proyecto.id}`} className="text-xs text-ink3 hover:text-ink hover:underline">
-                            Proyecto: {l.proyecto.nombre}
+                            {l.proyecto.nombre === l.descripcion ? "Ver proyecto" : `Proyecto: ${l.proyecto.nombre}`}
                           </Link>
                         ) : (
                           <span className="text-xs text-ink3">Línea manual</span>
@@ -239,10 +239,12 @@ function FichaFactura() {
               <div className="divide-y divide-line">
                 {cobros.map((c) => (
                   <div key={c.id} className="group flex items-center gap-3 px-4 py-2.5 text-sm">
-                    <span className="w-14 shrink-0 tabular-nums text-ink2">{formatYMDCorta(c.fecha)}</span>
-                    <span className="min-w-0 flex-1 truncate text-ink2">
-                      {METODO_COBRO_LABEL[c.metodo]}
-                      {c.referencia ? ` · ${c.referencia}` : ""}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-ink">{formatYMDCorta(c.fecha)}</span>
+                      <span className="block truncate text-xs text-ink3">
+                        {METODO_COBRO_LABEL[c.metodo]}
+                        {c.referencia ? ` · ${c.referencia}` : ""}
+                      </span>
                     </span>
                     <span className="font-medium tabular-nums text-ink">{eur(c.importe)}</span>
                     <button
