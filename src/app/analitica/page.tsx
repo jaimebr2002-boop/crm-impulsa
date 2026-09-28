@@ -24,6 +24,7 @@ import { ActivityFeed, type ActividadItem } from "@/components/analitica/Activit
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { IconLeads, IconTelefono, IconCalendario, IconCheck, IconTrendUp } from "@/components/Icons";
+import { AnaliticaFinanzas } from "@/components/finanzas/AnaliticaFinanzas";
 
 // Estados que cuentan como "pipeline activo" en el funnel; se excluyen los
 // terminales negativos para que la barra final no quede aplastada por ellos.
@@ -334,6 +335,12 @@ export default function AnaliticaPage() {
               <TeamTable filas={equipo} />
             </section>
           ) : null}
+        </div>
+      ) : null}
+
+      {esAdmin ? (
+        <div className="mt-10">
+          <AnaliticaFinanzas />
         </div>
       ) : null}
     </div>

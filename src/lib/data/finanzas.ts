@@ -10,6 +10,7 @@ import type {
   MetodoCobro,
   ProyectoFacturacion,
   Suscripcion,
+  TipoProyecto,
 } from "@/lib/types";
 import { traerTodo } from "./paginar";
 
@@ -145,6 +146,27 @@ export async function facturasDeProyecto(proyectoId: string): Promise<{ factura:
   if (porFactura.size === 0) return [];
   const facturas = await listarFacturas({ ids: Array.from(porFactura.keys()) });
   return facturas.map((f) => ({ factura: f, importe: (porFactura.get(f.id) ?? 0) / 100 }));
+}
+
+export type LineaFacturada = {
+  importe: number;
+  factura: { fecha_emision: string; cuenta_id: string };
+  proyecto: { id: string; tipo: TipoProyecto; marca: { id: string; nombre: string } | null } | null;
+};
+
+/** Líneas de facturas emitidas en [desde, hasta) con el proyecto (tipo y marca): para la analítica por marca y tipo. */
+export async function lineasFacturadas(desde: string, hasta: string): Promise<LineaFacturada[]> {
+  return traerTodo<LineaFacturada>((a, b) =>
+    supabase
+      .from("factura_lineas")
+      .select("importe, factura:facturas!inner(fecha_emision, cuenta_id), proyecto:proyectos(id, tipo, marca:marcas(id, nombre))")
+      .eq("factura.estado", "emitida")
+      .gte("factura.fecha_emision", desde)
+      .lt("factura.fecha_emision", hasta)
+      .order("id")
+      .range(a, b)
+      .returns<LineaFacturada[]>()
+  );
 }
 
 // ---------- Gastos ----------
