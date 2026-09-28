@@ -7,7 +7,8 @@ import { useUsuario } from "@/context/UsuarioContext";
 import { ESTADO_LABEL } from "@/lib/constants";
 import { aYMD, formatHaceCuanto, formatHora, hoyYMD, sumarDiasYMD, ymdADate } from "@/lib/dates";
 import { ESTADO_PROYECTO_LABEL, ESTADO_TAREA_LABEL } from "@/lib/trabajo";
-import type { Actividad, EstadoProyecto, EstadoTarea } from "@/lib/types";
+import { CATEGORIA_GASTO_LABEL, eur, METODO_COBRO_LABEL, periodicidadCorta } from "@/lib/finanzas";
+import type { Actividad, CategoriaGasto, EstadoProyecto, EstadoTarea, MetodoCobro, Periodicidad } from "@/lib/types";
 
 /** Una acción del historial convertida en frase. `verbo` va en 3.ª persona
  * ("completó") y `verboTu` en 2.ª ("completaste") para tus propias acciones. */
@@ -22,6 +23,7 @@ type Frase = {
 
 const cita = (t: string | null | undefined) => (t ? `«${t}»` : "");
 const texto = (v: unknown) => (typeof v === "string" ? v : null);
+const importe = (v: unknown) => (typeof v === "number" || typeof v === "string" ? eur(v) : "");
 
 function describir(a: Actividad): Frase {
   const nombre = cita(a.titulo);
@@ -128,6 +130,85 @@ function describir(a: Actividad): Frase {
         href: "/calendario",
         complemento: cuando ? { texto: `para el ${new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(new Date(cuando))} a las ${formatHora(cuando)}` } : undefined,
         punto: "bg-pink-500",
+      };
+    }
+
+    case "factura": {
+      const href = `/finanzas/facturas/${a.entidad_id}`;
+      const cuenta = texto(a.datos?.cuenta_nombre);
+      const total = importe(a.datos?.total);
+      const detalle = [cuenta && `a ${cuenta}`, total].filter(Boolean).join(" · ");
+      const acciones: Record<string, [string, string, string]> = {
+        emitida: ["emitió la factura", "emitiste la factura", "bg-emerald-500"],
+        enviada: ["envió la factura", "enviaste la factura", "bg-sky-500"],
+        cobrada: ["terminó de cobrar la factura", "terminaste de cobrar la factura", "bg-emerald-500"],
+        cancelada: ["canceló la factura", "cancelaste la factura", "bg-red-400"],
+      };
+      const [v, vt, p] = acciones[a.accion] ?? [a.accion, a.accion, "bg-ink3"];
+      return {
+        verbo: v,
+        verboTu: vt,
+        objeto: nombre,
+        href,
+        complemento: a.accion === "emitida" && detalle ? { texto: detalle } : undefined,
+        punto: p,
+      };
+    }
+
+    case "cobro": {
+      const facturaId = texto(a.datos?.factura_id);
+      const href = facturaId ? `/finanzas/facturas/${facturaId}` : null;
+      const cuanto = importe(a.datos?.importe);
+      const metodo = texto(a.datos?.metodo);
+      if (a.accion === "eliminado")
+        return {
+          verbo: `eliminó un cobro de ${cuanto} de la factura`,
+          verboTu: `eliminaste un cobro de ${cuanto} de la factura`,
+          objeto: nombre,
+          href,
+          punto: "bg-red-400",
+        };
+      return {
+        verbo: `cobró ${cuanto} de la factura`,
+        verboTu: `cobraste ${cuanto} de la factura`,
+        objeto: nombre,
+        href,
+        complemento: metodo ? { texto: `por ${(METODO_COBRO_LABEL[metodo as MetodoCobro] ?? metodo).toLowerCase()}` } : undefined,
+        punto: "bg-emerald-500",
+      };
+    }
+
+    case "gasto": {
+      const cuanto = importe(a.datos?.importe);
+      const categoria = texto(a.datos?.categoria);
+      const renovacion = !!a.datos?.suscripcion_id;
+      return {
+        verbo: renovacion ? "registró la renovación de" : "registró el gasto",
+        verboTu: renovacion ? "registraste la renovación de" : "registraste el gasto",
+        objeto: nombre,
+        href: renovacion ? "/finanzas/suscripciones" : "/finanzas/gastos",
+        complemento: {
+          texto: [cuanto, !renovacion && categoria ? CATEGORIA_GASTO_LABEL[categoria as CategoriaGasto] ?? categoria : null]
+            .filter(Boolean)
+            .join(" · "),
+        },
+        punto: "bg-amber-500",
+      };
+    }
+
+    case "suscripcion": {
+      const href = "/finanzas/suscripciones";
+      if (a.accion === "pausada") return { verbo: "pausó la suscripción", verboTu: "pausaste la suscripción", objeto: nombre, href, punto: "bg-ink3" };
+      if (a.accion === "reactivada")
+        return { verbo: "reactivó la suscripción", verboTu: "reactivaste la suscripción", objeto: nombre, href, punto: "bg-ink3" };
+      const periodicidad = texto(a.datos?.periodicidad);
+      return {
+        verbo: "añadió la suscripción",
+        verboTu: "añadiste la suscripción",
+        objeto: nombre,
+        href,
+        complemento: { texto: `${importe(a.datos?.importe)}${periodicidad ? periodicidadCorta(periodicidad as Periodicidad) : ""}` },
+        punto: "bg-orange-400",
       };
     }
   }

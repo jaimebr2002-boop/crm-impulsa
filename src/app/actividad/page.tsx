@@ -9,7 +9,7 @@ import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
 import { ActividadPaginada } from "@/components/trabajo/ActividadPaginada";
 import { Cabecera, Segmentado } from "@/components/ui/Cabecera";
 
-type Tipo = "todo" | "proyectos" | "tareas" | "ventas" | "cuentas";
+type Tipo = "todo" | "proyectos" | "tareas" | "ventas" | "cuentas" | "finanzas";
 
 const ENTIDADES: Record<Tipo, string[] | undefined> = {
   todo: undefined,
@@ -17,6 +17,7 @@ const ENTIDADES: Record<Tipo, string[] | undefined> = {
   tareas: ["tarea"],
   ventas: ["lead"],
   cuentas: ["cuenta", "marca"],
+  finanzas: ["factura", "cobro", "gasto", "suscripcion"],
 };
 
 export default function ActividadPage() {
@@ -70,6 +71,7 @@ function Actividad() {
               { id: "tareas", label: "Tareas" },
               { id: "ventas", label: "Ventas" },
               { id: "cuentas", label: "Cuentas" },
+              { id: "finanzas", label: "Finanzas" },
             ]}
             valor={tipo}
             onChange={setTipo}
