@@ -3,10 +3,9 @@
 --
 -- Pasos para dar de alta a Jaime, Laura y Reyes:
 --   1. Crea sus cuentas de Auth (dashboard: Authentication → Users → Invite
---      user, o vía `supabase.auth.admin.inviteUserByEmail(email, { data:
---      { nombre, rol } })`), pasando nombre y rol ('admin' | 'comercial')
---      en el metadata del usuario.
---   2. El trigger `handle_new_user` (ver 0002_auth_roles_rls.sql) crea
---      automáticamente su fila en `usuarios` a partir de ese metadata.
---
--- No es necesario ejecutar ningún SQL adicional para el alta normal.
+--      user), opcionalmente con { "nombre": "…" } en el metadata.
+--   2. El trigger `handle_new_user` crea su fila en `usuarios`. Desde 0008
+--      toda cuenta nace 'comercial': el rol NUNCA se toma del metadata (lo
+--      controla quien se registra).
+--   3. Para hacer admin a alguien, en el SQL Editor:
+--      update usuarios set rol = 'admin' where email = '…';

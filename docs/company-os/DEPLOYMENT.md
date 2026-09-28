@@ -29,7 +29,7 @@ No hay ninguna variable secreta: la app **no usa service role** (el PDF se gener
 
 ## 3. Prerrequisitos (una vez)
 
-1. **Auth de producción** → *Authentication → Sign In / Providers*: **desactivar "Allow new users to sign up"** (las cuentas se crean desde el panel). Mientras 0008 no esté aplicada, `handle_new_user` toma el rol de los metadatos del registro: con el registro abierto, cualquiera podría darse de alta como admin.
+1. **Auth de producción** → *Authentication → Sign In / Providers* → sección *User Signups*: **desactivar "Allow new users to sign up"** y guardar (las cuentas se crean desde *Authentication → Users → Invite user*). Comprobación: `GET https://sfjzwieddvniimeetrud.supabase.co/auth/v1/settings` con la cabecera `apikey: <clave publicable>` debe devolver `"disable_signup": true`. (El 29-09-2026 devolvía `false`; la escalada a admin ya está cerrada por la corrección de `handle_new_user`, pero un desconocido aún podría crear una cuenta `comercial`.)
 2. Acceso al panel de Supabase de producción y al proyecto de Vercel.
 3. `psql` o `pg_dump` 17 en tu ordenador (o Supabase CLI) y la cadena de conexión de producción (*Connect → Session pooler*).
 4. Estar en la rama validada, con el último Preview en verde y `tsc`, `lint` y `next build` limpios.
@@ -39,15 +39,34 @@ No hay ninguna variable secreta: la app **no usa service role** (el PDF se gener
 El plan Free no tiene copias descargables ni PITR, así que el backup lo haces tú:
 
 ```bash
-# Esquema + datos de public y auth (roles incluidos), formato restaurable
+# 0. Cadena de conexión: Supabase → proyecto CRM IMPULSA STUDIO → botón "Connect" →
+#    "Session pooler" → copiar la URI y poner tu contraseña de la base de datos.
+#    (Si no la recuerdas: Project Settings → Database → Reset database password.)
+export DB_URL_PRODUCCION='postgresql://postgres.sfjzwieddvniimeetrud:TU_CONTRASEÑA@aws-0-eu-west-1.pooler.supabase.com:5432/postgres'
+mkdir -p backup-crm && cd backup-crm
+
+# 1. Esquema + datos de public y auth, formato restaurable (pg_dump 17: la base es Postgres 17)
 pg_dump "$DB_URL_PRODUCCION" --schema=public --schema=auth --no-owner --no-privileges \
   -Fc -f crm-prod-$(date +%Y%m%d-%H%M).dump
-# Comprobación: debe listar leads, interacciones, eventos, usuarios
+# 2. La misma copia en SQL legible (por si hay que mirar o restaurar a mano)
+pg_dump "$DB_URL_PRODUCCION" --schema=public --schema=auth --no-owner --no-privileges \
+  -f crm-prod-$(date +%Y%m%d-%H%M).sql
+
+# 3. CSV de las cuatro tablas del CRM
+for t in usuarios leads interacciones eventos; do
+  psql "$DB_URL_PRODUCCION" -c "\copy (select * from public.$t order by id) to '$t.csv' csv header"
+done
+
+# 4. Comprobaciones: el dump contiene los datos y los CSV tienen las filas esperadas
 pg_restore -l crm-prod-*.dump | grep -E "TABLE DATA public (leads|interacciones|eventos|usuarios)"
+wc -l *.csv    # usuarios 4, leads 72, interacciones 64, eventos 6 (cabecera incluida)
+psql "$DB_URL_PRODUCCION" -f ../supabase/scripts/huella_datos.sql > huella-antes.txt
 ```
 
+Guarda la carpeta `backup-crm` fuera del repo (contiene datos personales). Si no tienes `pg_dump` 17: `brew install postgresql@17` (macOS) o la Supabase CLI (`supabase db dump`).
+
 Además:
-- **CSV de respaldo** (Table Editor → Export) de `leads`, `interacciones`, `eventos` y `usuarios`.
+- **CSV desde el panel** (alternativa si no tienes `psql`): Table Editor → cada tabla → Export → CSV.
 - **Storage**: producción no tiene buckets (verificado); no hay nada que copiar.
 - **Huella**: ejecuta `supabase/scripts/huella_datos.sql` en el SQL Editor y guarda el resultado (número de filas y md5 por tabla).
 
@@ -120,16 +139,23 @@ Solo lectura, o acciones reales que harías igualmente. **No** ejecutar las bate
 | RLS admin / comercial / anónimo (en Postgres) | ✓ | ✓ | — |
 | Código de `master` sobre la base migrada | — | ✓ | — |
 | Storage: bucket privado, límites, políticas en SQL | ✓ simulado | ✓ | — |
-| Storage por HTTP (subida, signed URL, MIME, 50 MB, comercial) | ✓ simulado | **Pendiente**: `scripts/verificar-staging.mjs` | — |
-| PDF en Vercel (`/api/facturas/[id]/pdf`) | ✓ | **Pendiente** (mismo script) | — |
-| Preview de Vercel | — | ✓ build, middleware (redirige a /login), usa staging | — |
+| Storage por HTTP (API real de Storage) | ✓ simulado | ✓ 22 casos (ver abajo) | — |
+| PDF en Vercel (`/api/facturas/[id]/pdf`) | ✓ | ✓ 12 casos en el Preview real (ver abajo) | — |
+| Preview de Vercel | — | ✓ build, middleware, 22 rutas con sesión real, usa staging | — |
+| Navegador real contra el Preview (clics, ⌘K, drag & drop) | ✓ (Playwright) | ✗ no disponible desde el entorno | — |
 
-Para completar lo pendiente, con red hacia `*.supabase.co` y `*.vercel.app`:
-`node scripts/verificar-staging.mjs` (instrucciones dentro del archivo).
+**Cómo se probó staging por HTTP (29-09-2026).** El entorno de trabajo no tiene red hacia `*.supabase.co` / `*.vercel.app`, así que las peticiones HTTP reales se lanzaron desde el Postgres de **staging** con la extensión `http` (solo en staging): login real en Supabase Auth, llamadas a la API de Storage y al Preview de Vercel con la cookie de sesión que escribe `@supabase/ssr`. `scripts/verificar-staging.mjs` hace lo mismo desde Node para repetirlo desde un ordenador con red.
+
+Storage (22/22): admin sube, descarga, signed URL de 60 s (200 sin sesión), signed URL de 1 s caducada (400 `exp`), sin URL pública, subir encima sin upsert (409), reemplazar con PUT, HTML y MIME ejecutable rechazados (415), `.exe` con MIME PDF y ruta sin `{uuid}` rechazados por la política (403), > 50 MB rechazado (413), comercial no lista/sube/descarga/firma/borra, anónimo no descarga/sube/lista, admin borra.
+Nota: Storage sirve **desde la caché de Cloudflare** la misma URL con el mismo token durante un rato (`cf-cache-status: HIT`) aunque el objeto se haya reemplazado o borrado. Sin fuga entre usuarios (un comercial recibe 404 sobre la misma URL) y sin efecto en la app: abre siempre con signed URLs únicas y cada PDF regenerado usa una ruta nueva.
+
+PDF en Vercel (12/12): sin sesión 401, comercial 404, admin 200 (~1,5 s desde `iad1`), `pdf_path` + huella + `pdf_estado = actualizado`, 1 fila en `documentos` (`generado`), objeto `application/pdf` en Storage, se abre por signed URL, se descarga como `attachment`, regenerar crea ruta nueva y borra el objeto anterior (sigue 1 documento), modificar la factura → `desactualizado`, actividad «pdf» (generado y regenerado). Sin datos fiscales el endpoint responde 422 con la lista de lo que falta (comportamiento esperado).
 
 ## 10. Problemas conocidos
 
-- **Estados legacy** en producción ("Contactado", "Cerrado", "En negociación", "WhatsApp", "Frío", "No tocar"…). La app los tolera: los inequívocos se leen como su estado y el resto aparece en "Otros estados". Para arreglarlos de verdad, usar `normalizar_leads_legacy.sql` (con decisión sobre "En negociación", "No tocar", "No la vieron").
+- **Estados legacy** en producción ("Contactado", "Cerrado", "En negociación", "WhatsApp", "Frío", "No tocar"…). La app los tolera: "Contactado" se lee como Contactado; el resto aparece tal cual en "Otros estados". "Cerrado" **no** se da por Ganado (los 18 son "No tocar": podrían ser perdidos). Para arreglarlos de verdad, `normalizar_leads_legacy.sql` con decisión sobre "Cerrado", "En negociación", "No tocar", "No la vieron".
+- **Registro público de Auth**: estaba activo en producción. El 29-09-2026 se aplicó en producción solo la corrección de `handle_new_user` (idéntica a 0008: toda cuenta nueva nace `comercial`), así que ya no hay escalada a admin. Sigue siendo necesario desactivar "Allow new users to sign up".
+- **Comercial en rutas de admin**: la página se sirve (200) y el cliente redirige a Seguimientos; los datos los protege RLS (0 filas).
 - **Previews y producción**: antes de `next.config.mjs`, todos los Preview usaban el Supabase de producción porque `.env.production` está versionado. Ya no, pero los deployments antiguos siguen apuntando allí: están protegidos por Vercel Authentication; si quieres, bórralos.
 - **Rol de un usuario**: con 0008, `update usuarios set rol = 'admin' where email = '…'` funciona desde el SQL Editor (antes lo bloqueaba el trigger de 0006).
 - **Logs de Vercel**: la retención en Hobby es de 1 hora.
