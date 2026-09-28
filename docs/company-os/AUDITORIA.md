@@ -120,7 +120,7 @@ Estados de proyecto: `pendiente, preparado, en_progreso, esperando, revision, en
 Principal   Inicio (/inicio)
 Trabajo     Proyectos (/proyectos) · Tareas (/tareas) · Calendario (/calendario)
 Ventas      Leads (/leads) · Seguimientos (/hoy) · Importar (/importar)
-Negocio     Finanzas (/finanzas, F3) · Gastos (/gastos, F3)
+Negocio     Ventas (/leads) · Cuentas (/cuentas) · Finanzas (/finanzas: Resumen · Facturas · Gastos · Suscripciones)
 Información Documentos (/documentos, F4) · Analítica (/analitica)
 Sistema     Configuración (/perfil)
 ```
@@ -157,6 +157,17 @@ Sistema     Configuración (/perfil)
   - **Las notas de cuentas y marcas** usan las columnas `notas` existentes: no hace falta tabla.
   - **Métricas de cuenta solo de proyectos** ("Valor de proyectos", "Valor en curso"). Facturado, cobrado y pendiente llegarán con Finanzas.
 - Probado con PostgreSQL 16 + PostgREST 12 simulando Supabase: migraciones 0001–0009 en limpio y re-ejecutadas, 0009 sobre datos de 0008 (relleno de actividad), RLS de comercial en eventos nuevos, y un recorrido en navegador que cubre crear cuenta, marca y proyecto desde la cuenta, tarea desde un proyecto, cambiar de estado, completar, navegar cuenta ↔ proyecto, ⌘K, calendario, actividad, móvil, modo oscuro y los permisos de un comercial.
+
+**Fase 3 — completada** (misma rama). Migración `0010_company_os_finance.sql`. Detalle del modelo, las reglas y las decisiones en [`FINANZAS.md`](./FINANZAS.md).
+
+- Facturas N:M con proyectos (líneas), numeración segura, IVA/IRPF por factura, cobros parciales, gastos, suscripciones con «Registrar periodo», resumen financiero, finanzas en cuentas, proyectos, Inicio, calendario, actividad, ⌘K y Analítica.
+- Decisiones:
+  - **Finanzas es una sola entrada de menú** con pestañas internas (Resumen · Facturas · Gastos · Suscripciones) en vez de dos entradas: todo es del mismo dominio y la barra lateral no crece.
+  - **Totales y estado de cobro en BD** (triggers y vista `facturas_estado`), nunca en el navegador. El frontend usa céntimos enteros solo para previsualizar.
+  - **El número se asigna al emitir**: los borradores no gastan números ni dejan huecos.
+  - **Facturado/cobrado/pendiente con el total** (lo que entra en el banco); **proyectos y desgloses en base** (comparables con el importe del proyecto).
+  - **Suscripción = plantilla**, gasto = pago real. No hay tareas programadas: se registra cada periodo con un clic.
+  - **«Caja neta (aprox.)»** = cobrado − gastos, nunca «beneficio».
 
 ## 13. Roadmap
 
