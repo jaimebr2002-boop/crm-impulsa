@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { listarCuentas } from "@/lib/data/cuentas";
 import { listarProyectos } from "@/lib/data/proyectos";
 import { facturacionDeProyectos, guardarFactura, type CabeceraFactura } from "@/lib/data/finanzas";
+import { obtenerAjustes } from "@/lib/data/ajustes";
 import { hoyYMD } from "@/lib/dates";
-import { aCentimos, calcularTotales, deCentimos, eur, vencimientoPorDefecto } from "@/lib/finanzas";
+import { aCentimos, calcularTotales, deCentimos, eur, repartoFacturacion, vencimientoPorDefecto } from "@/lib/finanzas";
 import { contextoDeProyecto } from "@/lib/trabajo";
 import type { Cuenta, LineaBorrador, ProyectoConRelaciones, ProyectoFacturacion } from "@/lib/types";
 import { IconMas, IconPapelera } from "../Icons";
@@ -65,11 +66,36 @@ export function FacturaForm({
         setFacturacion(f);
       })
       .catch(() => {});
+    // Factura nueva: IVA, IRPF y vencimiento por defecto de Configuración.
+    if (!existente)
+      obtenerAjustes()
+        .then((a) => {
+          if (!a) return;
+          setIvaPct(Number(a.iva_pct_defecto));
+          setIrpfPct(Number(a.irpf_pct_defecto));
+          setVencimiento(a.dias_vencimiento > 0 ? vencimientoPorDefecto(hoyYMD(), a.dias_vencimiento) : "");
+        })
+        .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Lo que queda por facturar de un proyecto (valor − facturado), nunca negativo. */
-  const porFacturar = (p: ProyectoConRelaciones) =>
-    p.importe == null ? null : deCentimos(Math.max(0, aCentimos(p.importe) - aCentimos(facturacion[p.id]?.facturado ?? 0)));
+  // Si se edita un borrador, sus propias líneas no cuentan como "en otro borrador".
+  const propioBorrador = useMemo(() => {
+    const m: Record<string, number> = {};
+    if (existente?.estado === "borrador")
+      for (const l of existente.lineas)
+        if (l.proyecto_id) m[l.proyecto_id] = (m[l.proyecto_id] ?? 0) + aCentimos(l.cantidad) * aCentimos(l.precio_unitario) / 100;
+    return m;
+  }, [existente]);
+
+  /** Reparto del proyecto (facturado, en otros borradores y lo que falta por preparar). */
+  const reparto = (p: ProyectoConRelaciones) => {
+    const f = facturacion[p.id];
+    const enBorrador = deCentimos(Math.max(aCentimos(f?.en_borrador ?? 0) - Math.round(propioBorrador[p.id] ?? 0), 0));
+    return repartoFacturacion(p, f ? { ...f, en_borrador: enBorrador } : undefined);
+  };
+  /** Lo que queda por facturar de un proyecto (sin contar lo ya preparado en otro borrador). */
+  const porFacturar = (p: ProyectoConRelaciones) => (p.importe == null ? null : reparto(p).porPreparar);
 
   // "Añadir a factura" desde un proyecto: entra como primera línea con lo pendiente.
   useEffect(() => {
@@ -276,10 +302,12 @@ export function FacturaForm({
             <option value="">{proyectosDisponibles.length || !cuentaId ? "+ Añadir proyecto…" : "Sin más proyectos en esta cuenta"}</option>
             {proyectosDisponibles.map((p) => {
               const pend = porFacturar(p);
+              const r = reparto(p);
               return (
                 <option key={p.id} value={p.id}>
                   {contextoDeProyecto(p)}
-                  {pend != null ? ` — ${pend > 0 ? `${eur(pend)} por facturar` : "ya facturado"}` : ""}
+                  {pend != null ? ` — ${pend > 0 ? `${eur(pend)} por facturar` : r.enBorrador > 0 ? "ya en un borrador" : "ya facturado"}` : ""}
+                  {pend != null && pend > 0 && r.enBorrador > 0 ? ` (${eur(r.enBorrador)} en borrador)` : ""}
                 </option>
               );
             })}

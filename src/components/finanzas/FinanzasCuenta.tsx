@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { useApp } from "@/context/AppContext";
 import { formatYMDCorta } from "@/lib/dates";
-import { aCentimos, deCentimos, eur, METODO_COBRO_LABEL } from "@/lib/finanzas";
+import { aCentimos, deCentimos, eur, METODO_COBRO_LABEL, repartoFacturacion } from "@/lib/finanzas";
 import type { CobroConFactura, FacturaConCuenta, ProyectoConRelaciones, ProyectoFacturacion } from "@/lib/types";
 import { Panel } from "../ui/Panel";
 import { EstadoFacturaChip } from "./EstadoFactura";
 import { IconMas } from "../Icons";
 
-/** Importe de un proyecto que aún no está en ninguna factura emitida (base, sin IVA). */
+/** Lo que falta por meter en alguna factura (ni emitida ni en borrador). Base, sin IVA. */
 export function porFacturar(p: Pick<ProyectoConRelaciones, "importe" | "estado">, fact: ProyectoFacturacion | undefined): number {
-  if (p.estado === "cancelado" || p.importe == null) return 0;
-  return Math.max(deCentimos(aCentimos(p.importe) - aCentimos(fact?.facturado ?? 0)), 0);
+  return repartoFacturacion(p, fact).porPreparar;
 }
 
 /** Pestaña Finanzas de una cuenta: qué falta por facturar, sus facturas y sus cobros. */
@@ -30,11 +29,15 @@ export function FinanzasCuenta({
   facturacion: Record<string, ProyectoFacturacion>;
 }) {
   const { abrirAlta } = useApp();
-  const sinFacturar = proyectos
-    .map((p) => ({ p, falta: porFacturar(p, facturacion[p.id]) }))
-    .filter((x) => x.falta > 0)
-    .sort((a, b) => b.falta - a.falta);
-  const totalSinFacturar = deCentimos(sinFacturar.reduce((t, x) => t + aCentimos(x.falta), 0));
+  // Proyectos con algo pendiente de emitir: sin preparar (se ofrece "Facturar")
+  // o ya preparado en un borrador (se muestra "En borrador", no se ofrece otra vez).
+  const filas = proyectos
+    .map((p) => ({ p, r: repartoFacturacion(p, facturacion[p.id]) }))
+    .filter((x) => x.r.porPreparar > 0 || x.r.enBorrador > 0)
+    .sort((a, b) => b.r.porPreparar - a.r.porPreparar || b.r.enBorrador - a.r.enBorrador);
+  const sinFacturar = filas.filter((x) => x.r.porPreparar > 0);
+  const totalSinFacturar = deCentimos(sinFacturar.reduce((t, x) => t + aCentimos(x.r.porPreparar), 0));
+  const totalBorrador = deCentimos(filas.reduce((t, x) => t + aCentimos(x.r.enBorrador), 0));
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,27 +64,47 @@ export function FinanzasCuenta({
             : undefined
         }
       >
-        {sinFacturar.length === 0 ? (
+        {filas.length === 0 ? (
           <p className="px-4 py-6 text-center text-sm text-ink3">Todo el valor de los proyectos está facturado.</p>
         ) : (
           <ul className="divide-y divide-line">
-            {sinFacturar.map(({ p, falta }) => (
+            {filas.map(({ p, r }) => (
               <li key={p.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
                 <Link href={`/proyectos/${p.id}`} className="min-w-0 flex-1 truncate font-medium text-ink hover:underline">
                   {p.nombre}
                 </Link>
                 <span className="hidden text-xs text-ink3 sm:block">
-                  {aCentimos(facturacion[p.id]?.facturado ?? 0) > 0 ? `${eur(facturacion[p.id]?.facturado)} de ${eur(p.importe)}` : "Sin facturar"}
+                  {[
+                    r.facturado > 0 ? `${eur(r.facturado)} facturado` : r.enBorrador > 0 ? null : "Sin facturar",
+                    r.enBorrador > 0 && r.porPreparar > 0 ? `${eur(r.enBorrador)} en borrador` : null,
+                    r.valor != null && (r.facturado > 0 || r.enBorrador > 0) ? `de ${eur(r.valor)}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </span>
-                <span className="w-24 text-right font-medium tabular-nums text-ink">{eur(falta)}</span>
-                <button onClick={() => abrirAlta({ tipo: "factura", cuentaId, proyectoIds: [p.id] })} className="btn-ghost py-1 text-xs">
-                  Facturar
-                </button>
+                {r.porPreparar > 0 ? (
+                  <>
+                    <span className="w-24 text-right font-medium tabular-nums text-ink">{eur(r.porPreparar)}</span>
+                    <button onClick={() => abrirAlta({ tipo: "factura", cuentaId, proyectoIds: [p.id] })} className="btn-ghost w-24 py-1 text-xs">
+                      Facturar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-24 text-right tabular-nums text-ink3">{eur(r.enBorrador)}</span>
+                    <Link href={`/finanzas/facturas/${r.borradores[0]}`} className="w-24 text-center">
+                      <span className="chip border-line text-ink2">En borrador</span>
+                    </Link>
+                  </>
+                )}
               </li>
             ))}
           </ul>
         )}
-        <p className="border-t border-line px-4 py-2 text-xs text-ink3">Importes sin IVA: valor del proyecto menos lo ya facturado.</p>
+        <p className="border-t border-line px-4 py-2 text-xs text-ink3">
+          Sin IVA: valor del proyecto − facturado (emitido) − lo que ya está en un borrador.
+          {totalBorrador > 0 ? ` En borradores: ${eur(totalBorrador)} (aún no cuenta como facturado).` : ""}
+        </p>
       </Panel>
 
       <Panel titulo="Facturas" contador={facturas.length}>

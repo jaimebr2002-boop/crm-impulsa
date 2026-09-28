@@ -4,10 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { facturacionDeProyecto, facturasDeProyecto } from "@/lib/data/finanzas";
-import { aCentimos, eur, estadoFacturacionProyecto, ESTADO_FACTURACION_LABEL } from "@/lib/finanzas";
+import { aCentimos, eur, estadoFacturacionProyecto, ESTADO_FACTURACION_LABEL, repartoFacturacion } from "@/lib/finanzas";
 import type { FacturaConCuenta, ProyectoConRelaciones, ProyectoFacturacion } from "@/lib/types";
 import { EstadoFacturaChip } from "./EstadoFactura";
-import { porFacturar } from "./FinanzasCuenta";
 
 const ESTILO = {
   sin_facturar: "border-line text-ink2",
@@ -39,7 +38,8 @@ export function FacturacionProyecto({ proyecto }: { proyecto: ProyectoConRelacio
 
   const facturado = Number(fact?.facturado ?? 0);
   const estado = estadoFacturacionProyecto(proyecto.importe, facturado);
-  const falta = porFacturar(proyecto, fact ?? undefined);
+  const r = repartoFacturacion(proyecto, fact);
+  const falta = r.porPreparar;
 
   return (
     <div className="mt-4 rounded-xl border border-line bg-surface p-4 text-sm" data-testid="facturacion-proyecto">
@@ -55,6 +55,7 @@ export function FacturacionProyecto({ proyecto }: { proyecto: ProyectoConRelacio
             <Fila label="Valor" valor={proyecto.importe != null ? eur(proyecto.importe) : "—"} />
             <Fila label="Facturado" valor={eur(facturado)} />
             <Fila label="Cobrado" valor={eur(fact?.cobrado ?? 0)} />
+            {r.enBorrador > 0 ? <Fila label="En borrador" valor={eur(r.enBorrador)} /> : null}
           </dl>
           {facturas.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-1.5 border-t border-line pt-3">
@@ -78,7 +79,14 @@ export function FacturacionProyecto({ proyecto }: { proyecto: ProyectoConRelacio
               {aCentimos(falta) > 0 ? ` ${eur(falta)}` : ""}
             </button>
           ) : null}
-          <p className="mt-2 text-[11px] text-ink3">Sin IVA. Cobrado: parte proporcional de los cobros de sus facturas.</p>
+          {aCentimos(falta) === 0 && r.enBorrador > 0 && r.borradores[0] ? (
+            <Link href={`/finanzas/facturas/${r.borradores[0]}`} className="btn-ghost mt-3 w-full justify-center py-1.5 text-xs">
+              En borrador · revisar y emitir
+            </Link>
+          ) : null}
+          <p className="mt-2 text-[11px] text-ink3">
+            Sin IVA. Facturado: solo facturas emitidas. Cobrado: parte proporcional de los cobros de sus facturas.
+          </p>
         </>
       )}
     </div>

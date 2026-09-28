@@ -25,6 +25,7 @@ import type {
   LineaBorrador,
   MetodoCobro,
   Periodicidad,
+  ProyectoFacturacion,
   Suscripcion,
 } from "./types";
 
@@ -261,6 +262,30 @@ export function estadoFacturacionProyecto(valor: number | null, facturado: numbe
   if (aCentimos(facturado) <= 0) return "sin_facturar";
   if (valor != null && aCentimos(facturado) < aCentimos(valor)) return "parcial";
   return "facturado";
+}
+
+/**
+ * Reparto del valor de un proyecto (sin IVA):
+ *  · facturado  = líneas en facturas EMITIDAS (la única definición de "facturado").
+ *  · enBorrador = líneas en facturas BORRADOR: aún no es facturado, pero ya está preparado.
+ *  · porPreparar = valor − facturado − enBorrador (nunca negativo): lo que sigue sin
+ *    estar en ninguna factura. Es lo que se ofrece "Facturar", para no duplicar un
+ *    proyecto que ya está en un borrador.
+ */
+export function repartoFacturacion(
+  p: { importe: number | null; estado?: string },
+  fact: Pick<ProyectoFacturacion, "facturado" | "en_borrador" | "borradores"> | undefined | null
+) {
+  const facturado = aCentimos(fact?.facturado ?? 0);
+  const enBorrador = aCentimos(fact?.en_borrador ?? 0);
+  const valor = p.estado === "cancelado" || p.importe == null ? null : aCentimos(p.importe);
+  return {
+    valor: valor == null ? null : deCentimos(valor),
+    facturado: deCentimos(facturado),
+    enBorrador: deCentimos(enBorrador),
+    porPreparar: valor == null ? 0 : deCentimos(Math.max(valor - facturado - enBorrador, 0)),
+    borradores: fact?.borradores ?? [],
+  };
 }
 
 export const ESTADO_FACTURACION_LABEL: Record<EstadoFacturacionProyecto, string> = {
