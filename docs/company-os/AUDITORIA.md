@@ -168,6 +168,9 @@ Sistema     Configuración (/perfil)
   - **Facturado/cobrado/pendiente con el total** (lo que entra en el banco); **proyectos y desgloses en base** (comparables con el importe del proyecto).
   - **Suscripción = plantilla**, gasto = pago real. No hay tareas programadas: se registra cada periodo con un clic.
   - **«Caja neta (aprox.)»** = cobrado − gastos, nunca «beneficio».
+- Probado con PostgreSQL 16 + PostgREST 12 simulando Supabase:
+  - Base de datos: migraciones 0001–0010 en limpio y 0010 re-ejecutada, con cálculo fiscal y redondeo, numeración, cobros parciales o excesivos, vencidas, borradores, número duplicado, edición con cobros, renovaciones duplicadas, actividad, y RLS de comercial y anónimo.
+  - Navegador, 36 comprobaciones: factura multi-proyecto desde Fer, cobros, emitir, editar, enviar, cancelar, borrar borrador, filtros, gasto desde proyecto, suscripciones, KPIs contrastados con la BD, Inicio, calendario, actividad, ⌘K, Analítica y un comercial sin acceso por URL ni por búsqueda. También escritorio, móvil y modo oscuro.
 
 ## 13. Roadmap
 
