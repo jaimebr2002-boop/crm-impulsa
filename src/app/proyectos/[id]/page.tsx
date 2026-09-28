@@ -658,7 +658,7 @@ function Enlaces({
           Añadir
         </button>
       </form>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="field-error">{error}</p> : null}
     </div>
   );
 }

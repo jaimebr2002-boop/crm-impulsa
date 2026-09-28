@@ -1,5 +1,6 @@
 "use client";
 
+import { ErrorState } from "@/components/ErrorState";
 import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { faltanDatosEmisor, guardarAjustes, obtenerAjustes } from "@/lib/data/ajustes";
@@ -69,7 +70,7 @@ export function ConfiguracionFacturacion() {
     cargar();
   }, [cargar]);
 
-  if (error) return <p className="text-sm text-red-600">{error}</p>;
+  if (error) return <ErrorState mensaje={error} />;
   if (!ajustes) return <div className="skeleton h-64 w-full rounded-xl" />;
 
   const falta = faltanDatosEmisor(ajustes);

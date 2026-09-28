@@ -1,5 +1,6 @@
 "use client";
 
+import { ErrorState } from "@/components/ErrorState";
 import { useCallback, useEffect, useState } from "react";
 import { listarActividad, type FiltroActividad } from "@/lib/data/actividad";
 import type { Actividad } from "@/lib/types";
@@ -44,7 +45,7 @@ export function ActividadPaginada({
     cargar();
   }, [cargar]);
 
-  if (error) return <p className="py-6 text-center text-sm text-red-600">{error}</p>;
+  if (error) return <ErrorState mensaje={error} />;
   if (cargando && items.length === 0) return <SkeletonLineas filas={5} alto="h-8" />;
 
   return (

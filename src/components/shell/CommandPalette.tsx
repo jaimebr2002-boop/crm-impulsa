@@ -61,12 +61,15 @@ export function CommandPalette() {
 
   const cerrar = () => setPaletaAbierta(false);
 
+  // Se limpia al cerrar (no al abrir): así, al reabrir con ⌘K, lo primero que se teclea no se
+  // mezcla con la búsqueda anterior.
   useEffect(() => {
     if (paletaAbierta) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else {
       setTexto("");
       setResultados([]);
       setIndice(0);
-      setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [paletaAbierta]);
 
