@@ -10,6 +10,7 @@ import { listarActividad } from "@/lib/data/actividad";
 import { listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
 import { obtenerLeadsActuales } from "@/lib/data/analitica";
 import { listarCobros, listarFacturas } from "@/lib/data/finanzas";
+import { pendientesDocumentales } from "@/lib/data/documentos";
 import { aCentimos, calcularKpis, eur, periodoQueContiene } from "@/lib/finanzas";
 import { ESTADOS_ABIERTOS, formatEuros, sumarValor } from "@/lib/constants";
 import { aYMD, endOfDay, formatHora, formatYMDRelativa, hoyYMD, startOfDay, sumarDiasYMD } from "@/lib/dates";
@@ -62,6 +63,7 @@ function Inicio() {
   const [actividad, setActividad] = useState<Actividad[]>([]);
   const [facturas, setFacturas] = useState<FacturaConCuenta[]>([]);
   const [cobros, setCobros] = useState<CobroConFactura[]>([]);
+  const [papeleo, setPapeleo] = useState<{ gastosSinJustificante: number; facturasSinPdf: number; pdfDesactualizados: number } | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [anadirAbierto, setAnadirAbierto] = useState(false);
@@ -91,6 +93,10 @@ function Inicio() {
       setActividad(a);
       setFacturas(fs);
       setCobros(cs);
+      // Avisos de papeleo: no bloquean el Inicio si fallan.
+      pendientesDocumentales(periodoQueContiene("anio").desde)
+        .then(setPapeleo)
+        .catch(() => setPapeleo(null));
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se ha podido cargar el inicio.");
     } finally {
@@ -261,6 +267,27 @@ function Inicio() {
               { etiqueta: "Facturado este año", valor: eur(fin.anio.facturado), nota: `Cobrado ${eur(fin.anio.cobrado)}`, href: "/finanzas" },
             ]}
           />
+
+          {papeleo && (papeleo.gastosSinJustificante || papeleo.facturasSinPdf || papeleo.pdfDesactualizados) ? (
+            <p className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink3" data-testid="avisos-papeleo">
+              <span className="font-medium text-ink2">Papeleo pendiente:</span>
+              {papeleo.gastosSinJustificante ? (
+                <Link href="/finanzas/gastos?justificante=sin" className="hover:text-ink hover:underline">
+                  {papeleo.gastosSinJustificante} gasto{papeleo.gastosSinJustificante === 1 ? "" : "s"} sin justificante
+                </Link>
+              ) : null}
+              {papeleo.facturasSinPdf ? (
+                <Link href="/finanzas/facturas?estado=sinpdf" className="hover:text-ink hover:underline">
+                  {papeleo.facturasSinPdf} factura{papeleo.facturasSinPdf === 1 ? "" : "s"} emitida{papeleo.facturasSinPdf === 1 ? "" : "s"} sin PDF
+                </Link>
+              ) : null}
+              {papeleo.pdfDesactualizados ? (
+                <Link href="/finanzas/facturas?estado=sinpdf" className="text-amber-700 hover:underline dark:text-amber-400">
+                  {papeleo.pdfDesactualizados} PDF desactualizado{papeleo.pdfDesactualizados === 1 ? "" : "s"}
+                </Link>
+              ) : null}
+            </p>
+          ) : null}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Hoy */}

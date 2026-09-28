@@ -16,7 +16,7 @@ import {
   sumarImportes,
   type Periodo,
 } from "@/lib/finanzas";
-import type { CategoriaGasto, Gasto, ProyectoConRelaciones, Suscripcion } from "@/lib/types";
+import type { CategoriaGasto, DocumentoContexto, Gasto, ProyectoConRelaciones, Suscripcion } from "@/lib/types";
 import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
 import { FinanzasNav } from "@/components/finanzas/FinanzasNav";
 import { BarrasImporte, SelectorPeriodo } from "@/components/finanzas/SelectorPeriodo";
@@ -27,7 +27,10 @@ import { SkeletonLineas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { Modal } from "@/components/Modal";
 import { GastoForm } from "@/components/forms/GastoForm";
-import { IconMas, IconPapelera } from "@/components/Icons";
+import { IconClip, IconMas, IconPapelera } from "@/components/Icons";
+import { SeccionDocumentos } from "@/components/documentos/SeccionDocumentos";
+import { VisorDocumento } from "@/components/documentos/VisorDocumento";
+import { listarDocumentos } from "@/lib/data/documentos";
 
 type Tipo = "todos" | "puntuales" | "recurrentes";
 
@@ -43,10 +46,14 @@ export default function GastosPage() {
 
 function Gastos() {
   const { abrirAlta, versionDatos, avisar } = useApp();
-  const fecha = useSearchParams().get("fecha");
+  const params = useSearchParams();
+  const fecha = params.get("fecha");
+  const [sinJustificante, setSinJustificante] = useState(params.get("justificante") === "sin");
+  const [visor, setVisor] = useState<DocumentoContexto | null>(null);
   // ?fecha=YYYY-MM-DD (desde la búsqueda) abre el mes de ese gasto.
   const [periodo, setPeriodo] = useState<Periodo>(() =>
-    periodoQueContiene("mes", fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? ymdADate(fecha) : new Date())
+    // ?justificante=sin (aviso del Inicio) mira el año entero.
+    periodoQueContiene(params.get("justificante") === "sin" ? "anio" : "mes", fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? ymdADate(fecha) : new Date())
   );
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
@@ -57,6 +64,11 @@ function Gastos() {
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState<Gasto | null>(null);
   const [borrando, setBorrando] = useState<Gasto | null>(null);
+  const idEditando = editando?.id;
+  const cargarJustificantes = useCallback(
+    () => (idEditando ? listarDocumentos({ gastoId: idEditando }) : Promise.resolve([])),
+    [idEditando]
+  );
 
   const cargar = useCallback(async () => {
     setError(null);
@@ -80,12 +92,26 @@ function Gastos() {
     () =>
       gastos.filter(
         (g) =>
-          (tipo === "todos" || (tipo === "recurrentes" ? !!g.suscripcion_id : !g.suscripcion_id)) && (!categoria || g.categoria === categoria)
+          (tipo === "todos" || (tipo === "recurrentes" ? !!g.suscripcion_id : !g.suscripcion_id)) &&
+          (!categoria || g.categoria === categoria) &&
+          (!sinJustificante || !g.justificante_path)
       ),
-    [gastos, tipo, categoria]
+    [gastos, tipo, categoria, sinJustificante]
   );
 
   const total = sumarImportes(visibles, (g) => g.importe);
+
+  const adjuntar = (g: Gasto) =>
+    abrirAlta({ tipo: "documento", relacion: { tipo: "gasto", id: g.id, etiqueta: g.concepto }, categoria: "justificante", relacionFija: true });
+  async function verJustificante(g: Gasto) {
+    try {
+      const [d] = await listarDocumentos({ gastoId: g.id, categoria: "justificante", limite: 1 });
+      if (d) setVisor(d);
+      else avisar("No se encuentra el justificante.", { tono: "error" });
+    } catch (e) {
+      avisar(e instanceof Error ? e.message : "No se ha podido abrir.", { tono: "error" });
+    }
+  }
   const recurrente = sumarImportes(visibles.filter((g) => g.suscripcion_id), (g) => g.importe);
   const porCategoria = agruparImportes(visibles, (g) => g.categoria, (g) => g.importe).map((f) => ({
     clave: f.clave,
@@ -138,6 +164,13 @@ function Gastos() {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => setSinJustificante((v) => !v)}
+            aria-pressed={sinJustificante}
+            className={`rounded-lg border px-2.5 py-1.5 text-sm ${sinJustificante ? "border-ink bg-ink text-canvas" : "border-line bg-surface text-ink2 hover:text-ink"}`}
+          >
+            Sin justificante{gastos.filter((g) => !g.justificante_path && Number(g.importe) > 0).length ? ` ${gastos.filter((g) => !g.justificante_path && Number(g.importe) > 0).length}` : ""}
+          </button>
         </div>
       </div>
 
@@ -189,6 +222,25 @@ function Gastos() {
                             {p.nombre}
                           </Link>
                         ) : null}
+                        {g.justificante_path ? (
+                          <button
+                            onClick={() => verJustificante(g)}
+                            title="Justificante ✓ · ver"
+                            aria-label={`Ver justificante de ${g.concepto}`}
+                            className="rounded p-1 text-emerald-600 hover:bg-mute dark:text-emerald-400"
+                          >
+                            <IconClip className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => adjuntar(g)}
+                            title="Sin justificante · adjuntar"
+                            aria-label={`Adjuntar justificante a ${g.concepto}`}
+                            className="rounded p-1 text-ink3/60 hover:bg-mute hover:text-ink"
+                          >
+                            <IconClip className="h-4 w-4" />
+                          </button>
+                        )}
                         <span className="w-24 text-right font-medium tabular-nums text-ink">{eur(g.importe)}</span>
                         <button
                           onClick={() => setBorrando(g)}
@@ -221,8 +273,20 @@ function Gastos() {
               cargar();
             }}
           />
+          <div className="mt-5 border-t border-line pt-4">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-ink3">Justificante</p>
+            <SeccionDocumentos
+              cargar={cargarJustificantes}
+              relacion={{ tipo: "gasto", id: editando.id, etiqueta: editando.concepto }}
+              categoriaInicial="justificante"
+              textoBoton={editando.justificante_path ? "Añadir otro" : "Adjuntar justificante"}
+              vacio="Sin justificante."
+              compacta
+            />
+          </div>
         </Modal>
       ) : null}
+      {visor ? <VisorDocumento doc={visor} onCerrar={() => setVisor(null)} /> : null}
 
       {borrando ? (
         <Modal titulo="Eliminar gasto" onClose={() => setBorrando(null)}>

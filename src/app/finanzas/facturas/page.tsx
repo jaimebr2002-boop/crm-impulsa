@@ -16,8 +16,8 @@ import { SkeletonLineas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { IconBuscar, IconMas } from "@/components/Icons";
 
-type Filtro = "todas" | "pendientes" | "vencidas" | "cobradas" | "borradores";
-const FILTROS: Filtro[] = ["todas", "pendientes", "vencidas", "cobradas", "borradores"];
+type Filtro = "todas" | "pendientes" | "vencidas" | "cobradas" | "borradores" | "sinpdf";
+const FILTROS: Filtro[] = ["todas", "pendientes", "vencidas", "cobradas", "borradores", "sinpdf"];
 
 export default function FacturasPage() {
   return (
@@ -62,6 +62,7 @@ function Facturas() {
         if (filtro === "vencidas") return f.vencida;
         if (filtro === "cobradas") return f.estado_cobro === "cobrada";
         if (filtro === "borradores") return f.estado === "borrador";
+        if (filtro === "sinpdf") return f.estado === "emitida" && f.pdf_estado !== "actualizado";
         return true;
       })
       .filter((f) => !q || (f.numero ?? "borrador").toLowerCase().includes(q) || (f.cuenta?.nombre ?? "").toLowerCase().includes(q));
@@ -95,6 +96,7 @@ function Facturas() {
               { id: "vencidas", label: `Vencidas${cuenta(1) ? ` ${cuenta(1)}` : ""}` },
               { id: "cobradas", label: "Cobradas" },
               { id: "borradores", label: "Borradores" },
+              { id: "sinpdf", label: "Sin PDF al día" },
             ]}
             valor={filtro}
             onChange={setFiltro}
