@@ -17,14 +17,19 @@ export type AltaRapida =
     }
   | { tipo: "cuenta" }
   | { tipo: "marca"; cuentaId?: string }
-  | { tipo: "evento"; valores?: { fecha?: string; cuenta_id?: string | null; proyecto_id?: string | null } };
+  | { tipo: "evento"; valores?: { fecha?: string; cuenta_id?: string | null; proyecto_id?: string | null } }
+  | { tipo: "factura"; cuentaId?: string; proyectoIds?: string[] }
+  | { tipo: "cobro"; facturaId?: string }
+  | { tipo: "gasto"; valores?: { proyecto_id?: string | null; cuenta_id?: string | null } }
+  | { tipo: "suscripcion" };
 
 /** Dónde está el usuario: lo fija cada ficha para que "+ Añadir" y la paleta
  * ofrezcan acciones con sentido en ese sitio. */
 export type ContextoPantalla =
   | { tipo: "cuenta"; id: string; nombre: string }
   | { tipo: "marca"; id: string; nombre: string; cuentaId: string }
-  | { tipo: "proyecto"; id: string; nombre: string; cuentaId: string | null; marcaId: string | null; esSubproyecto: boolean };
+  | { tipo: "proyecto"; id: string; nombre: string; cuentaId: string | null; marcaId: string | null; esSubproyecto: boolean }
+  | { tipo: "factura"; id: string; nombre: string; pendiente: number };
 
 type AppContextValue = {
   usuarios: Usuario[];

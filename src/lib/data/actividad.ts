@@ -11,6 +11,8 @@ export type FiltroActividad = {
   proyectoId?: string;
   /** Actividad de una marca: la propia marca y la de sus proyectos. */
   marca?: { id: string; proyectoIds: string[] };
+  /** Actividad de una factura: la propia factura y sus cobros. */
+  facturaId?: string;
 };
 
 export async function listarActividad(filtro: FiltroActividad = {}): Promise<Actividad[]> {
@@ -29,6 +31,9 @@ export async function listarActividad(filtro: FiltroActividad = {}): Promise<Act
     const partes = [`and(entidad.eq.marca,entidad_id.eq.${filtro.marca.id})`];
     if (filtro.marca.proyectoIds.length) partes.push(`proyecto_id.in.(${filtro.marca.proyectoIds.join(",")})`);
     q = q.or(partes.join(","));
+  }
+  if (filtro.facturaId) {
+    q = q.or(`and(entidad.eq.factura,entidad_id.eq.${filtro.facturaId}),datos->>factura_id.eq.${filtro.facturaId}`);
   }
   const { data, error } = await q;
   if (error) throw new Error(error.message);

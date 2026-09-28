@@ -12,6 +12,12 @@ import { TareaForm } from "../forms/TareaForm";
 import { CuentaForm } from "../forms/CuentaForm";
 import { MarcaForm } from "../forms/MarcaForm";
 import { EventoGenericoForm } from "../forms/EventoGenericoForm";
+import { FacturaForm } from "../forms/FacturaForm";
+import { CobroForm } from "../forms/CobroForm";
+import { GastoForm } from "../forms/GastoForm";
+import { SuscripcionForm } from "../forms/SuscripcionForm";
+import { crearGasto, crearSuscripcion } from "@/lib/data/finanzas";
+import { eur } from "@/lib/finanzas";
 
 /** Alta rápida global: se abre desde "+ Añadir", la paleta o cualquier
  * pantalla con `abrirAlta(...)`. */
@@ -76,6 +82,54 @@ export function AltaRapidaModal() {
             onSubmit={async (v) => {
               const m = await crearMarca(v);
               hecho(`Marca «${m.nombre}» creada`, { href: `/marcas/${m.id}`, texto: "Abrir" });
+            }}
+          />
+        </Modal>
+      );
+    case "factura":
+      return (
+        <Modal titulo="Nueva factura" onClose={cerrarAlta} ancho="max-w-3xl">
+          <FacturaForm
+            cuentaInicial={alta.cuentaId}
+            proyectosIniciales={alta.proyectoIds}
+            onCancelar={cerrarAlta}
+            onGuardada={(id, estado) =>
+              hecho(estado === "borrador" ? "Borrador guardado" : "Factura creada", { href: `/finanzas/facturas/${id}`, texto: "Abrir" })
+            }
+          />
+        </Modal>
+      );
+    case "cobro":
+      return (
+        <Modal titulo="Registrar cobro" onClose={cerrarAlta}>
+          <CobroForm
+            facturaId={alta.facturaId}
+            onCancelar={cerrarAlta}
+            onGuardado={(f) => hecho(`Cobro registrado en ${f.numero}`, { href: `/finanzas/facturas/${f.id}`, texto: "Ver factura" })}
+          />
+        </Modal>
+      );
+    case "gasto":
+      return (
+        <Modal titulo="Nuevo gasto" onClose={cerrarAlta}>
+          <GastoForm
+            inicial={alta.valores}
+            onCancelar={cerrarAlta}
+            onSubmit={async (v) => {
+              const g = await crearGasto(v);
+              hecho(`Gasto de ${eur(g.importe)} registrado`, { href: "/finanzas/gastos", texto: "Ver gastos" });
+            }}
+          />
+        </Modal>
+      );
+    case "suscripcion":
+      return (
+        <Modal titulo="Nueva suscripción" onClose={cerrarAlta}>
+          <SuscripcionForm
+            onCancelar={cerrarAlta}
+            onSubmit={async (v) => {
+              const s = await crearSuscripcion(v);
+              hecho(`Suscripción «${s.nombre}» creada`, { href: "/finanzas/suscripciones", texto: "Ver" });
             }}
           />
         </Modal>
