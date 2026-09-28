@@ -130,6 +130,12 @@ export async function facturacionDeProyectos(): Promise<Record<string, ProyectoF
   return m;
 }
 
+export async function facturacionDeProyecto(proyectoId: string): Promise<ProyectoFacturacion | null> {
+  const { data, error } = await supabase.from("proyectos_facturacion").select("*").eq("proyecto_id", proyectoId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as ProyectoFacturacion | null) ?? null;
+}
+
 /** Facturas (emitidas o no) que incluyen líneas de un proyecto, con el importe de esas líneas. */
 export async function facturasDeProyecto(proyectoId: string): Promise<{ factura: FacturaConCuenta; importe: number }[]> {
   const { data, error } = await supabase.from("factura_lineas").select("factura_id, importe").eq("proyecto_id", proyectoId);

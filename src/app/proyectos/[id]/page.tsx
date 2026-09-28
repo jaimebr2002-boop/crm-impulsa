@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useApp, useContextoPantalla, usePestanaPedida } from "@/context/AppContext";
+import { FacturacionProyecto } from "@/components/finanzas/FacturacionProyecto";
 import {
   actualizarProyecto,
   crearEnlace,
@@ -294,6 +295,7 @@ function FichaProyecto() {
               </span>
             </Propiedad>
           </div>
+          <FacturacionProyecto proyecto={proyecto} />
         </aside>
 
         <section className="min-w-0">

@@ -8,11 +8,22 @@ import { actualizarCuenta, listarMarcas, obtenerCuenta } from "@/lib/data/cuenta
 import { listarProyectos } from "@/lib/data/proyectos";
 import { listarTareas } from "@/lib/data/tareas";
 import { listarActividad } from "@/lib/data/actividad";
+import { facturacionDeProyectos, listarCobros, listarFacturas } from "@/lib/data/finanzas";
+import { eur, resumenFacturas } from "@/lib/finanzas";
 import { formatEuros } from "@/lib/constants";
 import { hoyYMD } from "@/lib/dates";
 import { resumirProyectos } from "@/lib/metricas";
 import { ESTADOS_PROYECTO_ACTIVOS, TIPO_CUENTA_LABEL } from "@/lib/trabajo";
-import type { Actividad, Cuenta, Marca, ProyectoConRelaciones, TareaConRelaciones } from "@/lib/types";
+import type {
+  Actividad,
+  CobroConFactura,
+  Cuenta,
+  FacturaConCuenta,
+  Marca,
+  ProyectoConRelaciones,
+  ProyectoFacturacion,
+  TareaConRelaciones,
+} from "@/lib/types";
 import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
 import { FilaKpis } from "@/components/trabajo/FilaKpis";
 import { Pestanas, reflejarTabEnUrl, tabDesdeUrl } from "@/components/trabajo/Pestanas";
@@ -25,13 +36,14 @@ import { NotasAutoguardado } from "@/components/trabajo/NotasAutoguardado";
 import { Segmentado } from "@/components/ui/Cabecera";
 import { SkeletonLineas, SkeletonTarjetas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { FinanzasCuenta } from "@/components/finanzas/FinanzasCuenta";
 import { Panel } from "@/components/ui/Panel";
 import { Modal } from "@/components/Modal";
 import { Avatar } from "@/components/Avatar";
 import { CuentaForm } from "@/components/forms/CuentaForm";
 import { IconFlecha, IconMas } from "@/components/Icons";
 
-const TABS = ["resumen", "proyectos", "marcas", "tareas", "actividad", "notas"] as const;
+const TABS = ["resumen", "proyectos", "marcas", "tareas", "finanzas", "actividad", "notas"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function CuentaPage() {
@@ -53,6 +65,9 @@ function FichaCuenta() {
   const [proyectos, setProyectos] = useState<ProyectoConRelaciones[]>([]);
   const [tareas, setTareas] = useState<TareaConRelaciones[]>([]);
   const [actividad, setActividad] = useState<Actividad[]>([]);
+  const [facturas, setFacturas] = useState<FacturaConCuenta[]>([]);
+  const [cobros, setCobros] = useState<CobroConFactura[]>([]);
+  const [facturacion, setFacturacion] = useState<Record<string, ProyectoFacturacion>>({});
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
@@ -73,17 +88,23 @@ function FichaCuenta() {
   const cargar = useCallback(async () => {
     setError(null);
     try {
-      const [c, m, ps, a] = await Promise.all([
+      const [c, m, ps, a, fs, cs, fp] = await Promise.all([
         obtenerCuenta(id),
         listarMarcas({ cuentaId: id }),
         listarProyectos(),
         listarActividad({ cuentaId: id, limite: 6 }),
+        listarFacturas({ cuentaId: id }),
+        listarCobros(),
+        facturacionDeProyectos(),
       ]);
       const suyos = ps.filter((p) => p.cuenta_id === id);
       setCuenta(c);
       setMarcas(m);
       setProyectos(suyos);
       setActividad(a);
+      setFacturas(fs);
+      setCobros(cs.filter((x) => x.factura?.cuenta_id === id));
+      setFacturacion(fp);
       setTareas(suyos.length ? await listarTareas({ proyectoIds: suyos.map((p) => p.id), diasCompletadas: 14 }) : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se ha podido cargar la cuenta.");
@@ -97,6 +118,7 @@ function FichaCuenta() {
   }, [cargar, versionDatos]);
 
   const resumen = useMemo(() => resumirProyectos(proyectos), [proyectos]);
+  const fin = useMemo(() => resumenFacturas(facturas), [facturas]);
   const tareasAbiertas = tareas.filter((t) => t.estado !== "completada");
   const filtroActividad = useMemo(() => ({ cuentaId: id }), [id]);
 
@@ -189,19 +211,25 @@ function FichaCuenta() {
 
       <div className="mb-6">
         <FilaKpis
-          columnas="md:grid-cols-5"
+          columnas="md:grid-cols-3 xl:grid-cols-6"
           kpis={[
-            { etiqueta: "Proyectos activos", valor: resumen.activos },
-            { etiqueta: "Entregados", valor: resumen.entregados },
-            { etiqueta: "Valor de proyectos", valor: formatEuros(resumen.valorProyectos), nota: "Sin cancelados" },
-            { etiqueta: "Valor en curso", valor: formatEuros(resumen.valorEnCurso), nota: "Proyectos activos" },
             {
-              etiqueta: "Tareas abiertas",
-              valor: tareasAbiertas.length,
+              etiqueta: "Proyectos activos",
+              valor: resumen.activos,
               nota: tareasAbiertas.some((t) => t.fecha_limite && t.fecha_limite < hoyYMD())
                 ? "Hay tareas vencidas"
-                : undefined,
-              alerta: true,
+                : `${resumen.entregados} entregado${resumen.entregados === 1 ? "" : "s"}`,
+              alerta: tareasAbiertas.some((t) => t.fecha_limite && t.fecha_limite < hoyYMD()),
+            },
+            { etiqueta: "Valor de proyectos", valor: formatEuros(resumen.valorProyectos), nota: "Sin cancelados · sin IVA" },
+            { etiqueta: "Valor en curso", valor: formatEuros(resumen.valorEnCurso), nota: "Proyectos activos" },
+            { etiqueta: "Facturado", valor: eur(fin.facturado), nota: `${eur(fin.facturadoBase)} base` },
+            { etiqueta: "Cobrado", valor: eur(fin.cobrado) },
+            {
+              etiqueta: "Pendiente",
+              valor: eur(fin.pendiente),
+              nota: fin.vencido > 0 ? `${eur(fin.vencido)} vencido` : undefined,
+              alerta: fin.vencido > 0,
             },
           ]}
         />
@@ -215,6 +243,7 @@ function FichaCuenta() {
           { id: "proyectos", label: "Proyectos", n: proyectos.length },
           { id: "marcas", label: "Marcas", n: marcas.length },
           { id: "tareas", label: "Tareas", n: tareasAbiertas.length },
+          { id: "finanzas", label: "Finanzas", n: facturas.length },
           { id: "actividad", label: "Actividad" },
           { id: "notas", label: "Notas" },
         ]}
@@ -342,6 +371,10 @@ function FichaCuenta() {
           </div>
           <SeccionTareas tareas={tareas} setTareas={setTareas} vacio="Sin tareas abiertas en los proyectos de esta cuenta." />
         </div>
+      ) : null}
+
+      {tab === "finanzas" ? (
+        <FinanzasCuenta cuentaId={cuenta.id} proyectos={proyectos} facturas={facturas} cobros={cobros} facturacion={facturacion} />
       ) : null}
 
       {tab === "actividad" ? (
