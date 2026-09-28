@@ -22,7 +22,7 @@ export function BarChart({ datos, formatoEtiqueta }: { datos: BarraDato[]; forma
           return (
             <div
               key={i}
-              className="group relative flex flex-1 flex-col items-center justify-end"
+              className="group relative flex h-full flex-1 flex-col items-center justify-end"
               onMouseEnter={() => setActivo(i)}
               onMouseLeave={() => setActivo(null)}
             >

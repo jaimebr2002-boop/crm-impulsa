@@ -41,12 +41,12 @@ export function GraficoMensual({ puntos }: { puntos: PuntoMensual[] }) {
           if (v > tope) return null;
           return (
             <div key={i} className="absolute inset-x-0 flex items-center" style={{ bottom: `${(v / tope) * 100}%` }}>
-              <span className="w-10 shrink-0 -translate-y-1/2 pr-2 text-right text-[10px] tabular-nums text-ink3">{eurCorto(v)}</span>
+              <span className="w-12 shrink-0 -translate-y-1/2 whitespace-nowrap pr-2 text-right text-[10px] tabular-nums text-ink3">{eurCorto(v)}</span>
               <span className="h-px flex-1 bg-line" />
             </div>
           );
         })}
-        <svg className="absolute inset-y-0 left-10 right-0 h-full w-[calc(100%-2.5rem)] overflow-visible" viewBox={`0 0 100 ${alto}`} preserveAspectRatio="none" role="img" aria-label="Facturado, cobrado y gastos por mes">
+        <svg className="absolute inset-y-0 left-12 right-0 h-full w-[calc(100%-3rem)] overflow-visible" viewBox={`0 0 100 ${alto}`} preserveAspectRatio="none" role="img" aria-label="Facturado, cobrado y gastos por mes">
           {puntos.map((p, i) => {
             const x0 = i * ancho;
             const hueco = ancho * 0.2;
@@ -63,7 +63,7 @@ export function GraficoMensual({ puntos }: { puntos: PuntoMensual[] }) {
           })}
         </svg>
       </div>
-      <div className="ml-10 mt-1.5 flex">
+      <div className="ml-12 mt-1.5 flex">
         {puntos.map((p, i) => (
           <span key={p.mes} className={`flex-1 text-center text-[10px] capitalize ${activo === i ? "font-medium text-ink" : "text-ink3"}`}>
             {p.etiqueta}
