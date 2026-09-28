@@ -143,6 +143,10 @@ function describir(a: Actividad): Frase {
         enviada: ["envió la factura", "enviaste la factura", "bg-sky-500"],
         cobrada: ["terminó de cobrar la factura", "terminaste de cobrar la factura", "bg-emerald-500"],
         cancelada: ["canceló la factura", "cancelaste la factura", "bg-red-400"],
+        pdf:
+          a.datos?.regenerado === true
+            ? ["regeneró el PDF de la factura", "regeneraste el PDF de la factura", "bg-ink3"]
+            : ["generó el PDF de la factura", "generaste el PDF de la factura", "bg-ink3"],
       };
       const [v, vt, p] = acciones[a.accion] ?? [a.accion, a.accion, "bg-ink3"];
       return {
@@ -194,6 +198,30 @@ function describir(a: Actividad): Frase {
         },
         punto: "bg-amber-500",
       };
+    }
+
+    case "documento": {
+      const href = a.accion === "eliminado" ? null : `/documentos?ver=${a.entidad_id}`;
+      if (a.accion === "eliminado")
+        return { verbo: "eliminó el documento", verboTu: "eliminaste el documento", objeto: nombre, href, punto: "bg-red-400" };
+      if (a.accion === "justificante") {
+        const gasto = texto(a.datos?.gasto_concepto);
+        return {
+          verbo: "adjuntó un justificante al gasto",
+          verboTu: "adjuntaste un justificante al gasto",
+          objeto: gasto ? cita(gasto) : nombre,
+          href,
+          punto: "bg-amber-500",
+        };
+      }
+      const factura = texto(a.datos?.factura_numero);
+      const facturaId = texto(a.datos?.factura_id);
+      const destino = factura
+        ? { texto: `a la factura ${cita(factura)}`, href: facturaId ? `/finanzas/facturas/${facturaId}` : null }
+        : proyectoNombre && proyectoId
+          ? { texto: `al proyecto ${cita(proyectoNombre)}`, href: `/proyectos/${proyectoId}` }
+          : undefined;
+      return { verbo: "subió", verboTu: "subiste", objeto: nombre, href, complemento: destino, punto: "bg-sky-500" };
     }
 
     case "suscripcion": {

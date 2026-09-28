@@ -5,6 +5,7 @@ import {
   IconAnalitica,
   IconCalendario,
   IconCuenta,
+  IconDocumento,
   IconFinanzas,
   IconInicio,
   IconProyectos,
@@ -24,7 +25,7 @@ export type ItemNav = {
 export type GrupoNav = { titulo: string | null; items: ItemNav[] };
 
 // Solo se listan módulos ya construidos. Finanzas agrupa facturas, gastos y
-// suscripciones en pestañas internas; Documentos llegará en la Fase 4.
+// suscripciones en pestañas internas.
 export const GRUPOS_NAV: GrupoNav[] = [
   { titulo: null, items: [{ href: "/inicio", label: "Inicio", icon: IconInicio, soloAdmin: true }] },
   {
@@ -47,6 +48,7 @@ export const GRUPOS_NAV: GrupoNav[] = [
   {
     titulo: "Información",
     items: [
+      { href: "/documentos", label: "Documentos", icon: IconDocumento, soloAdmin: true },
       { href: "/actividad", label: "Actividad", icon: IconActividad, soloAdmin: true },
       { href: "/analitica", label: "Analítica", icon: IconAnalitica },
     ],
