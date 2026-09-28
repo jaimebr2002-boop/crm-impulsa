@@ -133,12 +133,12 @@ Solo lectura, o acciones reales que harías igualmente. **No** ejecutar las bate
 
 | | Local | Staging (Supabase real) | Producción |
 |---|---|---|---|
-| Migraciones 0007→0012 | ✓ | ✓, una a una, comprobando después de cada una | **No aplicadas** |
-| Datos antiguos intactos (huella md5) | ✓ | ✓ (71 leads / 63 interacciones / 5 eventos / 3 usuarios) | — |
-| Catálogo idéntico a local | — | ✓ 283 columnas, 128 restricciones, 34 funciones, 76 índices, 33 políticas, 34 triggers, 3 vistas | — |
-| RLS admin / comercial / anónimo (en Postgres) | ✓ | ✓ | — |
+| Migraciones 0007→0012 | ✓ | ✓, una a una, comprobando después de cada una | ✓ 29-09-2026, una a una; cada transacción verificaba conteos y huella antes de confirmar |
+| Datos antiguos intactos (huella md5) | ✓ | ✓ (71 leads / 63 interacciones / 5 eventos / 3 usuarios) | ✓ mismas filas y huellas antes y después; `estado` y `updated_at` de los 71 leads sin cambios |
+| Catálogo idéntico a local | — | ✓ 283 columnas, 128 restricciones, 34 funciones, 76 índices, 33 políticas, 34 triggers, 3 vistas | ✓ idéntico a staging en las 7 categorías |
+| RLS admin / comercial / anónimo (en Postgres) | ✓ | ✓ | ✓ con los usuarios reales (admin 71 leads; comerciales 8 y 0; anónimo 0) |
 | Código de `master` sobre la base migrada | — | ✓ | — |
-| Storage: bucket privado, límites, políticas en SQL | ✓ simulado | ✓ | — |
+| Storage: bucket privado, límites, políticas en SQL | ✓ simulado | ✓ | ✓ privado, 50 MB, 18 MIME, 4 políticas |
 | Storage por HTTP (API real de Storage) | ✓ simulado | ✓ 22 casos (ver abajo) | — |
 | PDF en Vercel (`/api/facturas/[id]/pdf`) | ✓ | ✓ 12 casos en el Preview real (ver abajo) | — |
 | Preview de Vercel | — | ✓ build, middleware, 22 rutas con sesión real, usa staging | — |
@@ -150,6 +150,8 @@ Storage (22/22): admin sube, descarga, signed URL de 60 s (200 sin sesión), sig
 Nota: Storage sirve **desde la caché de Cloudflare** la misma URL con el mismo token durante un rato (`cf-cache-status: HIT`) aunque el objeto se haya reemplazado o borrado. Sin fuga entre usuarios (un comercial recibe 404 sobre la misma URL) y sin efecto en la app: abre siempre con signed URLs únicas y cada PDF regenerado usa una ruta nueva.
 
 PDF en Vercel (12/12): sin sesión 401, comercial 404, admin 200 (~1,5 s desde `iad1`), `pdf_path` + huella + `pdf_estado = actualizado`, 1 fila en `documentos` (`generado`), objeto `application/pdf` en Storage, se abre por signed URL, se descarga como `attachment`, regenerar crea ruta nueva y borra el objeto anterior (sigue 1 documento), modificar la factura → `desactualizado`, actividad «pdf» (generado y regenerado). Sin datos fiscales el endpoint responde 422 con la lista de lo que falta (comportamiento esperado).
+
+**Backup de producción (29-09-2026).** Externo: `pg_dump` + CSV hechos por el propietario, fuera del repo. Interno: esquema `backup_pre_company_os` con copia de `usuarios`, `leads`, `interacciones`, `eventos`, `auth.users` y `auth.identities` (huellas verificadas; sin permisos para `anon`/`authenticated`). Borrarlo cuando el Company OS lleve un tiempo estable: `drop schema backup_pre_company_os cascade;`.
 
 ## 10. Problemas conocidos
 
