@@ -5,6 +5,7 @@ import {
   IconAnalitica,
   IconCalendario,
   IconCuenta,
+  IconFinanzas,
   IconInicio,
   IconProyectos,
   IconTareas,
@@ -22,8 +23,8 @@ export type ItemNav = {
 
 export type GrupoNav = { titulo: string | null; items: ItemNav[] };
 
-// Solo se listan módulos ya construidos. Finanzas, Gastos y Documentos se
-// añadirán aquí cuando existan (Fases 3 y 4).
+// Solo se listan módulos ya construidos. Finanzas agrupa facturas, gastos y
+// suscripciones en pestañas internas; Documentos llegará en la Fase 4.
 export const GRUPOS_NAV: GrupoNav[] = [
   { titulo: null, items: [{ href: "/inicio", label: "Inicio", icon: IconInicio, soloAdmin: true }] },
   {
@@ -40,6 +41,7 @@ export const GRUPOS_NAV: GrupoNav[] = [
       // El CRM entero (leads, seguimientos, importación) vive dentro de Ventas.
       { href: "/leads", label: "Ventas", icon: IconVentas, activoEn: ["/hoy", "/importar"] },
       { href: "/cuentas", label: "Cuentas", icon: IconCuenta, soloAdmin: true, activoEn: ["/marcas"] },
+      { href: "/finanzas", label: "Finanzas", icon: IconFinanzas, soloAdmin: true },
     ],
   },
   {

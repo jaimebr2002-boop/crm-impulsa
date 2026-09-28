@@ -296,3 +296,12 @@ export function IconActividad({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconFinanzas({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <rect x="3.5" y="6" width="17" height="12" rx="2" />
+      <path d="M3.5 10h17M7.5 14.5h3" strokeLinecap="round" />
+    </svg>
+  );
+}
