@@ -18,6 +18,7 @@ import { GastoForm } from "../forms/GastoForm";
 import { SuscripcionForm } from "../forms/SuscripcionForm";
 import { crearGasto, crearSuscripcion } from "@/lib/data/finanzas";
 import { eur } from "@/lib/finanzas";
+import { SubirDocumentoForm } from "../documentos/SubirDocumentoForm";
 
 /** Alta rápida global: se abre desde "+ Añadir", la paleta o cualquier
  * pantalla con `abrirAlta(...)`. */
@@ -119,6 +120,19 @@ export function AltaRapidaModal() {
               const g = await crearGasto(v);
               hecho(`Gasto de ${eur(g.importe)} registrado`, { href: "/finanzas/gastos", texto: "Ver gastos" });
             }}
+          />
+        </Modal>
+      );
+    case "documento":
+      return (
+        <Modal titulo={alta.categoria === "justificante" ? "Adjuntar justificante" : "Subir documento"} onClose={cerrarAlta}>
+          <SubirDocumentoForm
+            archivoInicial={alta.archivo}
+            relacionInicial={alta.relacion ?? null}
+            categoriaInicial={alta.categoria}
+            relacionFija={alta.relacionFija}
+            onCancelar={cerrarAlta}
+            onGuardado={(d) => hecho(`«${d.nombre}» subido`, { href: `/documentos?ver=${d.id}`, texto: "Ver" })}
           />
         </Modal>
       );

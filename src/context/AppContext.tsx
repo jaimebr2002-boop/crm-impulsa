@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { listarUsuarios } from "@/lib/data/usuarios";
-import type { TareaInsert, Usuario } from "@/lib/types";
+import type { CategoriaDocumento, RelacionDocumento, TareaInsert, Usuario } from "@/lib/types";
 import { useUsuario } from "./UsuarioContext";
 
 export type Aviso = { id: number; texto: string; tono?: "ok" | "error"; enlace?: { href: string; texto: string } };
@@ -21,7 +21,15 @@ export type AltaRapida =
   | { tipo: "factura"; cuentaId?: string; proyectoIds?: string[] }
   | { tipo: "cobro"; facturaId?: string }
   | { tipo: "gasto"; valores?: { proyecto_id?: string | null; cuenta_id?: string | null } }
-  | { tipo: "suscripcion" };
+  | { tipo: "suscripcion" }
+  | {
+      tipo: "documento";
+      relacion?: RelacionDocumento | null;
+      categoria?: CategoriaDocumento;
+      archivo?: File;
+      /** La relación viene del sitio donde estás y no se ofrece cambiarla. */
+      relacionFija?: boolean;
+    };
 
 /** Dónde está el usuario: lo fija cada ficha para que "+ Añadir" y la paleta
  * ofrezcan acciones con sentido en ese sitio. */

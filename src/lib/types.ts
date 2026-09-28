@@ -118,6 +118,18 @@ export type Cuenta = {
   creado_por: string | null;
   created_at: string;
   updated_at: string;
+} & DatosFiscalesCuenta;
+
+/** Datos de facturación opcionales del receptor (0011). */
+export type DatosFiscalesCuenta = {
+  fiscal_nombre?: string | null;
+  fiscal_nif?: string | null;
+  fiscal_direccion?: string | null;
+  fiscal_codigo_postal?: string | null;
+  fiscal_ciudad?: string | null;
+  fiscal_provincia?: string | null;
+  fiscal_pais?: string | null;
+  email_facturacion?: string | null;
 };
 
 export type Marca = {
@@ -272,12 +284,18 @@ export type Factura = {
   enviada_en: string | null;
   notas: string | null;
   pdf_path: string | null;
+  pdf_huella?: string | null;
+  pdf_generado_en?: string | null;
   creado_por: string | null;
   created_at: string;
   updated_at: string;
 };
 
+/** sin_pdf · actualizado · desactualizado (la factura cambió después de generar el PDF). */
+export type EstadoPdf = "sin_pdf" | "actualizado" | "desactualizado";
+
 export type FacturaEstado = Factura & {
+  pdf_estado?: EstadoPdf;
   cobrado: number;
   pendiente: number;
   estado_cobro: EstadoCobro;
@@ -353,4 +371,79 @@ export type Suscripcion = {
   updated_at: string;
 };
 
-export type ProyectoFacturacion = { proyecto_id: string; facturas: number; facturado: number; cobrado: number };
+/** Por proyecto (sin IVA). facturado/cobrado = solo emitidas; en_borrador = líneas en borradores (no es facturado). */
+export type ProyectoFacturacion = {
+  proyecto_id: string;
+  facturas: number;
+  facturado: number;
+  cobrado: number;
+  en_borrador: number;
+  borradores: string[];
+};
+
+// ---------- Documentos (Fase 4) ----------
+
+export type CategoriaDocumento =
+  | "factura"
+  | "justificante"
+  | "contrato"
+  | "propuesta"
+  | "briefing"
+  | "informe"
+  | "guion"
+  | "creativo"
+  | "recurso"
+  | "otro";
+
+export type Documento = {
+  id: string;
+  nombre: string;
+  nombre_archivo: string;
+  storage_path: string;
+  mime_type: string;
+  tamano: number;
+  categoria: CategoriaDocumento;
+  descripcion: string | null;
+  cuenta_id: string | null;
+  marca_id: string | null;
+  proyecto_id: string | null;
+  factura_id: string | null;
+  gasto_id: string | null;
+  origen: "subida" | "generado";
+  creado_por: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Documento con su contexto deducido (vista documentos_contexto). */
+export type DocumentoContexto = Documento & {
+  ref_cuenta_id: string | null;
+  ref_marca_id: string | null;
+  ref_proyecto_id: string | null;
+  cuenta_nombre: string | null;
+  marca_nombre: string | null;
+  proyecto_nombre: string | null;
+  factura_numero: string | null;
+  gasto_concepto: string | null;
+};
+
+/** Relación directa de un documento (como máximo una). */
+export type RelacionDocumento = { tipo: "cuenta" | "marca" | "proyecto" | "factura" | "gasto"; id: string; etiqueta?: string };
+
+export type AjustesFacturacion = {
+  nombre: string | null;
+  nif: string | null;
+  direccion: string | null;
+  codigo_postal: string | null;
+  ciudad: string | null;
+  provincia: string | null;
+  pais: string;
+  email: string | null;
+  telefono: string | null;
+  iban: string | null;
+  texto_legal: string | null;
+  iva_pct_defecto: number;
+  irpf_pct_defecto: number;
+  dias_vencimiento: number;
+  updated_at: string;
+};
