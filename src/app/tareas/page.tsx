@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { useUsuario } from "@/context/UsuarioContext";
@@ -40,7 +40,6 @@ function Tareas() {
   const { usuarioActual, esAdmin } = useUsuario();
   const { abrirAlta, versionDatos, usuarios } = useApp();
   const params = useSearchParams();
-  const router = useRouter();
   const vistaParam = params.get("vista") as Vista | null;
   const vista: Vista = vistaParam && VISTAS.includes(vistaParam) ? vistaParam : "hoy";
 
@@ -80,7 +79,7 @@ function Tareas() {
   const completadasHoy = mias.filter((t) => t.estado === "completada" && t.completada_en && aYMD(new Date(t.completada_en)) >= hoy);
 
   function irA(v: Vista) {
-    router.replace(v === "hoy" ? "/tareas" : `/tareas?vista=${v}`, { scroll: false });
+    window.history.replaceState(null, "", v === "hoy" ? "/tareas" : `/tareas?vista=${v}`);
   }
 
   async function altaEnLinea(titulo: string) {
@@ -100,7 +99,9 @@ function Tareas() {
         subtitulo={
           cargando
             ? "…"
-            : `${abiertas.length} abiertas${vencidas.length ? ` · ${vencidas.length} vencidas` : ""}`
+            : `${abiertas.length} abierta${abiertas.length === 1 ? "" : "s"}${
+                vencidas.length ? ` · ${vencidas.length} vencida${vencidas.length === 1 ? "" : "s"}` : ""
+              }`
         }
         acciones={
           <>

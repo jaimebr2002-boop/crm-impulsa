@@ -279,7 +279,15 @@ function TablaProyectos({ proyectos, progreso }: { proyectos: ProyectoConRelacio
     <>
       {/* Escritorio: tabla densa */}
       <div className="hidden overflow-hidden rounded-xl border border-line bg-surface md:block">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col />
+            <col className="w-32" />
+            <col className="w-28" />
+            <col className="w-28" />
+            <col className="w-32" />
+            <col className="w-28" />
+          </colgroup>
           <thead>
             <tr className="border-b border-line text-left text-xs text-ink3">
               <th className="px-4 py-2.5 font-medium">Proyecto</th>

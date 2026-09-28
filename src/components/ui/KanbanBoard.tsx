@@ -69,7 +69,7 @@ export function KanbanBoard<T>({
               e.preventDefault();
               soltar(col.id);
             }}
-            className={`flex w-[80vw] max-w-[300px] shrink-0 snap-start flex-col rounded-xl border transition-colors md:w-72 ${
+            className={`flex w-[80vw] max-w-[300px] shrink-0 snap-start flex-col rounded-xl border transition-colors md:w-auto md:min-w-[210px] md:flex-1 ${
               esDestino ? "border-brand bg-brand-light/40" : "border-transparent bg-mute/50"
             }`}
           >

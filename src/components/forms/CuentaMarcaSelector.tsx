@@ -39,8 +39,27 @@ export function CuentaMarcaSelector({
   async function confirmarNueva() {
     const nombre = nombreNuevo.trim();
     if (!nombre || guardando) return;
-    setGuardando(true);
     setError(null);
+    const igual = (a: string) => a.trim().toLocaleLowerCase("es") === nombre.toLocaleLowerCase("es");
+    // Si ya existe, se elige la existente en vez de duplicarla.
+    if (creando === "cuenta") {
+      const existente = cuentas.find((c) => igual(c.nombre));
+      if (existente) {
+        onChange({ cuenta_id: existente.id, marca_id: null });
+        setCreando(null);
+        setNombreNuevo("");
+        return;
+      }
+    } else if (creando === "marca") {
+      const existente = marcas.find((m) => m.cuenta_id === cuentaId && igual(m.nombre));
+      if (existente) {
+        onChange({ cuenta_id: cuentaId, marca_id: existente.id });
+        setCreando(null);
+        setNombreNuevo("");
+        return;
+      }
+    }
+    setGuardando(true);
     try {
       if (creando === "cuenta") {
         const c = await crearCuenta({ nombre });

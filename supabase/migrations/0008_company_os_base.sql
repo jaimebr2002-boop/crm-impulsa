@@ -77,6 +77,8 @@ create table if not exists cuentas (
 );
 
 create unique index if not exists uq_cuentas_lead_id on cuentas (lead_id) where lead_id is not null;
+-- Una sola "Fer": el nombre no se repite (sin distinguir mayúsculas).
+create unique index if not exists uq_cuentas_nombre on cuentas (lower(trim(nombre)));
 create index if not exists idx_cuentas_archivada on cuentas (archivada);
 
 comment on table cuentas is 'Origen del trabajo: un intermediario (p. ej. Fer) o un cliente directo. No tienen acceso a la app.';
@@ -96,7 +98,7 @@ create table if not exists marcas (
 );
 
 create index if not exists idx_marcas_cuenta_id on marcas (cuenta_id);
-create unique index if not exists uq_marcas_cuenta_nombre on marcas (cuenta_id, lower(nombre));
+create unique index if not exists uq_marcas_cuenta_nombre on marcas (cuenta_id, lower(trim(nombre)));
 
 -- ============================================================
 -- 3. proyectos

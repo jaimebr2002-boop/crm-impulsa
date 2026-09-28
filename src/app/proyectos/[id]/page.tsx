@@ -104,7 +104,8 @@ function FichaProyecto() {
 
   function cambiarTab(t: Tab) {
     setTab(t);
-    router.replace(t === "resumen" ? `/proyectos/${id}` : `/proyectos/${id}?tab=${t}`, { scroll: false });
+    // Solo actualiza la URL (compartible); no hace falta ida y vuelta al servidor.
+    window.history.replaceState(null, "", t === "resumen" ? `/proyectos/${id}` : `/proyectos/${id}?tab=${t}`);
   }
 
   async function guardar(cambios: ProyectoUpdate) {

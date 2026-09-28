@@ -10,7 +10,10 @@ export async function listarCuentas(): Promise<Cuenta[]> {
 
 export async function crearCuenta(payload: { nombre: string; tipo?: TipoCuenta; lead_id?: string | null }): Promise<Cuenta> {
   const { data, error } = await supabase.from("cuentas").insert(payload).select("*").single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.code === "23505") throw new Error("Ya existe una cuenta con ese nombre.");
+    throw new Error(error.message);
+  }
   return data;
 }
 

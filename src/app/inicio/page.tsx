@@ -71,7 +71,7 @@ function Inicio() {
         listarEventosDeHoy(startOfDay(ahora).toISOString(), endOfDay(ahora).toISOString(), usuarioActual.id),
         listarEventosVencidos(startOfDay(ahora).toISOString(), usuarioActual.id),
         obtenerLeadsActuales(),
-        listarActividad({ limite: 12 }),
+        listarActividad({ limite: 8 }),
       ]);
       setProyectos(p);
       setTareas(t);
@@ -160,7 +160,7 @@ function Inicio() {
     <div className="mx-auto max-w-6xl px-4 pt-6 md:px-8 md:pt-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm capitalize text-ink3">{fecha}</p>
+          <p className="text-sm text-ink3 first-letter:uppercase">{fecha}</p>
           <h1 className="mt-0.5 font-display text-[28px] font-bold tracking-tight text-ink">
             {saludo()}, {usuarioActual?.nombre}
           </h1>
@@ -197,7 +197,7 @@ function Inicio() {
             <Kpi etiqueta="Proyectos activos" valor={m.activos.length} href="/proyectos"
               nota={[m.enRevision && `${m.enRevision} en revisión`, m.esperando && `${m.esperando} esperando`].filter(Boolean).join(" · ") || undefined} />
             <Kpi etiqueta="Tareas pendientes" valor={m.abiertas.length} href="/tareas?vista=todas"
-              nota={m.tareasVencidas.length ? `${m.tareasVencidas.length} vencidas` : "Nada vencido"} alerta={m.tareasVencidas.length > 0} />
+              nota={m.tareasVencidas.length ? `${m.tareasVencidas.length} vencida${m.tareasVencidas.length === 1 ? "" : "s"}` : "Nada vencido"} alerta={m.tareasVencidas.length > 0} />
             <Kpi etiqueta="Entregas en 7 días" valor={m.entregasSemana.length} href="/proyectos" />
             <Kpi etiqueta="Valor en curso" valor={formatEuros(m.valorEnCurso)} nota="Proyectos activos" />
             <Kpi etiqueta="Entregado este mes" valor={formatEuros(m.valorEntregadoMes)}
