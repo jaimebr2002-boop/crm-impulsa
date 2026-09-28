@@ -2,12 +2,13 @@ import { supabase } from "@/lib/supabase";
 import type { TareaConRelaciones, TareaInsert, TareaUpdate } from "@/lib/types";
 import { traerTodo } from "./paginar";
 
-const SELECT = "*, proyecto:proyectos(id, nombre), lead:leads(id, negocio, nombre_contacto)";
+const SELECT =
+  "*, proyecto:proyectos(id, nombre, cuenta_id, marca_id, cuenta:cuentas(id, nombre), marca:marcas(id, nombre)), lead:leads(id, negocio, nombre_contacto)";
 
 /** Tareas abiertas + completadas en los últimos `diasCompletadas` días (el
  * archivo histórico completo no hace falta en el día a día). */
 export async function listarTareas(
-  filtro: { proyectoId?: string; leadId?: string; diasCompletadas?: number } = {}
+  filtro: { proyectoId?: string; proyectoIds?: string[]; leadId?: string; diasCompletadas?: number } = {}
 ): Promise<TareaConRelaciones[]> {
   const dias = filtro.diasCompletadas ?? 30;
   const desde = new Date(Date.now() - dias * 86_400_000).toISOString();
@@ -20,6 +21,7 @@ export async function listarTareas(
       .order("id")
       .range(a, b);
     if (filtro.proyectoId) q = q.eq("proyecto_id", filtro.proyectoId);
+    if (filtro.proyectoIds) q = q.in("proyecto_id", filtro.proyectoIds.length ? filtro.proyectoIds : ["00000000-0000-0000-0000-000000000000"]);
     if (filtro.leadId) q = q.eq("lead_id", filtro.leadId);
     return q;
   });

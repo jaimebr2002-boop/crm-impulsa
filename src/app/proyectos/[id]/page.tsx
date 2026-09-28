@@ -45,6 +45,7 @@ import { TareaEditarModal } from "@/components/trabajo/TareaEditarModal";
 import { ActividadLista } from "@/components/trabajo/ActividadLista";
 import { FechaLimite, PrioridadIcono } from "@/components/trabajo/Insignias";
 import { AltaTareaEnLinea } from "@/components/trabajo/AltaTareaEnLinea";
+import { NotasAutoguardado } from "@/components/trabajo/NotasAutoguardado";
 import { IconEnlace, IconPapelera } from "@/components/Icons";
 
 type Tab = "resumen" | "tareas" | "enlaces" | "notas" | "actividad";
@@ -383,7 +384,7 @@ function FichaProyecto() {
           ) : null}
 
           {tab === "notas" ? (
-            <Notas
+            <NotasAutoguardado
               key={proyecto.id}
               inicial={proyecto.notas ?? ""}
               onGuardar={async (notas) => {
@@ -588,47 +589,6 @@ function Enlaces({
         </button>
       </form>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-    </div>
-  );
-}
-
-/** Notas libres con guardado automático al dejar de escribir. */
-function Notas({ inicial, onGuardar }: { inicial: string; onGuardar: (notas: string) => Promise<void> }) {
-  const [texto, setTexto] = useState(inicial);
-  const [estado, setEstado] = useState<"guardado" | "pendiente" | "guardando" | "error">("guardado");
-  const ultimo = useRef(inicial);
-  const guardarRef = useRef(onGuardar);
-  guardarRef.current = onGuardar;
-
-  useEffect(() => {
-    if (texto === ultimo.current) return;
-    setEstado("pendiente");
-    const t = setTimeout(async () => {
-      setEstado("guardando");
-      try {
-        await guardarRef.current(texto);
-        ultimo.current = texto;
-        setEstado("guardado");
-      } catch {
-        setEstado("error");
-      }
-    }, 800);
-    return () => clearTimeout(t);
-  }, [texto]);
-
-  const etiqueta = { guardado: "Guardado", pendiente: "Sin guardar…", guardando: "Guardando…", error: "Error al guardar" }[estado];
-
-  return (
-    <div>
-      <textarea
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        placeholder="Apuntes, feedback del cliente, ideas, credenciales NO (usa un gestor de contraseñas)…"
-        className="min-h-[320px] w-full resize-y rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-ink outline-none focus:border-brand"
-      />
-      <p className={`mt-1 text-right text-xs ${estado === "error" ? "text-red-600" : "text-ink3"}`}>
-        {etiqueta}
-      </p>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { listarProyectos } from "@/lib/data/proyectos";
 import { useApp } from "@/context/AppContext";
-import type { EstadoProyecto, Prioridad, ProyectoInsert, TipoProyecto } from "@/lib/types";
+import type { EstadoProyecto, Prioridad, Proyecto, ProyectoInsert, TipoProyecto } from "@/lib/types";
 import {
   ESTADOS_PROYECTO,
   ESTADO_PROYECTO_LABEL,
@@ -20,11 +21,17 @@ export function ProyectoForm({
   onSubmit,
   onCancelar,
   botonTexto = "Crear proyecto",
+  proyectoId,
+  tieneSubproyectos = false,
 }: {
   valoresIniciales?: Partial<ProyectoFormValores>;
   onSubmit: (v: ProyectoFormValores) => Promise<void>;
   onCancelar?: () => void;
   botonTexto?: string;
+  /** Id del proyecto en edición (para no ofrecerlo como su propio padre). */
+  proyectoId?: string;
+  /** Un proyecto con subproyectos no puede ser a su vez subproyecto. */
+  tieneSubproyectos?: boolean;
 }) {
   const { usuarios } = useApp();
   const esEdicion = !!valoresIniciales?.nombre;
@@ -41,7 +48,15 @@ export function ProyectoForm({
     descripcion: null,
     ...valoresIniciales,
   });
-  const [masDetalles, setMasDetalles] = useState(esEdicion);
+  const [masDetalles, setMasDetalles] = useState(esEdicion || !!valoresIniciales?.proyecto_padre_id);
+  const [posiblesPadres, setPosiblesPadres] = useState<Pick<Proyecto, "id" | "nombre" | "cuenta_id" | "proyecto_padre_id">[]>([]);
+
+  useEffect(() => {
+    if (!masDetalles || tieneSubproyectos) return;
+    listarProyectos()
+      .then((ps) => setPosiblesPadres(ps.filter((p) => !p.proyecto_padre_id && p.id !== proyectoId)))
+      .catch(() => {});
+  }, [masDetalles, tieneSubproyectos, proyectoId]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -159,6 +174,27 @@ export function ProyectoForm({
               </select>
             </Campo>
           ) : null}
+          {!tieneSubproyectos ? (
+            <Campo label="Forma parte de">
+              <select
+                value={v.proyecto_padre_id ?? ""}
+                onChange={(e) => set("proyecto_padre_id", e.target.value || null)}
+                className="input"
+              >
+                <option value="">Ningún proyecto (independiente)</option>
+                {posiblesPadres
+                  .filter((p) => !v.cuenta_id || p.cuenta_id === v.cuenta_id || p.id === v.proyecto_padre_id)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                    </option>
+                  ))}
+              </select>
+              <span className="mt-1 block text-[11px] text-ink3">
+                Para agrupar piezas de una campaña. Pon el importe donde lo factures (en la campaña o en cada pieza), no en ambos, para no contarlo dos veces.
+              </span>
+            </Campo>
+          ) : null}
           <Campo label="Descripción">
             <textarea
               value={v.descripcion ?? ""}
@@ -214,5 +250,6 @@ export function valoresDesdeProyecto(p: ProyectoFormValores & Record<string, unk
     fecha_inicio: p.fecha_inicio ?? null,
     fecha_entrega: p.fecha_entrega ?? null,
     importe: p.importe ?? null,
+    proyecto_padre_id: p.proyecto_padre_id ?? null,
   };
 }

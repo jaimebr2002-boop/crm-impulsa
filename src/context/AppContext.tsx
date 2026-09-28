@@ -7,11 +7,24 @@ import { useUsuario } from "./UsuarioContext";
 
 export type Aviso = { id: number; texto: string; tono?: "ok" | "error"; enlace?: { href: string; texto: string } };
 
-export type TipoAltaRapida = "proyecto" | "tarea";
-
 export type AltaRapida =
-  | { tipo: "proyecto"; valores?: { cuenta_id?: string } }
-  | { tipo: "tarea"; valores?: Partial<Pick<TareaInsert, "proyecto_id" | "lead_id" | "fecha_limite">> };
+  | { tipo: "proyecto"; valores?: { cuenta_id?: string | null; marca_id?: string | null; proyecto_padre_id?: string | null } }
+  | {
+      tipo: "tarea";
+      valores?: Partial<Pick<TareaInsert, "proyecto_id" | "lead_id" | "fecha_limite">>;
+      /** Limita el selector de proyecto a los de esta cuenta. */
+      cuentaId?: string;
+    }
+  | { tipo: "cuenta" }
+  | { tipo: "marca"; cuentaId?: string }
+  | { tipo: "evento"; valores?: { fecha?: string; cuenta_id?: string | null; proyecto_id?: string | null } };
+
+/** Dónde está el usuario: lo fija cada ficha para que "+ Añadir" y la paleta
+ * ofrezcan acciones con sentido en ese sitio. */
+export type ContextoPantalla =
+  | { tipo: "cuenta"; id: string; nombre: string }
+  | { tipo: "marca"; id: string; nombre: string; cuentaId: string }
+  | { tipo: "proyecto"; id: string; nombre: string; cuentaId: string | null; marcaId: string | null; esSubproyecto: boolean };
 
 type AppContextValue = {
   usuarios: Usuario[];
@@ -27,6 +40,11 @@ type AppContextValue = {
    * usan como dependencia para recargar sus datos. */
   versionDatos: number;
   notificarCambio: () => void;
+  contexto: ContextoPantalla | null;
+  setContexto: (c: ContextoPantalla | null) => void;
+  /** Petición de abrir una pestaña de la ficha actual (p. ej. "notas" desde + Añadir). */
+  pestanaPedida: { tab: string; n: number } | null;
+  pedirPestana: (tab: string) => void;
   /** Toast breve de confirmación o error. */
   aviso: Aviso | null;
   avisar: (texto: string, opciones?: Omit<Aviso, "id" | "texto">) => void;
@@ -41,6 +59,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [altaRapida, setAltaRapida] = useState<AltaRapida | null>(null);
   const [versionDatos, setVersionDatos] = useState(0);
   const [aviso, setAviso] = useState<Aviso | null>(null);
+  const [contexto, setContexto] = useState<ContextoPantalla | null>(null);
+  const [pestanaPedida, setPestanaPedida] = useState<{ tab: string; n: number } | null>(null);
+  const pedirPestana = useCallback((tab: string) => setPestanaPedida({ tab, n: Date.now() }), []);
 
   useEffect(() => {
     if (!aviso) return;
@@ -97,6 +118,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notificarCambio,
         aviso,
         avisar,
+        contexto,
+        setContexto,
+        pestanaPedida,
+        pedirPestana,
       }}
     >
       {children}
@@ -108,4 +133,24 @@ export function useApp(): AppContextValue {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error("useApp debe usarse dentro de AppProvider");
   return ctx;
+}
+
+/** Fija el contexto de pantalla mientras la ficha está montada. */
+export function useContextoPantalla(c: ContextoPantalla | null) {
+  const { setContexto } = useApp();
+  const clave = c ? JSON.stringify(c) : "";
+  useEffect(() => {
+    setContexto(c);
+    return () => setContexto(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clave, setContexto]);
+}
+
+/** Ejecuta `abrir(tab)` cuando alguien pide una pestaña (desde + Añadir). */
+export function usePestanaPedida(abrir: (tab: string) => void) {
+  const { pestanaPedida } = useApp();
+  useEffect(() => {
+    if (pestanaPedida) abrir(pestanaPedida.tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pestanaPedida]);
 }

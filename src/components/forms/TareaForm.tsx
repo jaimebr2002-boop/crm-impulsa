@@ -22,12 +22,15 @@ export function TareaForm({
   onCancelar,
   botonTexto = "Crear tarea",
   ocultarProyecto = false,
+  cuentaId,
 }: {
   valoresIniciales?: Partial<TareaFormValores>;
   onSubmit: (v: TareaFormValores) => Promise<void>;
   onCancelar?: () => void;
   botonTexto?: string;
   ocultarProyecto?: boolean;
+  /** Si se crea desde una cuenta: solo sus proyectos en el selector. */
+  cuentaId?: string;
 }) {
   const { usuarios } = useApp();
   const { esAdmin } = useUsuario();
@@ -39,7 +42,7 @@ export function TareaForm({
     descripcion: null,
     ...valoresIniciales,
   });
-  const [proyectos, setProyectos] = useState<Pick<Proyecto, "id" | "nombre" | "estado">[]>([]);
+  const [proyectos, setProyectos] = useState<Pick<Proyecto, "id" | "nombre" | "estado" | "cuenta_id">[]>([]);
   const [masDetalles, setMasDetalles] = useState(!!valoresIniciales?.descripcion);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +50,17 @@ export function TareaForm({
   useEffect(() => {
     if (!esAdmin || ocultarProyecto) return;
     listarProyectos()
-      .then((ps) => setProyectos(ps.filter((p) => ESTADOS_PROYECTO_ACTIVOS.has(p.estado) || p.id === v.proyecto_id)))
+      .then((ps) =>
+        setProyectos(
+          ps.filter(
+            (p) =>
+              (ESTADOS_PROYECTO_ACTIVOS.has(p.estado) || p.id === v.proyecto_id) && (!cuentaId || p.cuenta_id === cuentaId)
+          )
+        )
+      )
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [esAdmin, ocultarProyecto]);
+  }, [esAdmin, ocultarProyecto, cuentaId]);
 
   function set<K extends keyof TareaFormValores>(k: K, valor: TareaFormValores[K]) {
     setV((prev) => ({ ...prev, [k]: valor }));

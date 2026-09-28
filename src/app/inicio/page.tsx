@@ -17,6 +17,7 @@ import { useAccionesTareas } from "@/lib/useAccionesTareas";
 import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
 import { SkeletonLineas, SkeletonTarjetas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { Panel } from "@/components/ui/Panel";
 import { TareaFila, CasillaTarea } from "@/components/trabajo/TareaFila";
 import { TareaEditarModal } from "@/components/trabajo/TareaEditarModal";
 import { ActividadLista } from "@/components/trabajo/ActividadLista";
@@ -323,41 +324,6 @@ function Kpi({
     </Link>
   ) : (
     <div className="bg-surface p-4">{contenido}</div>
-  );
-}
-
-function Panel({
-  titulo,
-  contador,
-  enlace,
-  tono,
-  className = "",
-  children,
-}: {
-  titulo: string;
-  contador?: number;
-  enlace?: { href: string; texto: string };
-  tono?: "alerta";
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className={`overflow-hidden rounded-xl border border-line bg-surface ${className}`}>
-      <header className="flex items-center justify-between border-b border-line px-4 py-2.5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-          {tono === "alerta" ? <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> : null}
-          {titulo}
-          {contador ? <span className="text-xs font-normal text-ink3">{contador}</span> : null}
-        </h2>
-        {enlace ? (
-          <Link href={enlace.href} className="flex items-center gap-1 text-xs text-ink3 hover:text-ink">
-            {enlace.texto}
-            <IconFlecha className="h-3 w-3" />
-          </Link>
-        ) : null}
-      </header>
-      {children}
-    </section>
   );
 }
 

@@ -66,10 +66,17 @@ export type InteraccionInsert = Partial<Omit<Interaccion, "id" | "fecha">> & {
   lead_id: string;
 };
 
+export type TipoEvento = "seguimiento" | "reunion" | "evento";
+
 export type Evento = {
   id: string;
-  lead_id: string;
+  /** Obligatorio en seguimientos CRM; opcional en reuniones/eventos (0009). */
+  lead_id: string | null;
   usuario_id: string | null;
+  tipo: TipoEvento;
+  descripcion: string | null;
+  proyecto_id: string | null;
+  cuenta_id: string | null;
   titulo: string;
   fecha_hora: string;
   completada: boolean;
@@ -79,7 +86,6 @@ export type Evento = {
 };
 
 export type EventoInsert = Partial<Omit<Evento, "id" | "created_at" | "updated_at" | "completada">> & {
-  lead_id: string;
   titulo: string;
   fecha_hora: string;
 };
@@ -146,6 +152,8 @@ export type Proyecto = {
   cuenta_id: string | null;
   marca_id: string | null;
   lead_id: string | null;
+  /** Proyecto contenedor (un solo nivel de subproyectos, 0009). */
+  proyecto_padre_id: string | null;
   tipo: TipoProyecto;
   estado: EstadoProyecto;
   prioridad: Prioridad;
@@ -165,6 +173,7 @@ export type Proyecto = {
 export type ProyectoConRelaciones = Proyecto & {
   cuenta: Pick<Cuenta, "id" | "nombre" | "tipo"> | null;
   marca: Pick<Marca, "id" | "nombre"> | null;
+  padre: Pick<Proyecto, "id" | "nombre"> | null;
 };
 
 export type ProyectoInsert = Partial<Omit<Proyecto, "id" | "created_at" | "updated_at" | "entregado_en" | "creado_por">> & {
@@ -199,7 +208,12 @@ export type Tarea = {
 };
 
 export type TareaConRelaciones = Tarea & {
-  proyecto: Pick<Proyecto, "id" | "nombre"> | null;
+  proyecto:
+    | (Pick<Proyecto, "id" | "nombre" | "cuenta_id" | "marca_id"> & {
+        cuenta: Pick<Cuenta, "id" | "nombre"> | null;
+        marca: Pick<Marca, "id" | "nombre"> | null;
+      })
+    | null;
   lead: Pick<Lead, "id" | "negocio" | "nombre_contacto"> | null;
 };
 
@@ -216,5 +230,7 @@ export type Actividad = {
   accion: string;
   titulo: string | null;
   datos: Record<string, unknown>;
+  cuenta_id: string | null;
+  proyecto_id: string | null;
   created_at: string;
 };
