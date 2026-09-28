@@ -270,7 +270,7 @@ export default function AnaliticaPage() {
               icono={IconCalendario}
             />
             <KpiCard
-              etiqueta="Leads cerrados"
+              etiqueta="Leads ganados"
               valor={cerrados.length}
               variacion={variacionPct(cerrados.length, cerradosAnterior.length)}
               icono={IconCheck}
@@ -282,7 +282,7 @@ export default function AnaliticaPage() {
               nota="Total actual, no depende del periodo"
             />
             <KpiCard
-              etiqueta="Facturación cerrada"
+              etiqueta="Valor ganado"
               valor={formatEuros(facturado)}
               variacion={variacionPct(facturado, facturadoAnterior)}
               icono={IconTrendUp}
@@ -312,7 +312,7 @@ export default function AnaliticaPage() {
             <section className="glass rounded-2xl p-5 shadow-glass dark:shadow-glass-dark">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-display text-sm font-bold text-ink">Pipeline actual</h2>
-                {perdidos > 0 ? <span className="text-xs text-ink3">{perdidos} descartados / sin contestar</span> : null}
+                {perdidos > 0 ? <span className="text-xs text-ink3">{perdidos} perdidos / sin contestar</span> : null}
               </div>
               <FunnelChart etapas={funnelData} />
             </section>

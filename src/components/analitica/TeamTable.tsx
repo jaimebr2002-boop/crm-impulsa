@@ -25,7 +25,7 @@ export function TeamTable({ filas }: { filas: FilaEquipo[] }) {
             <th className="pb-2 font-medium">Interacciones</th>
             <th className="pb-2 font-medium">Llam. contestadas</th>
             <th className="pb-2 font-medium">Seguim. hechos</th>
-            <th className="pb-2 font-medium">Cerrados</th>
+            <th className="pb-2 font-medium">Ganados</th>
           </tr>
         </thead>
         <tbody>

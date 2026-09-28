@@ -25,6 +25,7 @@ import { InteractionForm } from "@/components/forms/InteractionForm";
 import { EventForm } from "@/components/forms/EventForm";
 import { LeadForm, type LeadFormValores } from "@/components/forms/LeadForm";
 import { IconTelefono, IconWhatsapp } from "@/components/Icons";
+import { ConvertirLead } from "@/components/trabajo/ConvertirLead";
 
 export default function LeadDetallePage() {
   const params = useParams<{ id: string }>();
@@ -208,6 +209,8 @@ export default function LeadDetallePage() {
         )}
       </div>
 
+      {esAdmin ? <ConvertirLead lead={lead} /> : null}
+
       <div className="mb-5">
         <ReferralBanner referidoPor={lead.referido_por} />
       </div>
@@ -287,7 +290,7 @@ export default function LeadDetallePage() {
           />
           <Campo label="Oferta" valor={lead.oferta} />
           <Campo
-            label={lead.estado === "cerrado" ? "Valor facturado" : "Valor estimado"}
+            label={lead.estado === "cerrado" ? "Valor ganado" : "Valor estimado"}
             valor={lead.valor != null ? formatEuros(lead.valor) : null}
           />
           <Campo label="Email" valor={lead.email} />

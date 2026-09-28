@@ -212,7 +212,7 @@ export default function LeadsPage() {
                 onClick={() => cambiarVista(v)}
                 className={`rounded-lg px-3 py-1.5 ${vista === v ? "bg-brand-gradient text-brand-ink" : "text-ink2"}`}
               >
-                {v === "lista" ? "Lista" : "Tablero"}
+                {v === "lista" ? "Lista" : "Pipeline"}
               </button>
             ))}
           </div>

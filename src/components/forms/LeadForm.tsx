@@ -210,7 +210,7 @@ export function LeadForm({
         <Campo label="Oferta">
           <input value={valores.oferta ?? ""} onChange={(e) => set("oferta", e.target.value)} className="input" />
         </Campo>
-        <Campo label="Valor (€)" nota={valores.estado === "cerrado" ? "Importe facturado" : "Importe estimado"}>
+        <Campo label="Valor (€)" nota={valores.estado === "cerrado" ? "Importe ganado" : "Importe estimado"}>
           <input
             value={valores.valor ?? ""}
             onChange={(e) => set("valor", e.target.value === "" ? null : Math.max(0, Number(e.target.value)))}

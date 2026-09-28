@@ -1,14 +1,16 @@
 import type { CanalContacto, EstadoLead, OrigenLead, SegmentoLead } from "./types";
 
+// Orden del pipeline. Los valores guardados no cambian ("cerrado",
+// "descartado"); solo su etiqueta visible pasa a Ganado / Perdido.
 export const ESTADOS: EstadoLead[] = [
   "pendiente",
   "contactado",
+  "no contesta",
   "respondido",
   "interesado",
   "reunión",
   "cerrado",
   "descartado",
-  "no contesta",
 ];
 
 export const ESTADO_LABEL: Record<string, string> = {
@@ -17,8 +19,8 @@ export const ESTADO_LABEL: Record<string, string> = {
   respondido: "Respondido",
   interesado: "Interesado",
   reunión: "Reunión",
-  cerrado: "Cerrado",
-  descartado: "Descartado",
+  cerrado: "Ganado",
+  descartado: "Perdido",
   "no contesta": "No contesta",
 };
 

@@ -101,7 +101,7 @@ export default function HoyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 md:px-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark dark:text-brand">Hoy</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark dark:text-brand">Ventas · Seguimientos</p>
       <h1 className="mt-1 font-display text-2xl font-bold text-ink">Hola, {usuarioActual.nombre}</h1>
       <p className="mt-0.5 text-sm capitalize text-ink2">
         {new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}
