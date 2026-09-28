@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { useUsuario } from "@/context/UsuarioContext";
 import { listarProyectos } from "@/lib/data/proyectos";
@@ -10,8 +10,8 @@ import { listarActividad } from "@/lib/data/actividad";
 import { listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
 import { obtenerLeadsActuales } from "@/lib/data/analitica";
 import { ESTADOS_ABIERTOS, formatEuros, sumarValor } from "@/lib/constants";
-import { aYMD, endOfDay, formatHora, hoyYMD, startOfDay, sumarDiasYMD } from "@/lib/dates";
-import { ESTADOS_PROYECTO_ACTIVOS, PRIORIDAD_ORDEN } from "@/lib/trabajo";
+import { aYMD, endOfDay, formatHora, formatYMDRelativa, hoyYMD, startOfDay, sumarDiasYMD } from "@/lib/dates";
+import { ESTADOS_PROYECTO_ACTIVOS } from "@/lib/trabajo";
 import type { Actividad, EventoConLead, Lead, ProyectoConRelaciones, TareaConRelaciones } from "@/lib/types";
 import { useAccionesTareas } from "@/lib/useAccionesTareas";
 import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
@@ -21,8 +21,10 @@ import { Panel } from "@/components/ui/Panel";
 import { TareaFila, CasillaTarea } from "@/components/trabajo/TareaFila";
 import { TareaEditarModal } from "@/components/trabajo/TareaEditarModal";
 import { ActividadLista } from "@/components/trabajo/ActividadLista";
-import { EstadoProyectoInsignia, FechaLimite, PrioridadIcono } from "@/components/trabajo/Insignias";
-import { IconFlecha, IconMas } from "@/components/Icons";
+import { FechaLimite, PrioridadIcono } from "@/components/trabajo/Insignias";
+import { FilaKpis } from "@/components/trabajo/FilaKpis";
+import { ProyectosAtencion, proyectosQueRequierenAtencion } from "@/components/trabajo/ProyectosAtencion";
+import { IconMas } from "@/components/Icons";
 import { ListaOpcionesAnadir } from "@/components/shell/OpcionesAnadir";
 
 export default function InicioPage() {
@@ -41,9 +43,10 @@ function saludo(): string {
   return "Buenas noches";
 }
 
+// Urgente = lo tuyo que ya ha vencido. Los proyectos tienen su propio panel
+// ("Requieren atención") para no repetirlos aquí.
 type Urgente =
   | { tipo: "tarea"; id: string; fecha: string | null; tarea: TareaConRelaciones }
-  | { tipo: "proyecto"; id: string; fecha: string | null; proyecto: ProyectoConRelaciones }
   | { tipo: "seguimiento"; id: string; fecha: string | null; evento: EventoConLead };
 
 function Inicio() {
@@ -93,7 +96,6 @@ function Inicio() {
 
   const hoy = hoyYMD();
   const en7 = sumarDiasYMD(hoy, 7);
-  const en3 = sumarDiasYMD(hoy, 3);
   const mesActual = hoy.slice(0, 7);
 
   const m = useMemo(() => {
@@ -111,10 +113,6 @@ function Inicio() {
 
     const urgentes: Urgente[] = [
       ...tareasVencidas.map((t) => ({ tipo: "tarea" as const, id: t.id, fecha: t.fecha_limite, tarea: t })),
-      ...activos
-        .filter((p) => (p.fecha_entrega && p.fecha_entrega <= en3) || p.prioridad === "urgente")
-        .filter((p) => p.fecha_entrega !== hoy)
-        .map((p) => ({ tipo: "proyecto" as const, id: p.id, fecha: p.fecha_entrega, proyecto: p })),
       ...eventosVencidos.map((e) => ({ tipo: "seguimiento" as const, id: e.id, fecha: e.fecha_hora.slice(0, 10), evento: e })),
     ].sort((a, b) => (a.fecha ?? "9999").localeCompare(b.fecha ?? "9999"));
 
@@ -134,7 +132,7 @@ function Inicio() {
       enRevision: activos.filter((p) => p.estado === "revision").length,
       esperando: activos.filter((p) => p.estado === "esperando").length,
     };
-  }, [proyectos, tareas, leads, eventosVencidos, usuarioActual, hoy, en7, en3, mesActual]);
+  }, [proyectos, tareas, leads, eventosVencidos, usuarioActual, hoy, en7, mesActual]);
 
   async function completarSeguimiento(ev: EventoConLead) {
     const nuevo = !ev.completada;
@@ -148,13 +146,18 @@ function Inicio() {
   }
 
   const fecha = new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
-  const topProyectos = [...m.activos]
-    .sort(
-      (a, b) =>
-        PRIORIDAD_ORDEN[a.prioridad] - PRIORIDAD_ORDEN[b.prioridad] ||
-        (a.fecha_entrega ?? "9999").localeCompare(b.fecha_entrega ?? "9999")
-    )
-    .slice(0, 6);
+
+  // Cuentas con trabajo en marcha: cuántos proyectos, cuánto valor y la próxima entrega.
+  const porCuenta = new Map<string, { id: string; nombre: string; activos: number; valorEnCurso: number; proximaEntrega: string | null }>();
+  for (const p of m.activos) {
+    if (!p.cuenta) continue;
+    const c = porCuenta.get(p.cuenta.id) ?? { id: p.cuenta.id, nombre: p.cuenta.nombre, activos: 0, valorEnCurso: 0, proximaEntrega: null };
+    c.activos++;
+    c.valorEnCurso += Number(p.importe) || 0;
+    if (p.fecha_entrega && p.fecha_entrega >= hoy && (!c.proximaEntrega || p.fecha_entrega < c.proximaEntrega)) c.proximaEntrega = p.fecha_entrega;
+    porCuenta.set(c.id, c);
+  }
+  const cuentasActivas = Array.from(porCuenta.values()).sort((a, b) => b.activos - a.activos || b.valorEnCurso - a.valorEnCurso);
   const itemsHoy = m.tareasHoy.length + m.entregasHoy.length + eventosHoy.length;
 
   return (
@@ -193,19 +196,36 @@ function Inicio() {
 
       {!cargando && !error ? (
         <div className="flex flex-col gap-6">
-          {/* KPIs */}
-          <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3 xl:grid-cols-6">
-            <Kpi etiqueta="Proyectos activos" valor={m.activos.length} href="/proyectos"
-              nota={[m.enRevision && `${m.enRevision} en revisión`, m.esperando && `${m.esperando} esperando`].filter(Boolean).join(" · ") || undefined} />
-            <Kpi etiqueta="Tareas pendientes" valor={m.abiertas.length} href="/tareas?vista=todas"
-              nota={m.tareasVencidas.length ? `${m.tareasVencidas.length} vencida${m.tareasVencidas.length === 1 ? "" : "s"}` : "Nada vencido"} alerta={m.tareasVencidas.length > 0} />
-            <Kpi etiqueta="Entregas en 7 días" valor={m.entregasSemana.length} href="/proyectos" />
-            <Kpi etiqueta="Valor en curso" valor={formatEuros(m.valorEnCurso)} nota="Proyectos activos" />
-            <Kpi etiqueta="Entregado este mes" valor={formatEuros(m.valorEntregadoMes)}
-              nota={`${m.entregadosMes.length} proyecto${m.entregadosMes.length === 1 ? "" : "s"}`} />
-            <Kpi etiqueta="Leads activos" valor={m.leadsActivos.length} href="/leads"
-              nota={m.valorLeads > 0 ? `${formatEuros(m.valorLeads)} en juego` : undefined} />
-          </section>
+          <FilaKpis
+            kpis={[
+              {
+                etiqueta: "Proyectos activos",
+                valor: m.activos.length,
+                href: "/proyectos",
+                nota: [m.enRevision && `${m.enRevision} en revisión`, m.esperando && `${m.esperando} esperando`].filter(Boolean).join(" · ") || undefined,
+              },
+              {
+                etiqueta: "Tareas pendientes",
+                valor: m.abiertas.length,
+                href: "/tareas?vista=todas",
+                nota: m.tareasVencidas.length ? `${m.tareasVencidas.length} vencida${m.tareasVencidas.length === 1 ? "" : "s"}` : "Nada vencido",
+                alerta: m.tareasVencidas.length > 0,
+              },
+              { etiqueta: "Entregas en 7 días", valor: m.entregasSemana.length, href: "/calendario" },
+              { etiqueta: "Valor en curso", valor: formatEuros(m.valorEnCurso), nota: "Proyectos activos" },
+              {
+                etiqueta: "Entregado este mes",
+                valor: formatEuros(m.valorEntregadoMes),
+                nota: `${m.entregadosMes.length} proyecto${m.entregadosMes.length === 1 ? "" : "s"}`,
+              },
+              {
+                etiqueta: "Leads activos",
+                valor: m.leadsActivos.length,
+                href: "/leads",
+                nota: m.valorLeads > 0 ? `${formatEuros(m.valorLeads)} en juego` : undefined,
+              },
+            ]}
+          />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Hoy */}
@@ -230,14 +250,12 @@ function Inicio() {
             {/* Urgente */}
             <Panel titulo="Urgente" contador={m.urgentes.length} tono={m.urgentes.length ? "alerta" : undefined}>
               {m.urgentes.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-ink3">Nada vencido ni con entrega inminente.</p>
+                <p className="px-4 py-8 text-center text-sm text-ink3">Nada vencido. Todo al día.</p>
               ) : (
                 <div className="divide-y divide-line">
                   {m.urgentes.slice(0, 8).map((u) =>
                     u.tipo === "tarea" ? (
                       <TareaFila key={u.id} tarea={u.tarea} onToggle={acciones.alternar} onAbrir={setEditando} />
-                    ) : u.tipo === "proyecto" ? (
-                      <FilaProyecto key={u.id} p={u.proyecto} />
                     ) : (
                       <FilaSeguimiento key={u.id} ev={u.evento} onToggle={completarSeguimiento} vencido />
                     )
@@ -251,43 +269,42 @@ function Inicio() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <Panel titulo="Proyectos activos" contador={m.activos.length} enlace={{ href: "/proyectos", texto: "Ver todos" }} className="lg:col-span-2">
-              {topProyectos.length === 0 ? (
-                <div className="px-4 py-8 text-center">
-                  <p className="text-sm text-ink3">Sin proyectos activos.</p>
-                </div>
+            <Panel
+              titulo="Proyectos que requieren atención"
+              contador={proyectosQueRequierenAtencion(m.activos).length}
+              enlace={{ href: "/proyectos", texto: "Todos los proyectos" }}
+              className="lg:col-span-2"
+            >
+              <ProyectosAtencion proyectos={m.activos} vacio="Ningún proyecto vencido, con entrega inminente, esperando o en revisión." />
+            </Panel>
+
+            <Panel titulo="Cuentas activas" enlace={{ href: "/cuentas", texto: "Cuentas" }}>
+              {cuentasActivas.length === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-ink3">Ninguna cuenta con proyectos activos.</p>
               ) : (
                 <div className="divide-y divide-line">
-                  {topProyectos.map((p) => (
-                    <Link key={p.id} href={`/proyectos/${p.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-mute/50">
-                      <PrioridadIcono prioridad={p.prioridad} />
+                  {cuentasActivas.slice(0, 6).map((c) => (
+                    <Link key={c.id} href={`/cuentas/${c.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-mute/50">
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-ink">{p.nombre}</span>
+                        <span className="block truncate text-sm font-medium text-ink">{c.nombre}</span>
                         <span className="block truncate text-xs text-ink3">
-                          {[p.cuenta?.nombre, p.marca?.nombre].filter(Boolean).join(" · ") || "Sin cuenta"}
+                          {c.activos} proyecto{c.activos === 1 ? "" : "s"} activo{c.activos === 1 ? "" : "s"}
+                          {c.proximaEntrega ? ` · entrega ${formatYMDRelativa(c.proximaEntrega).toLowerCase()}` : ""}
                         </span>
                       </span>
-                      <span className="hidden sm:block">
-                        <EstadoProyectoInsignia estado={p.estado} />
-                      </span>
-                      <span className="w-20 text-right">
-                        <FechaLimite fecha={p.fecha_entrega} />
-                      </span>
-                      <span className="hidden w-20 text-right text-sm font-medium tabular-nums text-ink sm:block">
-                        {p.importe != null ? formatEuros(p.importe) : ""}
-                      </span>
+                      <span className="shrink-0 text-sm font-medium tabular-nums text-ink">{formatEuros(c.valorEnCurso)}</span>
                     </Link>
                   ))}
                 </div>
               )}
             </Panel>
-
-            <Panel titulo="Actividad reciente">
-              <div className="px-4 py-1">
-                <ActividadLista items={actividad} vacio="Aquí aparecerá lo que vaya pasando: proyectos, tareas, leads…" />
-              </div>
-            </Panel>
           </div>
+
+          <Panel titulo="Actividad reciente" enlace={{ href: "/actividad", texto: "Ver toda" }}>
+            <div className="px-4 py-1">
+              <ActividadLista items={actividad} vacio="Aquí aparecerá lo que vaya pasando: proyectos, tareas, leads…" />
+            </div>
+          </Panel>
         </div>
       ) : null}
 
@@ -295,35 +312,6 @@ function Inicio() {
         <TareaEditarModal tarea={editando} onCerrar={() => setEditando(null)} onGuardar={acciones.actualizar} onEliminar={acciones.eliminar} />
       ) : null}
     </div>
-  );
-}
-
-function Kpi({
-  etiqueta,
-  valor,
-  nota,
-  href,
-  alerta = false,
-}: {
-  etiqueta: string;
-  valor: ReactNode;
-  nota?: string;
-  href?: string;
-  alerta?: boolean;
-}) {
-  const contenido = (
-    <>
-      <p className="text-[11px] font-medium uppercase tracking-wider text-ink3">{etiqueta}</p>
-      <p className="mt-1.5 font-display text-2xl font-bold tabular-nums tracking-tight text-ink">{valor}</p>
-      {nota ? <p className={`mt-0.5 truncate text-xs ${alerta ? "font-medium text-red-600 dark:text-red-400" : "text-ink3"}`}>{nota}</p> : null}
-    </>
-  );
-  return href ? (
-    <Link href={href} className="block bg-surface p-4 transition-colors hover:bg-mute/40">
-      {contenido}
-    </Link>
-  ) : (
-    <div className="bg-surface p-4">{contenido}</div>
   );
 }
 
@@ -354,10 +342,14 @@ function FilaSeguimiento({ ev, onToggle, vencido = false }: { ev: EventoConLead;
       <span className="pt-0.5">
         <CasillaTarea completada={ev.completada} onToggle={() => onToggle(ev)} etiqueta={ev.titulo} />
       </span>
-      <Link href={ev.lead ? `/leads/${ev.lead.id}` : "/hoy"} className="min-w-0 flex-1">
+      <Link href={ev.lead ? `/leads/${ev.lead.id}` : "/calendario"} className="min-w-0 flex-1">
         <span className={`block truncate text-sm ${ev.completada ? "text-ink3 line-through" : "text-ink"}`}>{ev.titulo}</span>
         <span className="block truncate text-xs text-ink3">
-          Seguimiento CRM · {ev.lead?.negocio || ev.lead?.nombre_contacto || "Lead"}
+          {ev.tipo === "reunion"
+            ? "Reunión"
+            : ev.tipo === "evento"
+              ? "Evento"
+              : `Seguimiento CRM · ${ev.lead?.negocio || ev.lead?.nombre_contacto || "Lead"}`}
         </span>
       </Link>
       <span className={`shrink-0 pt-0.5 text-xs font-medium ${vencido ? "text-red-600 dark:text-red-400" : "text-ink2"}`}>
