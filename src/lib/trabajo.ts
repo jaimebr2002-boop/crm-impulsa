@@ -120,3 +120,15 @@ export const TIPO_CUENTA_LABEL: Record<TipoCuenta, string> = {
   cliente_directo: "Cliente directo",
   interno: "Interno",
 };
+
+/** Contexto corto de una tarea: "Segurma · Vídeo 3". Omite la marca (o la
+ * cuenta) si el nombre del proyecto ya empieza por ella, para no repetirla. */
+export function contextoDeProyecto(p: {
+  nombre: string;
+  marca?: { nombre: string } | null;
+  cuenta?: { nombre: string } | null;
+}): string {
+  const origen = p.marca?.nombre ?? p.cuenta?.nombre ?? null;
+  if (!origen || p.nombre.toLowerCase().startsWith(origen.toLowerCase())) return p.nombre;
+  return `${origen} · ${p.nombre}`;
+}

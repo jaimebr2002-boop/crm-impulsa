@@ -7,7 +7,9 @@ export type KpiDato = { etiqueta: string; valor: ReactNode; nota?: string; href?
 export function FilaKpis({ kpis, columnas = "md:grid-cols-3 xl:grid-cols-6" }: { kpis: KpiDato[]; columnas?: string }) {
   return (
     <section className={`grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line ${columnas}`}>
-      {kpis.map((k) => {
+      {kpis.map((k, i) => {
+        // En móvil (2 columnas) un número impar dejaría un hueco: el último ocupa la fila.
+        const ancho = i === kpis.length - 1 && kpis.length % 2 === 1 ? "col-span-2 md:col-span-1" : "";
         const contenido = (
           <>
             <p className="text-[11px] font-medium uppercase tracking-wider text-ink3">{k.etiqueta}</p>
@@ -18,11 +20,11 @@ export function FilaKpis({ kpis, columnas = "md:grid-cols-3 xl:grid-cols-6" }: {
           </>
         );
         return k.href ? (
-          <Link key={k.etiqueta} href={k.href} className="block bg-surface p-4 transition-colors hover:bg-mute/40">
+          <Link key={k.etiqueta} href={k.href} className={`block bg-surface p-4 transition-colors hover:bg-mute/40 ${ancho}`}>
             {contenido}
           </Link>
         ) : (
-          <div key={k.etiqueta} className="bg-surface p-4">
+          <div key={k.etiqueta} className={`bg-surface p-4 ${ancho}`}>
             {contenido}
           </div>
         );

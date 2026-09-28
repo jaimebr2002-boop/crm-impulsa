@@ -9,8 +9,10 @@ import type {
 } from "@/lib/types";
 import { traerTodo } from "./paginar";
 
+// Ojo: "proyectos!proyecto_padre_id" devolvería los HIJOS (array); embeber por
+// la columna FK devuelve el padre.
 const SELECT =
-  "*, cuenta:cuentas(id, nombre, tipo), marca:marcas(id, nombre), padre:proyectos!proyecto_padre_id(id, nombre)";
+  "*, cuenta:cuentas(id, nombre, tipo), marca:marcas(id, nombre), padre:proyecto_padre_id(id, nombre)";
 
 export async function listarProyectos({ archivados = false }: { archivados?: boolean } = {}): Promise<ProyectoConRelaciones[]> {
   return traerTodo<ProyectoConRelaciones>((desde, hasta) =>

@@ -69,9 +69,12 @@ La app ya no es solo un CRM: es el panel interno de Impulsa. La auditoría, el m
 - **Proyectos** (`/proyectos`): lista y tablero Kanban; ficha con tareas, enlaces, notas y actividad. Cada proyecto pertenece a una **cuenta** (p. ej. Fer) y opcionalmente a una **marca** (Segurma, Clínica X…).
 - **Tareas** (`/tareas`): Hoy, Esta semana, Vencidas, Todas y Kanban; con o sin proyecto.
 - **⌘K / Ctrl+K**: búsqueda global y acciones rápidas. **+ Añadir** en la barra lateral (o el botón central en móvil).
-- **Actividad**: la base de datos registra sola los cambios de proyectos, tareas y estados de leads (tabla `actividad`).
+- **Cuentas** (`/cuentas`, solo admin): de dónde viene el trabajo (Fer, clientes directos), con sus marcas, proyectos, tareas, actividad y notas internas. Las marcas tienen ficha propia (`/marcas/[id]`).
+- **Subproyectos**: un proyecto puede agrupar piezas (Campaña → Vídeo 1, Vídeo 2…), un solo nivel.
+- **Calendario** unificado: seguimientos CRM, reuniones y eventos, tareas con fecha y entregas de proyectos, con filtros.
+- **Actividad** (`/actividad`, solo admin): la base de datos registra sola los cambios de proyectos, tareas, cuentas, marcas, reuniones y estados de leads.
 
-> **Orden de despliegue:** ejecuta primero las migraciones pendientes (0007 y 0008) en el SQL Editor de Supabase y después despliega el código. El código nuevo consulta columnas y tablas que no existen hasta entonces.
+> **Orden de despliegue:** ejecuta primero las migraciones pendientes (0007, 0008 y 0009, en ese orden) en el SQL Editor de Supabase y después despliega el código. El código nuevo consulta columnas y tablas que no existen hasta entonces.
 
 ## 7. Pipeline, valor y gestión de leads
 

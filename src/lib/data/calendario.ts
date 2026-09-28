@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { aYMD, formatHora } from "@/lib/dates";
 import type { Cuenta, Evento, Lead, Proyecto, TareaConRelaciones } from "@/lib/types";
 import { traerTodo } from "./paginar";
+import { contextoDeProyecto } from "@/lib/trabajo";
 
 // Capa de lectura del calendario unificado. NO guarda nada: combina en un
 // solo tipo lo que ya vive en eventos (seguimientos CRM, reuniones, eventos),
@@ -141,9 +142,7 @@ export async function obtenerItemsCalendario(
       clave: `t-${t.id}`,
       tipo: "tarea",
       titulo: t.titulo,
-      subtitulo: t.proyecto
-        ? [t.proyecto.marca?.nombre ?? t.proyecto.cuenta?.nombre, t.proyecto.nombre].filter(Boolean).join(" · ")
-        : null,
+      subtitulo: t.proyecto ? contextoDeProyecto(t.proyecto) : null,
       dia: t.fecha_limite,
       hora: null,
       completado: t.estado === "completada",

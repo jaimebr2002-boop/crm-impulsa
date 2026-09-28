@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { TareaConRelaciones } from "@/lib/types";
 import { FechaLimite, PrioridadIcono } from "./Insignias";
+import { contextoDeProyecto } from "@/lib/trabajo";
 
 /** Casilla redonda de completar (estilo Things/Linear). */
 export function CasillaTarea({ completada, onToggle, etiqueta }: { completada: boolean; onToggle: () => void; etiqueta: string }) {
@@ -27,13 +28,6 @@ export function CasillaTarea({ completada, onToggle, etiqueta }: { completada: b
       ) : null}
     </button>
   );
-}
-
-function origenDe(p: NonNullable<TareaConRelaciones["proyecto"]>): string | null {
-  const nombre = p.marca?.nombre ?? p.cuenta?.nombre ?? null;
-  // "Segurma · Segurma — Vídeo 3" sería redundante.
-  if (nombre && p.nombre.toLowerCase().startsWith(nombre.toLowerCase())) return null;
-  return nombre;
 }
 
 export function TareaFila({
@@ -68,8 +62,7 @@ export function TareaFila({
               className="truncate text-xs text-ink3 hover:text-ink hover:underline"
             >
               {/* Contexto útil sin redundancia: la marca (o, si no hay, la cuenta) y el proyecto. */}
-              {origenDe(tarea.proyecto) ? <span className="text-ink2">{origenDe(tarea.proyecto)} · </span> : null}
-              {tarea.proyecto.nombre}
+              {contextoDeProyecto(tarea.proyecto)}
             </Link>
           ) : null}
           {tarea.lead ? (

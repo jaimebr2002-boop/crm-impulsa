@@ -183,6 +183,7 @@ export function CommandPalette() {
           <IconBuscar className="h-4 w-4 shrink-0 text-ink3" />
           <input
             ref={inputRef}
+            autoFocus
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             onKeyDown={onKeyDown}

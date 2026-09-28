@@ -146,6 +146,18 @@ Sistema     Configuración (/perfil)
 - App probada de extremo a extremo con PostgREST 12 + login simulado: Inicio, Proyectos (lista, tablero con arrastrar y soltar persistido), ficha (tareas, enlaces, notas con autoguardado, cambio de estado → actividad), Tareas, ⌘K, alta rápida, conversión de lead ganado en proyecto, redirección de comerciales. Escritorio, móvil y modo oscuro; sin errores de consola ni HTTP.
 - Pendiente de la Fase 1 que se deja para más adelante: rediseño visual de las pantallas del CRM heredadas (Leads, ficha de lead, Seguimientos, Calendario, Analítica, Importar) al nuevo lenguaje visual; hoy funcionan igual que antes dentro de la nueva shell.
 
+**Fase 2 — completada** (misma rama). Migración `0009_company_os_operations.sql`.
+
+- Cuentas (`/cuentas`, `/cuentas/[id]`) y marcas (`/marcas/[id]`, sin entrada propia en la navegación: se llega desde cuentas, proyectos y ⌘K).
+- Subproyectos, migas cuenta → marca → campaña → pieza, `+ Añadir` y ⌘K contextuales, calendario unificado, `/actividad`, paneles nuevos en Inicio.
+- Decisiones:
+  - **Subproyectos de un solo nivel** (`proyecto_padre_id`), validados por trigger. Cubre "Campaña → Vídeo 1, 2, 3" sin árboles recursivos, que complicarían consultas, totales y la interfaz. El importe se pone donde se factura (campaña o pieza), no en ambos.
+  - **Reuniones y eventos dentro de `eventos`** (tipo `seguimiento | reunion | evento`, lead opcional salvo en seguimientos) en vez de una tabla nueva. El calendario es una capa de lectura que combina eventos, tareas y entregas.
+  - **`actividad.cuenta_id` / `proyecto_id`** indexados: feeds por cuenta, marca y proyecto sin recorrer JSON, y base para asociar facturas y cobros en la Fase 3.
+  - **Las notas de cuentas y marcas** usan las columnas `notas` existentes: no hace falta tabla.
+  - **Métricas de cuenta solo de proyectos** ("Valor de proyectos", "Valor en curso"). Facturado, cobrado y pendiente llegarán con Finanzas.
+- Probado con PostgreSQL 16 + PostgREST 12 simulando Supabase: migraciones 0001–0009 en limpio y re-ejecutadas, 0009 sobre datos de 0008 (relleno de actividad), RLS de comercial en eventos nuevos, y un recorrido en navegador que cubre crear cuenta, marca y proyecto desde la cuenta, tarea desde un proyecto, cambiar de estado, completar, navegar cuenta ↔ proyecto, ⌘K, calendario, actividad, móvil, modo oscuro y los permisos de un comercial.
+
 ## 13. Roadmap
 
 | Fase | Contenido | Migración |
