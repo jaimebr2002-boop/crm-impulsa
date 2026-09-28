@@ -225,8 +225,22 @@ export default function LeadDetallePage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="flex min-w-0 flex-col gap-6">
+      {/* Móvil (uso durante una llamada): estado → seguimientos → historial → datos.
+          Escritorio: columna principal + lateral con estado y datos. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px] lg:grid-rows-[auto_1fr]">
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-line bg-surface p-4 lg:col-start-2 lg:row-start-1 lg:grid-cols-1">
+          <LeadStatusSelector value={lead.estado} onChange={cambiarEstado} />
+          {esAdmin ? (
+            <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
+          ) : (
+            <div>
+              <span className="field-label">Responsable</span>
+              <p className="text-sm font-medium text-ink">{asignado?.nombre ?? "Sin asignar"}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           {esAdmin ? <ConvertirLead lead={lead} /> : null}
           <ReferralBanner referidoPor={lead.referido_por} />
 
@@ -258,18 +272,7 @@ export default function LeadDetallePage() {
         </div>
 
         {/* Propiedades */}
-        <aside className="order-first flex flex-col gap-4 lg:order-last">
-          <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
-            <LeadStatusSelector value={lead.estado} onChange={cambiarEstado} />
-            {esAdmin ? (
-              <AssigneeSelector usuarios={usuarios} value={lead.asignado_a} onChange={cambiarAsignado} />
-            ) : (
-              <div>
-                <span className="field-label">Responsable</span>
-                <p className="text-sm font-medium text-ink">{asignado?.nombre ?? "Sin asignar"}</p>
-              </div>
-            )}
-          </div>
+        <aside className="flex flex-col gap-4 lg:col-start-2 lg:row-start-2">
           <div className="rounded-xl border border-line bg-surface p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="t-eyebrow">Datos</h2>
