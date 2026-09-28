@@ -41,7 +41,7 @@ create table if not exists public.leads_valores_legacy as
 alter table public.leads_valores_legacy enable row level security;  -- sin políticas: invisible para la app
 
 -- Equivalencias inequívocas (solo mayúsculas/tildes).
-update leads set estado = lower(estado) where estado in ('Contactado', 'Cerrado', 'Descartado', 'Pendiente', 'Interesado', 'Respondido');
+update leads set estado = lower(estado) where estado in ('Contactado', 'Descartado', 'Pendiente', 'Interesado', 'Respondido');
 update leads set canal = lower(canal) where canal in ('WhatsApp', 'Instagram', 'Llamada', 'Email', 'LinkedIn');
 update leads set segmento = 'frio' where segmento = 'Frío';
 update leads set segmento = 'caliente' where segmento = 'Caliente';
@@ -50,6 +50,9 @@ update leads set segmento = null where segmento = '';
 
 -- DECIDIR (descomentar la opción elegida; si no, se quedan como están y la app
 -- los muestra tal cual en "Otros estados"):
+-- "Cerrado" (18, todos con segmento "No tocar"): ¿ganado o perdido?
+-- update leads set estado = 'cerrado'    where estado = 'Cerrado';   -- Ganado
+-- update leads set estado = 'descartado' where estado = 'Cerrado';   -- Perdido
 -- update leads set estado = 'interesado' where estado = 'En negociación';
 -- update leads set estado = 'reunión'    where estado = 'En negociación';
 -- update leads set segmento = 'off'   where segmento = 'No tocar';

@@ -38,9 +38,14 @@ const ESTADO_POR_TEXTO = new Map<string, string>(
     [quitarTildes(ESTADO_LABEL[e] ?? e), e],
   ])
 );
+// "Ganado" nunca se deduce de un texto antiguo: en producción los "Cerrado"
+// son "No tocar" y podrían ser perdidos. Se muestran tal cual hasta decidirlo.
+const NO_DEDUCIR = new Set(["cerrado"]);
 export function estadoCanonico(estado: string | null | undefined): string {
   if (!estado) return "pendiente";
-  return ESTADO_POR_TEXTO.get(quitarTildes(estado)) ?? estado;
+  const canonico = ESTADO_POR_TEXTO.get(quitarTildes(estado));
+  if (!canonico || (canonico !== estado && NO_DEDUCIR.has(canonico))) return estado;
+  return canonico;
 }
 export function conEstadoCanonico<T extends { estado: string | null }>(lead: T): T {
   const estado = estadoCanonico(lead.estado);
