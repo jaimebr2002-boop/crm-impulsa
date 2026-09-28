@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import {
+  IconActividad,
   IconAjustes,
   IconAnalitica,
   IconCalendario,
-  IconImportar,
+  IconCuenta,
   IconInicio,
-  IconLeads,
   IconProyectos,
-  IconSeguimientos,
   IconTareas,
+  IconVentas,
 } from "@/components/Icons";
 
 export type ItemNav = {
@@ -35,16 +35,19 @@ export const GRUPOS_NAV: GrupoNav[] = [
     ],
   },
   {
-    titulo: "Ventas",
+    titulo: "Negocio",
     items: [
-      { href: "/leads", label: "Leads", icon: IconLeads },
-      { href: "/hoy", label: "Seguimientos", icon: IconSeguimientos },
-      { href: "/importar", label: "Importar", icon: IconImportar },
+      // El CRM entero (leads, seguimientos, importación) vive dentro de Ventas.
+      { href: "/leads", label: "Ventas", icon: IconVentas, activoEn: ["/hoy", "/importar"] },
+      { href: "/cuentas", label: "Cuentas", icon: IconCuenta, soloAdmin: true, activoEn: ["/marcas"] },
     ],
   },
   {
     titulo: "Información",
-    items: [{ href: "/analitica", label: "Analítica", icon: IconAnalitica }],
+    items: [
+      { href: "/actividad", label: "Actividad", icon: IconActividad, soloAdmin: true },
+      { href: "/analitica", label: "Analítica", icon: IconAnalitica },
+    ],
   },
   {
     titulo: "Sistema",

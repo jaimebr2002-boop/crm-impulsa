@@ -1,5 +1,6 @@
 "use client";
 
+import { VentasNav } from "@/components/VentasNav";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
 import { crearEvento, listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
@@ -101,6 +102,7 @@ export default function HoyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 md:px-8">
+      <VentasNav />
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark dark:text-brand">Ventas · Seguimientos</p>
       <h1 className="mt-1 font-display text-2xl font-bold text-ink">Hola, {usuarioActual.nombre}</h1>
       <p className="mt-0.5 text-sm capitalize text-ink2">

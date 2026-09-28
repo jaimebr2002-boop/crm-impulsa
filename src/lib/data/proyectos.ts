@@ -30,6 +30,18 @@ export async function obtenerProyecto(id: string): Promise<ProyectoConRelaciones
   return data as ProyectoConRelaciones | null;
 }
 
+export async function listarSubproyectos(padreId: string): Promise<ProyectoConRelaciones[]> {
+  const { data, error } = await supabase
+    .from("proyectos")
+    .select(SELECT)
+    .eq("proyecto_padre_id", padreId)
+    .eq("archivado", false)
+    .order("fecha_entrega", { ascending: true, nullsFirst: false })
+    .order("created_at");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ProyectoConRelaciones[];
+}
+
 export async function listarProyectosDeLead(leadId: string): Promise<Pick<Proyecto, "id" | "nombre" | "estado">[]> {
   const { data, error } = await supabase.from("proyectos").select("id, nombre, estado").eq("lead_id", leadId);
   if (error) throw new Error(error.message);

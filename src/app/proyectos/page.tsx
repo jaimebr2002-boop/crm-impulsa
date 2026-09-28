@@ -231,7 +231,7 @@ function Proyectos() {
 }
 
 function Subtitulo({ p }: { p: ProyectoConRelaciones }) {
-  const partes = [p.cuenta?.nombre, p.marca?.nombre].filter(Boolean);
+  const partes = [p.cuenta?.nombre, p.marca?.nombre, p.padre ? `↳ ${p.padre.nombre}` : null].filter(Boolean);
   return partes.length ? <span className="truncate text-xs text-ink3">{partes.join(" · ")}</span> : null;
 }
 

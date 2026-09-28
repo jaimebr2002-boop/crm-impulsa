@@ -288,3 +288,11 @@ export function IconPapelera({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconActividad({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} className={`${base} ${className ?? ""}`}>
+      <path d="M3.5 12h4l2.5-6 4 12 2.5-6h4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

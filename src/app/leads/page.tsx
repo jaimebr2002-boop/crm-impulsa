@@ -1,5 +1,6 @@
 "use client";
 
+import { VentasNav } from "@/components/VentasNav";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useUsuario } from "@/context/UsuarioContext";
@@ -202,6 +203,7 @@ export default function LeadsPage() {
 
   return (
     <div className={`mx-auto px-4 pt-6 md:px-8 ${vista === "tablero" ? "max-w-[1400px]" : "max-w-3xl"}`}>
+      <VentasNav />
       <div className="mb-5 flex items-center justify-between gap-2">
         <h1 className="font-display text-2xl font-bold text-ink">Leads</h1>
         <div className="flex items-center gap-2">

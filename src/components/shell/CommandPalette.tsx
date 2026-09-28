@@ -6,7 +6,8 @@ import { useApp } from "@/context/AppContext";
 import { useUsuario } from "@/context/UsuarioContext";
 import { buscarGlobal, type ResultadoBusqueda } from "@/lib/data/busqueda";
 import { gruposVisibles } from "@/lib/navegacion";
-import { IconBuscar, IconCuenta, IconFlecha, IconLeads, IconMas, IconProyectos, IconTareas } from "../Icons";
+import { IconBuscar, IconCuenta, IconFlecha, IconLeads, IconProyectos, IconTareas } from "../Icons";
+import { useOpcionesAnadir } from "./OpcionesAnadir";
 
 type Item = {
   id: string;
@@ -19,24 +20,28 @@ type Item = {
 
 const ICONO_RESULTADO: Record<ResultadoBusqueda["tipo"], Item["icon"]> = {
   proyecto: IconProyectos,
+  cuenta: IconCuenta,
+  marca: IconCuenta,
   tarea: IconTareas,
   lead: IconLeads,
-  cuenta: IconCuenta,
 };
 
 const GRUPO_RESULTADO: Record<ResultadoBusqueda["tipo"], string> = {
   proyecto: "Proyectos",
+  cuenta: "Cuentas",
+  marca: "Marcas",
   tarea: "Tareas",
   lead: "Leads",
-  cuenta: "Cuentas",
 };
+const ORDEN_GRUPOS: ResultadoBusqueda["tipo"][] = ["proyecto", "cuenta", "marca", "tarea", "lead"];
 
 function normalizar(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 export function CommandPalette() {
-  const { paletaAbierta, setPaletaAbierta, abrirAlta } = useApp();
+  const { paletaAbierta, setPaletaAbierta } = useApp();
+  const { contexto, propias, generales } = useOpcionesAnadir();
   const { esAdmin } = useUsuario();
   const router = useRouter();
   const [texto, setTexto] = useState("");
@@ -87,12 +92,29 @@ export function CommandPalette() {
       router.push(href);
     };
 
-    const acciones: Item[] = [];
-    if (esAdmin) {
-      acciones.push({ id: "a-proyecto", grupo: "Crear", titulo: "Nuevo proyecto", icon: IconMas, ejecutar: () => abrirAlta({ tipo: "proyecto" }) });
-    }
-    acciones.push({ id: "a-tarea", grupo: "Crear", titulo: "Nueva tarea", icon: IconMas, ejecutar: () => abrirAlta({ tipo: "tarea" }) });
-    acciones.push({ id: "a-lead", grupo: "Crear", titulo: "Nuevo lead", icon: IconMas, ejecutar: ir("/leads/nuevo") });
+    // Mismas acciones que "+ Añadir": primero las del sitio donde estás.
+    const acciones: Item[] = [
+      ...propias.map((o) => ({
+        id: `a-${o.id}`,
+        grupo: `Crear en ${contexto}`,
+        titulo: `${o.label}`,
+        icon: o.icon,
+        ejecutar: () => {
+          cerrar();
+          o.accion();
+        },
+      })),
+      ...generales.map((o) => ({
+        id: `a-${o.id}`,
+        grupo: "Crear",
+        titulo: `Nuevo: ${o.label.toLowerCase()}`,
+        icon: o.icon,
+        ejecutar: () => {
+          cerrar();
+          o.accion();
+        },
+      })),
+    ];
 
     const paginas: Item[] = gruposVisibles(esAdmin).flatMap((g) =>
       g.items.map((it) => ({
@@ -106,7 +128,8 @@ export function CommandPalette() {
     );
 
     const coincide = (i: Item) => !q || normalizar(`${i.titulo} ${i.subtitulo ?? ""}`).includes(q);
-    const encontrados: Item[] = resultados.map((r) => ({
+    const ordenados = [...resultados].sort((a, b) => ORDEN_GRUPOS.indexOf(a.tipo) - ORDEN_GRUPOS.indexOf(b.tipo));
+    const encontrados: Item[] = ordenados.map((r) => ({
       id: `r-${r.tipo}-${r.id}`,
       grupo: GRUPO_RESULTADO[r.tipo],
       titulo: r.titulo,
@@ -120,7 +143,7 @@ export function CommandPalette() {
       ? [...encontrados, ...acciones.filter(coincide), ...paginas.filter(coincide)]
       : [...acciones, ...paginas];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [texto, resultados, esAdmin]);
+  }, [texto, resultados, esAdmin, contexto, propias.length]);
 
   useEffect(() => setIndice(0), [items.length, texto]);
 

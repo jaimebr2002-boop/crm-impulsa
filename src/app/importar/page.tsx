@@ -1,5 +1,6 @@
 "use client";
 
+import { VentasNav } from "@/components/VentasNav";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -218,6 +219,7 @@ export default function ImportarPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
+      <VentasNav />
       <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-ink3">
         ← Volver
       </button>

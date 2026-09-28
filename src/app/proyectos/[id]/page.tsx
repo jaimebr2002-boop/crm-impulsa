@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useApp } from "@/context/AppContext";
+import { useApp, useContextoPantalla, usePestanaPedida } from "@/context/AppContext";
 import {
   actualizarProyecto,
   crearEnlace,
   eliminarEnlace,
   eliminarProyecto,
   listarEnlaces,
+  listarSubproyectos,
   obtenerProyecto,
 } from "@/lib/data/proyectos";
 import { crearTarea, listarTareas } from "@/lib/data/tareas";
@@ -46,6 +47,7 @@ import { ActividadLista } from "@/components/trabajo/ActividadLista";
 import { FechaLimite, PrioridadIcono } from "@/components/trabajo/Insignias";
 import { AltaTareaEnLinea } from "@/components/trabajo/AltaTareaEnLinea";
 import { NotasAutoguardado } from "@/components/trabajo/NotasAutoguardado";
+import { ListaProyectos } from "@/components/trabajo/ListaProyectos";
 import { IconEnlace, IconPapelera } from "@/components/Icons";
 
 type Tab = "resumen" | "tareas" | "enlaces" | "notas" | "actividad";
@@ -64,11 +66,12 @@ function FichaProyecto() {
   const { id } = useParams<{ id: string }>();
   const params = useSearchParams();
   const router = useRouter();
-  const { usuarios, usuariosPorId, avisar, versionDatos } = useApp();
+  const { usuarios, usuariosPorId, avisar, versionDatos, abrirAlta } = useApp();
 
   const [proyecto, setProyecto] = useState<ProyectoConRelaciones | null>(null);
   const [tareas, setTareas] = useState<TareaConRelaciones[]>([]);
   const [enlaces, setEnlaces] = useState<ProyectoEnlace[]>([]);
+  const [subproyectos, setSubproyectos] = useState<ProyectoConRelaciones[]>([]);
   const [actividad, setActividad] = useState<Actividad[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,13 +85,15 @@ function FichaProyecto() {
   const cargar = useCallback(async () => {
     setError(null);
     try {
-      const [p, t, e, a] = await Promise.all([
+      const [p, t, e, a, sub] = await Promise.all([
         obtenerProyecto(id),
         listarTareas({ proyectoId: id, diasCompletadas: 3650 }),
         listarEnlaces(id),
         listarActividad({ proyectoId: id, limite: 50 }),
+        listarSubproyectos(id),
       ]);
       setProyecto(p);
+      setSubproyectos(sub);
       setTareas(t);
       setEnlaces(e);
       setActividad(a);
@@ -108,6 +113,19 @@ function FichaProyecto() {
     // Solo actualiza la URL (compartible); no hace falta ida y vuelta al servidor.
     window.history.replaceState(null, "", t === "resumen" ? `/proyectos/${id}` : `/proyectos/${id}?tab=${t}`);
   }
+  usePestanaPedida((t) => cambiarTab(t as Tab));
+  useContextoPantalla(
+    proyecto
+      ? {
+          tipo: "proyecto",
+          id: proyecto.id,
+          nombre: proyecto.nombre,
+          cuentaId: proyecto.cuenta_id,
+          marcaId: proyecto.marca_id,
+          esSubproyecto: !!proyecto.proyecto_padre_id,
+        }
+      : null
+  );
 
   async function guardar(cambios: ProyectoUpdate) {
     if (!proyecto) return;
@@ -155,19 +173,7 @@ function FichaProyecto() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-5 md:px-8">
-      <nav className="mb-3 flex items-center gap-1.5 text-sm text-ink3">
-        <Link href="/proyectos" className="hover:text-ink">
-          Proyectos
-        </Link>
-        {proyecto.cuenta ? (
-          <>
-            <span>/</span>
-            <Link href={`/proyectos?cuenta=${proyecto.cuenta.id}`} className="hover:text-ink">
-              {proyecto.cuenta.nombre}
-            </Link>
-          </>
-        ) : null}
-      </nav>
+      <MigasProyecto proyecto={proyecto} />
 
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -233,10 +239,22 @@ function FichaProyecto() {
             </Propiedad>
             <Propiedad label="Importe">
               <span className="font-semibold text-ink">{proyecto.importe != null ? formatEuros(proyecto.importe) : "—"}</span>
+              {subproyectos.some((s) => s.importe != null) ? (
+                <span className="block text-xs text-ink3">
+                  Subproyectos: {formatEuros(subproyectos.reduce((t, s) => t + (Number(s.importe) || 0), 0))}
+                </span>
+              ) : null}
             </Propiedad>
+            {proyecto.padre ? (
+              <Propiedad label="Forma parte de">
+                <Link href={`/proyectos/${proyecto.padre.id}`} className="text-ink hover:underline">
+                  {proyecto.padre.nombre}
+                </Link>
+              </Propiedad>
+            ) : null}
             <Propiedad label="Cuenta">
               {proyecto.cuenta ? (
-                <Link href={`/proyectos?cuenta=${proyecto.cuenta.id}`} className="text-ink hover:underline">
+                <Link href={`/cuentas/${proyecto.cuenta.id}`} className="text-ink hover:underline">
                   {proyecto.cuenta.nombre}
                   <span className="ml-1 text-xs text-ink3">{TIPO_CUENTA_LABEL[proyecto.cuenta.tipo]}</span>
                 </Link>
@@ -245,7 +263,13 @@ function FichaProyecto() {
               )}
             </Propiedad>
             <Propiedad label="Marca">
-              <span className="text-ink">{proyecto.marca?.nombre ?? <span className="text-ink3">—</span>}</span>
+              {proyecto.marca ? (
+                <Link href={`/marcas/${proyecto.marca.id}`} className="text-ink hover:underline">
+                  {proyecto.marca.nombre}
+                </Link>
+              ) : (
+                <span className="text-ink3">—</span>
+              )}
             </Propiedad>
             {usuarios.length > 1 ? (
               <Propiedad label="Responsable">
@@ -300,6 +324,20 @@ function FichaProyecto() {
                   </button>
                 )}
               </div>
+              {subproyectos.length > 0 ? (
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <h2 className="text-xs font-medium uppercase tracking-wider text-ink3">Subproyectos · {subproyectos.length}</h2>
+                    <button
+                      onClick={() => abrirAlta({ tipo: "proyecto", valores: { proyecto_padre_id: proyecto.id } })}
+                      className="text-xs text-ink3 hover:text-ink"
+                    >
+                      + Subproyecto
+                    </button>
+                  </div>
+                  <ListaProyectos proyectos={subproyectos} contexto="padre" />
+                </div>
+              ) : null}
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <h2 className="text-xs font-medium uppercase tracking-wider text-ink3">Próximas tareas</h2>
@@ -406,6 +444,8 @@ function FichaProyecto() {
           <ProyectoForm
             botonTexto="Guardar"
             valoresIniciales={valoresDesdeProyecto(proyecto)}
+            proyectoId={proyecto.id}
+            tieneSubproyectos={subproyectos.length > 0}
             onCancelar={() => setModal(null)}
             onSubmit={async (v) => {
               const nuevo = await actualizarProyecto(proyecto.id, v);
@@ -590,5 +630,31 @@ function Enlaces({
       </form>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
+  );
+}
+
+/** Migas: Proyectos / Fer / Segurma / Campaña. En móvil solo el nivel inmediato superior. */
+function MigasProyecto({ proyecto }: { proyecto: ProyectoConRelaciones }) {
+  const migas: { href: string; texto: string }[] = [{ href: "/proyectos", texto: "Proyectos" }];
+  if (proyecto.cuenta) migas.push({ href: `/cuentas/${proyecto.cuenta.id}`, texto: proyecto.cuenta.nombre });
+  if (proyecto.marca) migas.push({ href: `/marcas/${proyecto.marca.id}`, texto: proyecto.marca.nombre });
+  if (proyecto.padre) migas.push({ href: `/proyectos/${proyecto.padre.id}`, texto: proyecto.padre.nombre });
+  const ultima = migas[migas.length - 1];
+  return (
+    <nav className="mb-3 text-sm text-ink3" aria-label="Ubicación">
+      <Link href={ultima.href} className="hover:text-ink md:hidden">
+        ← {ultima.texto}
+      </Link>
+      <ol className="hidden items-center gap-1.5 md:flex">
+        {migas.map((m, i) => (
+          <li key={m.href} className="flex min-w-0 items-center gap-1.5">
+            {i > 0 ? <span>/</span> : null}
+            <Link href={m.href} className="truncate hover:text-ink">
+              {m.texto}
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </nav>
   );
 }
