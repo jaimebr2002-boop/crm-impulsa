@@ -62,7 +62,7 @@ export default function ActualizarPasswordPage() {
           <p className="mt-1 text-sm text-ink2">Es la única vez que la necesitarás introducir aquí</p>
         </div>
 
-        <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
+        <div className="rounded-xl border border-line bg-surface p-6 shadow-card">
           {!listo ? (
             <LoadingState texto="Comprobando enlace…" />
           ) : !sesionValida ? (
@@ -104,7 +104,7 @@ export default function ActualizarPasswordPage() {
               <button
                 type="submit"
                 disabled={enviando}
-                className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink disabled:opacity-60"
+                className="btn-primary mt-2 w-full py-2.5"
               >
                 {enviando ? "Guardando…" : "Guardar contraseña"}
               </button>

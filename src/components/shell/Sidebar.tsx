@@ -103,7 +103,7 @@ export function Sidebar({
             {!plegada ? "Añadir" : null}
           </button>
           {anadirAbierto ? (
-            <div className="absolute left-0 top-10 z-50 w-48 rounded-xl border border-line bg-surface shadow-glass dark:shadow-glass-dark">
+            <div className="absolute left-0 top-10 z-50 w-48 rounded-xl border border-line bg-surface shadow-lg">
               <ListaOpcionesAnadir onElegir={() => setAnadirAbierto(false)} />
             </div>
           ) : null}

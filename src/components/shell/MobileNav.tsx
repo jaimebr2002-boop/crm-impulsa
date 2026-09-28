@@ -75,7 +75,7 @@ export function MobileTabBar() {
   return (
     <>
       <nav
-        className="glass-strong fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-30 flex items-center justify-around rounded-2xl px-1 py-1.5 shadow-glass dark:shadow-glass-dark md:hidden"
+        className="glass-strong fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-30 flex items-center justify-around rounded-xl px-1 py-1.5 shadow-lg md:hidden"
         aria-label="Navegación principal"
       >
         <Tab item={primera} activo={esActivo(pathname, primera)} />

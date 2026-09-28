@@ -96,7 +96,7 @@ export function KanbanBoard<T>({
                       setArrastrando(null);
                       setDestino(null);
                     }}
-                    className={`rounded-lg border border-line bg-surface p-3 shadow-card transition-shadow hover:shadow-glass md:cursor-grab ${
+                    className={`rounded-lg border border-line bg-surface p-3 shadow-card transition-shadow hover:shadow-md md:cursor-grab ${
                       arrastrando === id ? "opacity-40" : ""
                     }`}
                   >

@@ -37,7 +37,7 @@ export default function PerfilPage() {
       <h1 className="mb-5 font-display text-2xl font-bold text-ink">Configuración</h1>
       <h2 className="mb-1 text-[11px] font-medium uppercase tracking-wider text-ink3">Perfil</h2>
 
-      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-line bg-surface p-5">
+      <div className="mb-6 flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
         <Avatar nombre={usuarioActual.nombre} size="lg" />
         <div>
           <p className="text-lg font-semibold text-ink">{usuarioActual.nombre}</p>
@@ -46,7 +46,7 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      <div className="mb-6 overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="mb-6 overflow-hidden rounded-xl border border-line bg-surface">
         <Link href="/analitica" className="flex items-center justify-between px-5 py-4 text-sm font-medium text-ink">
           <span className="flex items-center gap-2.5">
             <IconAnalitica className="h-4 w-4 text-ink3" />
@@ -87,7 +87,7 @@ export default function PerfilPage() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="overflow-hidden rounded-xl border border-line bg-surface">
         <button
           onClick={cerrarSesion}
           className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-medium text-red-600"

@@ -202,7 +202,7 @@ function Inicio() {
           {anadirAbierto ? (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setAnadirAbierto(false)} />
-              <div className="absolute right-0 top-11 z-50 w-48 rounded-xl border border-line bg-surface shadow-glass dark:shadow-glass-dark">
+              <div className="absolute right-0 top-11 z-50 w-48 rounded-xl border border-line bg-surface shadow-lg">
                 <ListaOpcionesAnadir onElegir={() => setAnadirAbierto(false)} />
               </div>
             </>
@@ -224,24 +224,26 @@ function Inicio() {
           <FilaKpis
             kpis={[
               {
-                etiqueta: "Proyectos activos",
-                valor: m.activos.length,
-                href: "/proyectos",
-                nota: [m.enRevision && `${m.enRevision} en revisión`, m.esperando && `${m.esperando} esperando`].filter(Boolean).join(" · ") || undefined,
-              },
-              {
                 etiqueta: "Tareas pendientes",
                 valor: m.abiertas.length,
                 href: "/tareas?vista=todas",
                 nota: m.tareasVencidas.length ? `${m.tareasVencidas.length} vencida${m.tareasVencidas.length === 1 ? "" : "s"}` : "Nada vencido",
                 alerta: m.tareasVencidas.length > 0,
               },
-              { etiqueta: "Entregas en 7 días", valor: m.entregasSemana.length, href: "/calendario" },
-              { etiqueta: "Valor en curso", valor: formatEuros(m.valorEnCurso), nota: "Proyectos activos" },
               {
-                etiqueta: "Entregado este mes",
-                valor: formatEuros(m.valorEntregadoMes),
-                nota: `${m.entregadosMes.length} proyecto${m.entregadosMes.length === 1 ? "" : "s"}`,
+                etiqueta: "Proyectos activos",
+                valor: m.activos.length,
+                href: "/proyectos",
+                nota: m.entregasSemana.length ? `${m.entregasSemana.length} entrega${m.entregasSemana.length === 1 ? "" : "s"} en 7 días` : `${formatEuros(m.valorEnCurso)} en curso`,
+              },
+              { etiqueta: "Facturado este mes", valor: eur(fin.mes.facturado), nota: `${eur(fin.anio.facturado)} este año`, href: "/finanzas" },
+              { etiqueta: "Cobrado este mes", valor: eur(fin.mes.cobrado), href: "/finanzas" },
+              {
+                etiqueta: "Pendiente de cobro",
+                valor: eur(fin.mes.pendiente),
+                nota: fin.mes.numVencidas ? `${eur(fin.mes.vencido)} vencido` : `${fin.mes.numPendientes} factura${fin.mes.numPendientes === 1 ? "" : "s"}`,
+                alerta: fin.mes.numVencidas > 0,
+                href: "/finanzas/facturas?estado=pendientes",
               },
               {
                 etiqueta: "Leads activos",
@@ -251,23 +253,6 @@ function Inicio() {
               },
             ]}
           />
-
-          <FilaKpis
-            columnas="md:grid-cols-4"
-            kpis={[
-              { etiqueta: "Facturado este mes", valor: eur(fin.mes.facturado), nota: `${fin.mes.numFacturas} factura${fin.mes.numFacturas === 1 ? "" : "s"}`, href: "/finanzas" },
-              { etiqueta: "Cobrado este mes", valor: eur(fin.mes.cobrado), href: "/finanzas" },
-              {
-                etiqueta: "Pendiente de cobro",
-                valor: eur(fin.mes.pendiente),
-                nota: fin.mes.numVencidas ? `${eur(fin.mes.vencido)} vencido` : `${fin.mes.numPendientes} factura${fin.mes.numPendientes === 1 ? "" : "s"}`,
-                alerta: fin.mes.numVencidas > 0,
-                href: "/finanzas/facturas?estado=pendientes",
-              },
-              { etiqueta: "Facturado este año", valor: eur(fin.anio.facturado), nota: `Cobrado ${eur(fin.anio.cobrado)}`, href: "/finanzas" },
-            ]}
-          />
-
           {papeleo && (papeleo.gastosSinJustificante || papeleo.facturasSinPdf || papeleo.pdfDesactualizados) ? (
             <p className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink3" data-testid="avisos-papeleo">
               <span className="font-medium text-ink2">Papeleo pendiente:</span>
@@ -289,27 +274,9 @@ function Inicio() {
             </p>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Hoy */}
-            <Panel titulo="Hoy" contador={itemsHoy} enlace={{ href: "/tareas", texto: "Tareas" }} className="lg:col-span-2">
-              {itemsHoy === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-ink3">Nada programado para hoy.</p>
-              ) : (
-                <div className="divide-y divide-line">
-                  {m.entregasHoy.map((p) => (
-                    <FilaProyecto key={p.id} p={p} etiqueta="Entrega hoy" />
-                  ))}
-                  {eventosHoy.map((ev) => (
-                    <FilaSeguimiento key={ev.id} ev={ev} onToggle={completarSeguimiento} />
-                  ))}
-                  {m.tareasHoy.map((t) => (
-                    <TareaFila key={t.id} tarea={t} onToggle={acciones.alternar} onAbrir={setEditando} />
-                  ))}
-                </div>
-              )}
-            </Panel>
 
-            {/* Urgente */}
+          {/* 1. Urgente y 2. trabajo de hoy */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel titulo="Urgente" contador={m.urgentes.length} tono={m.urgentes.length ? "alerta" : undefined}>
               {m.urgentes.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-ink3">Nada vencido. Todo al día.</p>
@@ -328,47 +295,27 @@ function Inicio() {
                 </div>
               )}
             </Panel>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <Panel
-              titulo="Proyectos que requieren atención"
-              contador={proyectosQueRequierenAtencion(m.activos).length}
-              enlace={{ href: "/proyectos", texto: "Todos los proyectos" }}
-              className="lg:col-span-2"
-            >
-              <ProyectosAtencion proyectos={m.activos} vacio="Ningún proyecto vencido, con entrega inminente, esperando o en revisión." />
-            </Panel>
-
-            <Panel titulo="Cuentas activas" enlace={{ href: "/cuentas", texto: "Cuentas" }}>
-              {cuentasActivas.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-ink3">Ninguna cuenta con proyectos activos.</p>
+            <Panel titulo="Hoy" contador={itemsHoy} enlace={{ href: "/tareas", texto: "Tareas" }}>
+              {itemsHoy === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-ink3">Nada programado para hoy.</p>
               ) : (
                 <div className="divide-y divide-line">
-                  {cuentasActivas.slice(0, 6).map((c) => (
-                    <Link key={c.id} href={`/cuentas/${c.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-mute/50">
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-ink">{c.nombre}</span>
-                        <span className="block truncate text-xs text-ink3">
-                          {c.activos} proyecto{c.activos === 1 ? "" : "s"} activo{c.activos === 1 ? "" : "s"}
-                          {c.proximaEntrega ? ` · entrega ${formatYMDRelativa(c.proximaEntrega).toLowerCase()}` : ""}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-sm font-medium tabular-nums text-ink">{formatEuros(c.valorEnCurso)}</span>
-                    </Link>
+                  {m.entregasHoy.map((p) => (
+                    <FilaProyecto key={p.id} p={p} etiqueta="Entrega hoy" />
+                  ))}
+                  {eventosHoy.map((ev) => (
+                    <FilaSeguimiento key={ev.id} ev={ev} onToggle={completarSeguimiento} />
+                  ))}
+                  {m.tareasHoy.map((t) => (
+                    <TareaFila key={t.id} tarea={t} onToggle={acciones.alternar} onAbrir={setEditando} />
                   ))}
                 </div>
               )}
             </Panel>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <Panel titulo="Actividad reciente" enlace={{ href: "/actividad", texto: "Ver toda" }} className="lg:col-span-2">
-              <div className="px-4 py-1">
-                <ActividadLista items={actividad} vacio="Aquí aparecerá lo que vaya pasando: proyectos, tareas, leads…" />
-              </div>
-            </Panel>
-
+          {/* 3. Dinero y 4. proyectos */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel
               titulo="Pendiente de cobro"
               contador={fin.pendientes.length}
@@ -400,6 +347,43 @@ function Inicio() {
                   {fin.pendientes.length > 6 ? <p className="px-4 py-2 text-xs text-ink3">y {fin.pendientes.length - 6} más</p> : null}
                 </div>
               )}
+            </Panel>
+            <Panel
+              titulo="Proyectos que requieren atención"
+              contador={proyectosQueRequierenAtencion(m.activos).length}
+              enlace={{ href: "/proyectos", texto: "Todos los proyectos" }}
+              
+            >
+              <ProyectosAtencion proyectos={m.activos} vacio="Ningún proyecto vencido, con entrega inminente, esperando o en revisión." />
+            </Panel>
+          </div>
+
+          {/* 5. Cuentas y 6. actividad */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Panel titulo="Cuentas activas" enlace={{ href: "/cuentas", texto: "Cuentas" }}>
+              {cuentasActivas.length === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-ink3">Ninguna cuenta con proyectos activos.</p>
+              ) : (
+                <div className="divide-y divide-line">
+                  {cuentasActivas.slice(0, 6).map((c) => (
+                    <Link key={c.id} href={`/cuentas/${c.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-mute/50">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-ink">{c.nombre}</span>
+                        <span className="block truncate text-xs text-ink3">
+                          {c.activos} proyecto{c.activos === 1 ? "" : "s"} activo{c.activos === 1 ? "" : "s"}
+                          {c.proximaEntrega ? ` · entrega ${formatYMDRelativa(c.proximaEntrega).toLowerCase()}` : ""}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-medium tabular-nums text-ink">{formatEuros(c.valorEnCurso)}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </Panel>
+            <Panel titulo="Actividad reciente" enlace={{ href: "/actividad", texto: "Ver toda" }}>
+              <div className="px-4 py-1">
+                <ActividadLista items={actividad} vacio="Aquí aparecerá lo que vaya pasando: proyectos, tareas, leads…" />
+              </div>
             </Panel>
           </div>
         </div>

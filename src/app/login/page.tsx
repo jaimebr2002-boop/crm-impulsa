@@ -48,7 +48,7 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-ink2">Accede a tu panel de Impulsa Studio</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-strong flex flex-col gap-4 rounded-2xl p-6 shadow-glass dark:shadow-glass-dark">
+        <form onSubmit={handleSubmit} className="glass-strong flex flex-col gap-4 rounded-xl p-6 shadow-lg">
           <label className="block">
             <span className="field-label">Email</span>
             <input
@@ -81,7 +81,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={enviando}
-            className="mt-2 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink shadow-lg shadow-brand/30 disabled:opacity-60"
+            className="btn-primary mt-2 w-full py-2.5"
           >
             {enviando ? "Entrando…" : "Iniciar sesión"}
           </button>

@@ -198,15 +198,17 @@ export function CommandPalette() {
             placeholder="Busca proyectos, tareas, leads… o escribe una acción"
             className="h-12 w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-ink3"
             aria-autocomplete="list"
+            aria-controls="paleta-lista"
+            aria-activedescendant={items[indice] ? `paleta-op-${indice}` : undefined}
           />
           {buscando ? <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-brand" /> : null}
           <span className="kbd hidden sm:inline">Esc</span>
         </div>
 
-        <div ref={listaRef} className="max-h-[55dvh] overflow-y-auto p-1.5" role="listbox">
+        <div ref={listaRef} id="paleta-lista" className="max-h-[55dvh] overflow-y-auto p-1.5" role="listbox">
           {items.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-ink3">
-              {buscando ? "Buscando…" : texto.trim().length < 2 ? "Escribe al menos 2 letras" : "Sin resultados"}
+              {buscando ? "Buscando…" : texto.trim().length < 2 ? "Escribe al menos 2 letras" : `Sin resultados para «${texto.trim()}»`}
             </p>
           ) : null}
           {items.map((item, i) => {
@@ -220,6 +222,7 @@ export function CommandPalette() {
                 <button
                   type="button"
                   data-indice={i}
+                  id={`paleta-op-${i}`}
                   role="option"
                   aria-selected={activo}
                   onMouseMove={() => setIndice(i)}
@@ -230,7 +233,9 @@ export function CommandPalette() {
                 >
                   <Icon className="h-4 w-4 shrink-0 text-ink3" />
                   <span className="min-w-0 flex-1 truncate">
-                    <span className="text-ink">{item.titulo}</span>
+                    <span className="text-ink">
+                      <Resaltado texto={item.titulo} consulta={texto} />
+                    </span>
                     {item.subtitulo ? <span className="ml-2 text-xs text-ink3">{item.subtitulo}</span> : null}
                   </span>
                   {activo ? <IconFlecha className="h-3.5 w-3.5 shrink-0 text-ink3" /> : null}
@@ -247,5 +252,20 @@ export function CommandPalette() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Resalta la parte del título que coincide con la búsqueda (sin tildes ni mayúsculas). */
+function Resaltado({ texto, consulta }: { texto: string; consulta: string }) {
+  const q = normalizar(consulta.trim());
+  if (q.length < 2) return <>{texto}</>;
+  const i = normalizar(texto).indexOf(q);
+  if (i < 0) return <>{texto}</>;
+  return (
+    <>
+      {texto.slice(0, i)}
+      <mark className="rounded-sm bg-brand/40 text-ink">{texto.slice(i, i + q.length)}</mark>
+      {texto.slice(i + q.length)}
+    </>
   );
 }

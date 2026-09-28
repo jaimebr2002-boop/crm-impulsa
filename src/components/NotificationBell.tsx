@@ -58,7 +58,7 @@ export function NotificationBell({
 
       {abierto ? (
         <div
-          className={`absolute z-50 max-h-[70dvh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-line bg-surface p-2 shadow-glass dark:shadow-glass-dark ${
+          className={`absolute z-50 max-h-[70dvh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-line bg-surface p-2 shadow-lg ${
             abrirHaciaArriba ? "bottom-11 left-0" : "right-0 top-11"
           }`}
         >

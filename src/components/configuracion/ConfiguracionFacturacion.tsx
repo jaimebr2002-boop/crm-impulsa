@@ -32,7 +32,7 @@ function Seccion({ id, titulo, descripcion, children }: { id?: string; titulo: s
     <section id={id} className="scroll-mt-20">
       <h2 className="mb-1 text-[11px] font-medium uppercase tracking-wider text-ink3">{titulo}</h2>
       {descripcion ? <p className="mb-3 text-sm text-ink3">{descripcion}</p> : null}
-      <div className="rounded-2xl border border-line bg-surface p-5">{children}</div>
+      <div className="rounded-xl border border-line bg-surface p-5">{children}</div>
     </section>
   );
 }
@@ -70,7 +70,7 @@ export function ConfiguracionFacturacion() {
   }, [cargar]);
 
   if (error) return <p className="text-sm text-red-600">{error}</p>;
-  if (!ajustes) return <div className="skeleton h-64 w-full rounded-2xl" />;
+  if (!ajustes) return <div className="skeleton h-64 w-full rounded-xl" />;
 
   const falta = faltanDatosEmisor(ajustes);
 
