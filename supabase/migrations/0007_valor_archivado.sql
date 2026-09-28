@@ -28,10 +28,3 @@ drop policy if exists "leads_delete" on leads;
 create policy "leads_delete" on leads
   for delete to authenticated
   using (public.is_admin());
-
--- ============================================================
--- 4. Columnas usadas por la app que no estaban versionadas en migraciones
---    (ya existen en producción; esto solo hace reproducible un proyecto nuevo)
--- ============================================================
-alter table eventos add column if not exists leida_en timestamptz;
-alter table usuarios add column if not exists notificaciones_activas boolean not null default true;

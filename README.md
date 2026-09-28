@@ -26,7 +26,9 @@ CRM interno de Impulsa Studio para gestionar los leads de Jaime, Laura y Reyes: 
    - [`supabase/migrations/0002_auth_roles_rls.sql`](supabase/migrations/0002_auth_roles_rls.sql) — vincula `usuarios` a Supabase Auth, añade roles y las políticas RLS reales.
    - [`supabase/migrations/0003_hardening.sql`](supabase/migrations/0003_hardening.sql) — endurecimiento de funciones (`search_path`, permisos de ejecución).
    - [`supabase/migrations/0004_lead_instagram.sql`](supabase/migrations/0004_lead_instagram.sql) — campo Instagram en leads.
-   - [`supabase/migrations/0005_valor_archivado.sql`](supabase/migrations/0005_valor_archivado.sql) — valor en € por lead, archivado de leads y borrado definitivo (solo admin).
+   - [`supabase/migrations/0005_notificaciones.sql`](supabase/migrations/0005_notificaciones.sql) — columnas de notificaciones (`eventos.leida_en`, `usuarios.notificaciones_activas`).
+   - [`supabase/migrations/0006_usuarios_autoedicion.sql`](supabase/migrations/0006_usuarios_autoedicion.sql) — permite a cada usuario editar su preferencia de notificaciones sin poder cambiar su rol.
+   - [`supabase/migrations/0007_valor_archivado.sql`](supabase/migrations/0007_valor_archivado.sql) — valor en € por lead, archivado de leads y borrado definitivo (solo admin).
 3. Crea las cuentas de Auth para Jaime (`admin`), Laura y Reyes (`comercial`) — por API (`auth.admin.inviteUserByEmail`, recomendado) o desde el dashboard (**Authentication → Users → Invite user**), pasando `user_metadata: { nombre, rol }`. Un trigger (`handle_new_user`) crea automáticamente su fila en `usuarios` con esos datos.
 4. En **Authentication → URL Configuration**, configura el **Site URL** y añade a **Redirect URLs** el dominio de producción (p. ej. `https://tu-app.vercel.app/**`) — si no, los enlaces de invitación/recuperación de contraseña redirigen a `localhost`.
 5. En **Project Settings → API**, copia la **Project URL** y la **anon/publishable key**.

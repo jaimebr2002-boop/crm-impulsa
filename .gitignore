@@ -6,4 +6,5 @@ out
 .DS_Store
 npm-debug.log*
 .scratch-scripts
+.vercel
 *.tsbuildinfo
