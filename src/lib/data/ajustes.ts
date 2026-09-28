@@ -22,15 +22,4 @@ export async function guardarAjustes(cambios: AjustesUpdate): Promise<AjustesFac
   return data as AjustesFacturacion;
 }
 
-/** Campos del emisor que no pueden faltar en un PDF de factura. */
-export const CAMPOS_EMISOR_OBLIGATORIOS: { campo: keyof AjustesFacturacion; label: string }[] = [
-  { campo: "nombre", label: "nombre o razón social" },
-  { campo: "nif", label: "NIF" },
-  { campo: "direccion", label: "dirección" },
-  { campo: "codigo_postal", label: "código postal" },
-  { campo: "ciudad", label: "ciudad" },
-];
-
-export function faltanDatosEmisor(a: AjustesFacturacion | null): string[] {
-  return CAMPOS_EMISOR_OBLIGATORIOS.filter(({ campo }) => !String(a?.[campo] ?? "").trim()).map((c) => c.label);
-}
+export { faltanDatosEmisor } from "@/lib/facturacion";

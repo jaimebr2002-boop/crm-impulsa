@@ -94,11 +94,4 @@ export const CAMPOS_FISCALES_CUENTA: CampoFiscal[] = [
   { campo: "fiscal_pais", label: "País", placeholder: "España", ancho: "medio" },
 ];
 
-/** Qué falta de un receptor para poder emitir el PDF de su factura. */
-export function faltanDatosReceptor(c: Record<string, unknown> | null | undefined): string[] {
-  const falta: string[] = [];
-  if (!String(c?.fiscal_nif ?? "").trim()) falta.push("NIF/CIF");
-  if (!String(c?.fiscal_direccion ?? "").trim()) falta.push("dirección");
-  if (!String(c?.fiscal_codigo_postal ?? "").trim() || !String(c?.fiscal_ciudad ?? "").trim()) falta.push("código postal y ciudad");
-  return falta;
-}
+export { faltanDatosReceptor } from "@/lib/facturacion";

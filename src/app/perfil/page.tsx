@@ -8,6 +8,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { IconChevron, IconAnalitica, IconImportar } from "@/components/Icons";
 import { Avatar } from "@/components/Avatar";
 import { Switch } from "@/components/Switch";
+import { ConfiguracionFacturacion } from "@/components/configuracion/ConfiguracionFacturacion";
 
 const ROL_LABEL: Record<string, string> = {
   admin: "Administrador",
@@ -15,7 +16,7 @@ const ROL_LABEL: Record<string, string> = {
 };
 
 export default function PerfilPage() {
-  const { usuarioActual, cargando, cerrarSesion, actualizarPreferenciaNotificaciones } = useUsuario();
+  const { usuarioActual, cargando, cerrarSesion, actualizarPreferenciaNotificaciones, esAdmin } = useUsuario();
   const { tema, alternarTema } = useTheme();
   const [guardandoNotif, setGuardandoNotif] = useState(false);
 
@@ -32,8 +33,9 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-16 pt-6 md:px-8">
-      <h1 className="mb-5 font-display text-2xl font-bold text-ink">Perfil</h1>
+    <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 md:px-8">
+      <h1 className="mb-5 font-display text-2xl font-bold text-ink">Configuración</h1>
+      <h2 className="mb-1 text-[11px] font-medium uppercase tracking-wider text-ink3">Perfil</h2>
 
       <div className="mb-6 flex items-center gap-4 rounded-2xl border border-line bg-surface p-5">
         <Avatar nombre={usuarioActual.nombre} size="lg" />
@@ -78,6 +80,12 @@ export default function PerfilPage() {
           />
         </div>
       </div>
+
+      {esAdmin ? (
+        <div className="mb-8">
+          <ConfiguracionFacturacion />
+        </div>
+      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-line bg-surface">
         <button
