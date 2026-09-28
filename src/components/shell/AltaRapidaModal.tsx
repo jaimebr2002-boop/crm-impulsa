@@ -1,6 +1,7 @@
 "use client";
 
 import { useApp } from "@/context/AppContext";
+import { useUsuario } from "@/context/UsuarioContext";
 import { crearCuenta, crearMarca } from "@/lib/data/cuentas";
 import { crearEvento } from "@/lib/data/eventos";
 import { crearProyecto } from "@/lib/data/proyectos";
@@ -16,6 +17,7 @@ import { EventoGenericoForm } from "../forms/EventoGenericoForm";
  * pantalla con `abrirAlta(...)`. */
 export function AltaRapidaModal() {
   const { altaRapida: alta, cerrarAlta, notificarCambio, avisar } = useApp();
+  const { usuarioActual } = useUsuario();
   if (!alta) return null;
 
   const hecho = (texto: string, enlace?: { href: string; texto: string }) => {
@@ -85,7 +87,8 @@ export function AltaRapidaModal() {
             inicial={alta.valores}
             onCancelar={cerrarAlta}
             onSubmit={async (v) => {
-              await crearEvento(v);
+              // Asignada a quien la crea: aparece en su Hoy y en su campana.
+              await crearEvento({ ...v, usuario_id: usuarioActual?.id ?? null });
               hecho("Añadido al calendario", { href: "/calendario", texto: "Ver" });
             }}
           />

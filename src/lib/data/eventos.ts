@@ -118,3 +118,16 @@ export async function marcarTodasLasNotificacionesLeidas(usuarioId: string): Pro
     .lte("fecha_hora", new Date().toISOString());
   if (error) throw new Error(error.message);
 }
+
+export async function actualizarEvento(id: string, cambios: Partial<Evento>): Promise<Evento> {
+  const { data, error } = await supabase.from("eventos").update(cambios).eq("id", id).select("*").single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/** Solo reuniones y eventos manuales (los seguimientos CRM no se borran). */
+export async function eliminarEvento(id: string): Promise<void> {
+  const { data, error } = await supabase.from("eventos").delete().eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("No se ha podido eliminar este evento.");
+}

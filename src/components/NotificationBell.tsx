@@ -82,7 +82,7 @@ export function NotificationBell({
               {eventos.map((ev) => (
                 <Link
                   key={ev.id}
-                  href={ev.lead?.id ? `/leads/${ev.lead.id}` : "/hoy"}
+                  href={ev.lead?.id ? `/leads/${ev.lead.id}` : "/calendario"}
                   onClick={() => {
                     onMarcarLeida(ev.id);
                     onAbrir?.(ev.id);
@@ -90,7 +90,7 @@ export function NotificationBell({
                   }}
                   className="rounded-xl px-2 py-2 text-sm hover:bg-mute"
                 >
-                  <p className="font-medium text-ink">{ev.lead?.negocio || ev.lead?.nombre_contacto || "Lead"}</p>
+                  <p className="font-medium text-ink">{ev.lead ? ev.lead.negocio || ev.lead.nombre_contacto || "Lead" : "Reunión / evento"}</p>
                   <p className="text-xs text-ink2">{ev.titulo}</p>
                   <p className="mt-0.5 text-xs font-semibold text-red-600">{formatFechaRelativa(ev.fecha_hora)}</p>
                 </Link>
