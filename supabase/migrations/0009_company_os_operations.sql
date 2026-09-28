@@ -67,6 +67,28 @@ create trigger trg_proyectos_jerarquia
 
 revoke execute on function public.proyectos_jerarquia() from public, anon, authenticated;
 
+-- Si una marca cambia de cuenta, sus proyectos la acompañan (la cuenta de un
+-- proyecto con marca es siempre la de su marca).
+create or replace function public.marcas_propagar_cuenta()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.cuenta_id is distinct from old.cuenta_id then
+    update proyectos set cuenta_id = new.cuenta_id where marca_id = new.id and cuenta_id is distinct from new.cuenta_id;
+  end if;
+  return null;
+end;
+$$;
+
+drop trigger if exists trg_marcas_propagar_cuenta on marcas;
+create trigger trg_marcas_propagar_cuenta
+  after update of cuenta_id on marcas
+  for each row execute function public.marcas_propagar_cuenta();
+
+revoke execute on function public.marcas_propagar_cuenta() from public, anon, authenticated;
+
 -- ============================================================
 -- 2. Eventos genéricos (reuniones, eventos manuales)
 -- ============================================================
