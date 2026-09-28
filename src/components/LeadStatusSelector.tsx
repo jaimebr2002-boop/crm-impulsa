@@ -28,6 +28,8 @@ export function LeadStatusSelector({
         }}
         className="input font-medium"
       >
+        {/* Estado antiguo sin equivalente (p. ej. "En negociación"): se muestra tal cual. */}
+        {!(ESTADOS as readonly string[]).includes(value) ? <option value={value}>{value}</option> : null}
         {ESTADOS.map((estado) => (
           <option key={estado} value={estado}>
             {ESTADO_LABEL[estado]}

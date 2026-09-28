@@ -26,6 +26,27 @@ export const ESTADO_LABEL: Record<string, string> = {
   "no contesta": "No contesta",
 };
 
+// Datos antiguos (importados de hojas de cálculo) guardan el estado con otra
+// forma: "Contactado", "Cerrado"… Al leer se traduce al identificador del
+// pipeline si la equivalencia es inequívoca (mayúsculas, tildes o etiqueta
+// visible). Lo demás ("En negociación") se deja tal cual y se muestra aparte.
+// No cambia nada en la base de datos.
+const quitarTildes = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+const ESTADO_POR_TEXTO = new Map<string, string>(
+  ESTADOS.flatMap((e) => [
+    [quitarTildes(e), e],
+    [quitarTildes(ESTADO_LABEL[e] ?? e), e],
+  ])
+);
+export function estadoCanonico(estado: string | null | undefined): string {
+  if (!estado) return "pendiente";
+  return ESTADO_POR_TEXTO.get(quitarTildes(estado)) ?? estado;
+}
+export function conEstadoCanonico<T extends { estado: string | null }>(lead: T): T {
+  const estado = estadoCanonico(lead.estado);
+  return estado === lead.estado ? lead : { ...lead, estado };
+}
+
 // Estilo de cada estado: derivado de la semántica común (lib/tonos.ts).
 export const ESTADO_COLOR: Record<string, string> = Object.fromEntries(
   Object.entries(TONO_LEAD).map(([e, t]) => [e, TONO_CHIP[t]])

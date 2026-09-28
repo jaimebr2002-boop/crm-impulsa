@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Interaccion, Lead } from "@/lib/types";
 import { traerTodo } from "./paginar";
+import { conEstadoCanonico } from "@/lib/constants";
 
 export type FiltroAnalitica = {
   desdeIso: string;
@@ -31,7 +32,7 @@ export function llamadaContestada(i: Pick<Interaccion, "canal" | "resultado">): 
 }
 
 export async function obtenerLeadsPeriodo(filtro: FiltroAnalitica): Promise<Lead[]> {
-  return traerTodo<Lead>((desde, hasta) => {
+  return (await traerTodo<Lead>((desde, hasta) => {
     let query = supabase
       .from("leads")
       .select("*")
@@ -41,7 +42,7 @@ export async function obtenerLeadsPeriodo(filtro: FiltroAnalitica): Promise<Lead
       .range(desde, hasta);
     if (filtro.usuarioId) query = query.eq("asignado_a", filtro.usuarioId);
     return query;
-  });
+  })).map(conEstadoCanonico);
 }
 
 /** Snapshot actual del pipeline: todos los leads visibles (RLS ya limita a
@@ -49,11 +50,11 @@ export async function obtenerLeadsPeriodo(filtro: FiltroAnalitica): Promise<Lead
  * representa dónde está todo el mundo ahora, no quién entró en el periodo.
  * Los leads archivados quedan fuera del pipeline. */
 export async function obtenerLeadsActuales(usuarioId?: string): Promise<Lead[]> {
-  return traerTodo<Lead>((desde, hasta) => {
+  return (await traerTodo<Lead>((desde, hasta) => {
     let query = supabase.from("leads").select("*").eq("archivado", false).order("id").range(desde, hasta);
     if (usuarioId) query = query.eq("asignado_a", usuarioId);
     return query;
-  });
+  })).map(conEstadoCanonico);
 }
 
 export async function obtenerInteraccionesPeriodo(filtro: FiltroAnalitica): Promise<Interaccion[]> {

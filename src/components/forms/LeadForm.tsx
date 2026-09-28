@@ -159,6 +159,7 @@ export function LeadForm({
         <Campo label="Canal">
           <select value={valores.canal ?? ""} onChange={(e) => set("canal", e.target.value)} className="input">
             <option value="">Sin especificar</option>
+            <OpcionAntigua valor={valores.canal} validos={CANALES} />
             {CANALES.map((c) => (
               <option key={c} value={c}>
                 {CANAL_LABEL[c]}
@@ -169,6 +170,7 @@ export function LeadForm({
         <Campo label="Origen">
           <select value={valores.origen ?? ""} onChange={(e) => set("origen", e.target.value)} className="input">
             <option value="">Sin especificar</option>
+            <OpcionAntigua valor={valores.origen} validos={ORIGENES} />
             {ORIGENES.map((o) => (
               <option key={o} value={o}>
                 {ORIGEN_LABEL[o]}
@@ -188,6 +190,7 @@ export function LeadForm({
         <Campo label="Segmento">
           <select value={valores.segmento ?? ""} onChange={(e) => set("segmento", e.target.value)} className="input">
             <option value="">Sin especificar</option>
+            <OpcionAntigua valor={valores.segmento} validos={SEGMENTOS} />
             {SEGMENTOS.map((s) => (
               <option key={s} value={s}>
                 {SEGMENTO_LABEL[s]}
@@ -197,6 +200,7 @@ export function LeadForm({
         </Campo>
         <Campo label="Estado">
           <select value={valores.estado ?? "pendiente"} onChange={(e) => set("estado", e.target.value)} className="input">
+            <OpcionAntigua valor={valores.estado} validos={ESTADOS} />
             {ESTADOS.map((estado) => (
               <option key={estado} value={estado}>
                 {ESTADO_LABEL[estado]}
@@ -270,4 +274,11 @@ function Campo({ label, nota, children }: { label: string; nota?: string; childr
       {nota ? <span className="mt-1 block text-[11px] text-ink3">{nota}</span> : null}
     </label>
   );
+}
+
+/** Valor guardado que no está entre las opciones (datos antiguos importados):
+ * se muestra tal cual para que el formulario no aparente otro valor. */
+function OpcionAntigua({ valor, validos }: { valor: string | null | undefined; validos: readonly string[] }) {
+  if (!valor || validos.includes(valor)) return null;
+  return <option value={valor}>{valor}</option>;
 }

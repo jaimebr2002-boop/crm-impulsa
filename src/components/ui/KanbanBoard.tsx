@@ -37,20 +37,26 @@ export function KanbanBoard<T>({
   const [destino, setDestino] = useState<string | null>(null);
   const [visibles, setVisibles] = useState<Record<string, number>>({});
 
+  // Un elemento cuya columna no existe (p. ej. un estado antiguo importado) no
+  // desaparece: va a "Otros" y desde ahí se puede arrastrar a su sitio.
+  const OTROS = "__otros__";
   const porId: Record<string, T[]> = {};
   for (const c of columnas) porId[c.id] = [];
-  for (const it of items) porId[columnaDe(it)]?.push(it);
+  const otros: T[] = [];
+  for (const it of items) (porId[columnaDe(it)] ?? otros).push(it);
+  if (otros.length) porId[OTROS] = otros;
+  const columnasVisibles = otros.length ? [...columnas, { id: OTROS, titulo: "Otros estados", acento: "bg-line" }] : columnas;
 
   function soltar(columnaId: string) {
     const item = items.find((i) => clave(i) === arrastrando);
-    if (item && columnaDe(item) !== columnaId) onMover(item, columnaId);
+    if (item && columnaId !== OTROS && columnaDe(item) !== columnaId) onMover(item, columnaId);
     setArrastrando(null);
     setDestino(null);
   }
 
   return (
     <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:snap-none md:px-0">
-      {columnas.map((col) => {
+      {columnasVisibles.map((col) => {
         const lista = porId[col.id];
         const limite = visibles[col.id] ?? porColumna;
         const resumen = resumenColumna?.(lista);
@@ -107,6 +113,7 @@ export function KanbanBoard<T>({
                       aria-label="Mover a otra columna"
                       className="mt-2 w-full rounded-md border border-line bg-canvas px-2 py-1.5 text-xs text-ink2 md:hidden"
                     >
+                      {col.id === OTROS ? <option value={columnaDe(item)}>Mover a… ({columnaDe(item)})</option> : null}
                       {columnas.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.id === columnaDe(item) ? `Mover a… (${c.titulo})` : c.titulo}
