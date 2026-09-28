@@ -1,4 +1,4 @@
-# Impulsa CRM
+# Impulsa OS
 
 CRM interno de Impulsa Studio para gestionar los leads de Jaime, Laura y Reyes: pipeline automático, referidos personales y la campaña histórica de reactivación. Pensado para usarse sobre todo desde el móvil, durante llamadas.
 
@@ -60,7 +60,19 @@ Abre [http://localhost:3000](http://localhost:3000). Redirige a `/login`; cada p
 
 Desde **Perfil → Importar leads históricos**, pega los datos en CSV o TSV (con cabecera) o sube un archivo CSV/TSV/HTML. Cabeceras reconocidas: `negocio`, `contacto`/`nombre_contacto`, `telefono`, `email`, `enlace_demo`/`demo`, `segmento`, `nota`, `ciudad`, `nicho`. Cada fila crea un lead con `origen = reactivacion_web`, conservando el `segmento` y guardando la nota cualitativa como la primera interacción. Jaime puede elegir a quién se asignan; Laura y Reyes solo pueden importar para sí mismos (la política RLS de `leads` lo exige).
 
-## 6. Pipeline, valor y gestión de leads
+## 6. Company OS
+
+La app ya no es solo un CRM: es el panel interno de Impulsa. La auditoría, el modelo de datos y el plan por fases están en [`docs/company-os/AUDITORIA.md`](docs/company-os/AUDITORIA.md).
+
+- **Inicio** (`/inicio`, solo admin): KPIs reales, lo de hoy, lo urgente, proyectos activos y actividad reciente. Los comerciales entran directamente en su CRM (`/hoy`).
+- **Proyectos** (`/proyectos`): lista y tablero Kanban; ficha con tareas, enlaces, notas y actividad. Cada proyecto pertenece a una **cuenta** (p. ej. Fer) y opcionalmente a una **marca** (Segurma, Clínica X…).
+- **Tareas** (`/tareas`): Hoy, Esta semana, Vencidas, Todas y Kanban; con o sin proyecto.
+- **⌘K / Ctrl+K**: búsqueda global y acciones rápidas. **+ Añadir** en la barra lateral (o el botón central en móvil).
+- **Actividad**: la base de datos registra sola los cambios de proyectos, tareas y estados de leads (tabla `actividad`).
+
+> **Orden de despliegue:** ejecuta primero las migraciones pendientes (0007 y 0008) en el SQL Editor de Supabase y después despliega el código. El código nuevo consulta columnas y tablas que no existen hasta entonces.
+
+## 7. Pipeline, valor y gestión de leads
 
 - **Leads → Lista / Tablero**: el tablero es un Kanban por estado con el recuento y el valor total de cada columna. En escritorio las tarjetas se arrastran entre columnas; en móvil cada tarjeta tiene un selector "Mover a…".
 - **Valor (€)**: cada lead puede llevar un importe (estimado mientras está abierto, facturado al cerrarse). Analítica muestra la *facturación cerrada* del periodo, el ticket medio y el *valor en juego* del pipeline abierto.
@@ -68,18 +80,18 @@ Desde **Perfil → Importar leads históricos**, pega los datos en CSV o TSV (co
 - **Archivar** oculta un lead de listas, tablero y pipeline sin perder su historial; el botón *Archivados* los muestra y permite restaurarlos. **Eliminar** es definitivo y solo lo puede hacer Jaime (lo garantiza la política RLS `leads_delete`).
 - **Exportar CSV**: descarga los leads filtrados (o la selección) en CSV separado por `;`, listo para abrir en Excel.
 
-## 7. Cerrar sesión / cambiar de cuenta
+## 8. Cerrar sesión / cambiar de cuenta
 
 Perfil → **Cerrar sesión**. Cada persona tiene su propia cuenta; no existe un selector de usuario.
 
-## 8. Build de producción
+## 9. Build de producción
 
 ```bash
 npm run build
 npm run start
 ```
 
-## 9. Desplegar en Vercel
+## 10. Desplegar en Vercel
 
 1. Sube este proyecto a un repositorio Git.
 2. Impórtalo en [vercel.com/new](https://vercel.com/new).

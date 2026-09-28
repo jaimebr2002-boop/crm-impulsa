@@ -138,7 +138,15 @@ Sistema     Configuración (/perfil)
 - **Command palette (`⌘K`)**: busca proyectos, tareas, leads y cuentas; acciones de crear y navegar.
 - **Ventas**: el CRM actual con Lista | Pipeline, "Ganado/Perdido" y botón *Convertir en proyecto* en leads ganados (crea cuenta + proyecto enlazados al lead sin tocar su historial).
 
-## 12. Roadmap
+## 12. Estado
+
+**Fase 1 — completada** (rama `claude/awesome-dijkstra-5ciena`):
+
+- Migración `0008_company_os_base.sql` probada contra PostgreSQL 16 con un simulacro de Supabase Auth: migraciones 0001–0008 en limpio, re-ejecución idempotente y casos de RLS de admin y comercial (lectura, escritura, escalada de rol, borrado, duplicados).
+- App probada de extremo a extremo con PostgREST 12 + login simulado: Inicio, Proyectos (lista, tablero con arrastrar y soltar persistido), ficha (tareas, enlaces, notas con autoguardado, cambio de estado → actividad), Tareas, ⌘K, alta rápida, conversión de lead ganado en proyecto, redirección de comerciales. Escritorio, móvil y modo oscuro; sin errores de consola ni HTTP.
+- Pendiente de la Fase 1 que se deja para más adelante: rediseño visual de las pantallas del CRM heredadas (Leads, ficha de lead, Seguimientos, Calendario, Analítica, Importar) al nuevo lenguaje visual; hoy funcionan igual que antes dentro de la nueva shell.
+
+## 13. Roadmap
 
 | Fase | Contenido | Migración |
 |---|---|---|
