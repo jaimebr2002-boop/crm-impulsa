@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CANALES, CANAL_LABEL, ESTADOS, ESTADO_LABEL, ORIGENES, ORIGEN_LABEL, SEGMENTOS, SEGMENTO_LABEL } from "@/lib/constants";
 import type { FiltrosLeads } from "@/lib/data/leads";
 import { IconFiltro } from "./Icons";
+import { Modal } from "./Modal";
 
 type Props = {
   filtros: FiltrosLeads;
@@ -31,108 +32,45 @@ export function LeadFilters({ filtros, onChange }: Props) {
     onChange({ busqueda: filtros.busqueda });
   }
 
+  const campo = (clave: keyof FiltrosLeads, label: string, opciones: string[], etiquetas: Record<string, string>) => (
+    <label className="block">
+      <span className="field-label">{label}</span>
+      <select value={(filtros[clave] as string) ?? ""} onChange={(e) => set(clave, e.target.value)} className="input">
+        <option value="">Todos</option>
+        {opciones.map((o) => (
+          <option key={o} value={o}>
+            {etiquetas[o]}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
   return (
     <>
-      <button
-        onClick={() => setAbierto(true)}
-        className="relative flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink"
-      >
+      <button onClick={() => setAbierto(true)} className="btn-secondary" aria-label={`Filtros${activos ? ` (${activos} activos)` : ""}`}>
         <IconFiltro className="h-4 w-4" />
-        Filtros
-        {activos > 0 ? (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[11px] font-semibold text-white">
-            {activos}
-          </span>
-        ) : null}
+        <span className="hidden sm:inline">Filtros</span>
+        {activos > 0 ? <span className="rounded bg-ink px-1.5 text-[11px] font-semibold text-canvas">{activos}</span> : null}
       </button>
 
       {abierto ? (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/30 md:items-center" onClick={() => setAbierto(false)}>
-          <div
-            className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface p-5 md:rounded-3xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-ink">Filtros</h2>
-              <button onClick={limpiar} className="text-sm font-medium text-brand-dark">
-                Limpiar
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <label className="block">
-                <span className="field-label">Estado</span>
-                <select
-                  value={filtros.estado ?? ""}
-                  onChange={(e) => set("estado", e.target.value)}
-                  className="input"
-                >
-                  <option value="">Todos</option>
-                  {ESTADOS.map((e) => (
-                    <option key={e} value={e}>
-                      {ESTADO_LABEL[e]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="field-label">Origen</span>
-                <select
-                  value={filtros.origen ?? ""}
-                  onChange={(e) => set("origen", e.target.value)}
-                  className="input"
-                >
-                  <option value="">Todos</option>
-                  {ORIGENES.map((o) => (
-                    <option key={o} value={o}>
-                      {ORIGEN_LABEL[o]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="field-label">Segmento</span>
-                <select
-                  value={filtros.segmento ?? ""}
-                  onChange={(e) => set("segmento", e.target.value)}
-                  className="input"
-                >
-                  <option value="">Todos</option>
-                  {SEGMENTOS.map((s) => (
-                    <option key={s} value={s}>
-                      {SEGMENTO_LABEL[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="field-label">Canal</span>
-                <select
-                  value={filtros.canal ?? ""}
-                  onChange={(e) => set("canal", e.target.value)}
-                  className="input"
-                >
-                  <option value="">Todos</option>
-                  {CANALES.map((c) => (
-                    <option key={c} value={c}>
-                      {CANAL_LABEL[c]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <button
-              onClick={() => setAbierto(false)}
-              className="mt-6 w-full rounded-xl bg-brand-gradient py-3.5 text-base font-semibold text-brand-ink"
-            >
+        <Modal titulo="Filtros" onClose={() => setAbierto(false)}>
+          <div className="flex flex-col gap-3">
+            {campo("estado", "Estado", ESTADOS, ESTADO_LABEL)}
+            {campo("origen", "Origen", ORIGENES, ORIGEN_LABEL)}
+            {campo("segmento", "Segmento", SEGMENTOS, SEGMENTO_LABEL)}
+            {campo("canal", "Canal", CANALES, CANAL_LABEL)}
+          </div>
+          <div className="mt-5 flex justify-between gap-2">
+            <button onClick={limpiar} className="btn-ghost" disabled={activos === 0}>
+              Quitar filtros
+            </button>
+            <button onClick={() => setAbierto(false)} className="btn-primary px-4">
               Ver resultados
             </button>
           </div>
-        </div>
+        </Modal>
       ) : null}
     </>
   );

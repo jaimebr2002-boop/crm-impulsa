@@ -43,8 +43,12 @@ export function LeadBoard({ leads, usuariosPorId, proximos, onMover }: Props) {
               {lead.valor != null ? <span className="shrink-0 font-semibold text-ink">{formatEuros(lead.valor)}</span> : null}
             </div>
             {proximos[lead.id] ? (
-              <p className="mt-1.5 truncate text-[11px] font-medium text-brand-dark dark:text-brand">
-                Seguimiento {formatFechaRelativa(proximos[lead.id])}
+              <p
+                className={`mt-1.5 truncate text-[11px] font-medium ${
+                  new Date(proximos[lead.id]).getTime() < Date.now() ? "text-red-600 dark:text-red-400" : "text-ink2"
+                }`}
+              >
+                Seguimiento {formatFechaRelativa(proximos[lead.id]).toLowerCase()}
               </p>
             ) : null}
           </>

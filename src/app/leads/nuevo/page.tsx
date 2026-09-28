@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUsuario } from "@/context/UsuarioContext";
@@ -31,23 +33,27 @@ export default function NuevoLeadPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-10 pt-6 md:px-8">
-      <h1 className="mb-1 text-2xl font-semibold text-ink">Nuevo lead</h1>
-      <p className="mb-5 text-sm text-ink2">No se inventan datos: solo se guarda lo que introduzcas.</p>
+      <nav aria-label="Migas" className="mb-3 text-sm text-ink3">
+        <Link href="/leads" className="hover:text-ink">
+          Ventas
+        </Link>
+        <span aria-hidden> / </span>
+        <span className="text-ink2">Nuevo lead</span>
+      </nav>
+      <h1 className="t-page mb-4">Nuevo lead</h1>
 
-      <div className="mb-6 flex rounded-xl bg-mute p-1">
+      <div className="mb-5 inline-flex rounded-lg border border-line bg-surface p-0.5 text-sm">
         <button
           onClick={() => setModo("rapida")}
-          className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-            modo === "rapida" ? "bg-surface text-ink shadow-card" : "text-ink2"
-          }`}
+          aria-pressed={modo === "rapida"}
+          className={`rounded-md px-2.5 py-1 font-medium ${modo === "rapida" ? "bg-mute text-ink" : "text-ink3 hover:text-ink"}`}
         >
           Alta rápida
         </button>
         <button
           onClick={() => setModo("completa")}
-          className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-            modo === "completa" ? "bg-surface text-ink shadow-card" : "text-ink2"
-          }`}
+          aria-pressed={modo === "completa"}
+          className={`rounded-md px-2.5 py-1 font-medium ${modo === "completa" ? "bg-mute text-ink" : "text-ink3 hover:text-ink"}`}
         >
           Alta completa
         </button>

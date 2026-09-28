@@ -68,11 +68,11 @@ export const SEGMENTO_LABEL: Record<string, string> = {
 };
 
 export const SEGMENTO_COLOR: Record<string, string> = {
-  caliente: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30",
-  timing: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
-  frio: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30",
-  ghost: "bg-mute text-ink2 border-line",
-  off: "bg-mute text-ink3 border-line",
+  caliente: TONO_CHIP.atencion,
+  timing: TONO_CHIP.info,
+  frio: TONO_CHIP.neutro,
+  ghost: TONO_CHIP.inactivo,
+  off: TONO_CHIP.inactivo,
 };
 
 export const CANALES: CanalContacto[] = ["llamada", "whatsapp", "instagram", "email", "linkedin"];
