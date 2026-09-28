@@ -80,11 +80,8 @@ export function AnaliticaFinanzas() {
   }));
 
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="analitica-finanzas">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-6">
-        <h2 id="analitica-finanzas" className="font-display text-lg font-bold text-ink">
-          Finanzas
-        </h2>
+    <section className="flex flex-col gap-4" aria-label="Negocio">
+      <div className="flex flex-wrap items-center gap-2">
         <SelectorPeriodo periodo={periodo} onChange={setPeriodo} />
       </div>
 

@@ -27,14 +27,12 @@ export function BarChart({ datos, formatoEtiqueta }: { datos: BarraDato[]; forma
               onMouseLeave={() => setActivo(null)}
             >
               {activo === i ? (
-                <div className="glass-strong absolute -top-9 z-10 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] font-medium text-ink shadow-glass">
+                <div className="absolute -top-8 z-10 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-[11px] font-medium text-ink shadow-lg">
                   {formatoEtiqueta ? formatoEtiqueta(d.etiqueta) : d.etiqueta}: {d.valor}
                 </div>
               ) : null}
               <div
-                className={`w-full rounded-t-md transition-all duration-300 ${
-                  activo === i ? "bg-brand-gradient" : "bg-brand/60"
-                }`}
+                className={`w-full rounded-t-sm transition-colors ${activo === i ? "bg-ink" : "bg-ink/25"}`}
                 style={{ height: `${alturaPct}%`, minHeight: "3px" }}
               />
             </div>
