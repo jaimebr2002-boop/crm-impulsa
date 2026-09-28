@@ -1,14 +1,16 @@
 import { supabase } from "@/lib/supabase";
 import { aYMD, formatHora } from "@/lib/dates";
-import type { Cuenta, Evento, Lead, Proyecto, TareaConRelaciones } from "@/lib/types";
+import type { Cuenta, Evento, FacturaConCuenta, Lead, Proyecto, Suscripcion, TareaConRelaciones } from "@/lib/types";
+import { aCentimos, eur, renovacionesEntre } from "@/lib/finanzas";
 import { traerTodo } from "./paginar";
 import { contextoDeProyecto } from "@/lib/trabajo";
 
 // Capa de lectura del calendario unificado. NO guarda nada: combina en un
 // solo tipo lo que ya vive en eventos (seguimientos CRM, reuniones, eventos),
-// tareas (con fecha límite) y proyectos (entregas).
+// tareas (con fecha límite), proyectos (entregas) y finanzas (vencimientos de
+// facturas y renovaciones de suscripciones; solo admin por RLS).
 
-export type TipoItemCalendario = "seguimiento" | "reunion" | "evento" | "tarea" | "entrega";
+export type TipoItemCalendario = "seguimiento" | "reunion" | "evento" | "tarea" | "entrega" | "factura" | "renovacion";
 
 export type EventoCalendario = Evento & {
   lead: Pick<Lead, "id" | "negocio" | "nombre_contacto"> | null;
@@ -57,16 +59,28 @@ export const TIPO_ITEM: Record<TipoItemCalendario, { label: string; punto: strin
     punto: "bg-violet-500",
     chip: "bg-violet-50 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200",
   },
+  factura: {
+    label: "Vencimiento de factura",
+    punto: "bg-emerald-500",
+    chip: "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200",
+  },
+  renovacion: {
+    label: "Renovación",
+    punto: "bg-orange-400",
+    chip: "bg-orange-50 text-orange-800 dark:bg-orange-500/15 dark:text-orange-200",
+  },
 };
 
 /** Filtros visibles: reuniones y eventos manuales van juntos. */
-export type FiltroCalendario = "crm" | "eventos" | "tareas" | "proyectos";
+export type FiltroCalendario = "crm" | "eventos" | "tareas" | "proyectos" | "facturas" | "renovaciones";
 export const FILTRO_DE_TIPO: Record<TipoItemCalendario, FiltroCalendario> = {
   seguimiento: "crm",
   reunion: "eventos",
   evento: "eventos",
   tarea: "tareas",
   entrega: "proyectos",
+  factura: "facturas",
+  renovacion: "renovaciones",
 };
 
 const SELECT_TAREA =
@@ -85,7 +99,7 @@ export async function obtenerItemsCalendario(
   const desdeYMD = aYMD(desde);
   const hastaYMD = aYMD(hasta);
 
-  const [eventos, tareas, proyectos] = await Promise.all([
+  const [eventos, tareas, proyectos, facturas, suscripciones] = await Promise.all([
     traerTodo<EventoCalendario>((a, b) =>
       supabase
         .from("eventos")
@@ -112,6 +126,19 @@ export async function obtenerItemsCalendario(
         .range(a, b)
         .returns<EntregaFila[]>()
     ),
+    // Finanzas: RLS devuelve vacío a quien no es admin.
+    traerTodo<FacturaConCuenta>((a, b) =>
+      supabase
+        .from("facturas_estado")
+        .select("*, cuenta:cuentas(id, nombre)")
+        .eq("estado", "emitida")
+        .gte("fecha_vencimiento", desdeYMD)
+        .lt("fecha_vencimiento", hastaYMD)
+        .order("id")
+        .range(a, b)
+        .returns<FacturaConCuenta[]>()
+    ),
+    traerTodo<Suscripcion>((a, b) => supabase.from("suscripciones").select("*").eq("activa", true).order("id").range(a, b)),
   ]);
 
   const mio = (usuarioId: string | null) => !opciones.soloDe || !usuarioId || usuarioId === opciones.soloDe;
@@ -164,8 +191,45 @@ export async function obtenerItemsCalendario(
     });
   }
 
-  // Primero lo de día completo (entregas, tareas), después por hora.
-  const ordenTipo: Record<TipoItemCalendario, number> = { entrega: 0, tarea: 1, seguimiento: 2, reunion: 2, evento: 2 };
+  for (const f of facturas) {
+    if (!f.fecha_vencimiento) continue;
+    const cobrada = aCentimos(f.pendiente) <= 0;
+    items.push({
+      clave: `f-${f.id}`,
+      tipo: "factura",
+      titulo: `Factura ${f.numero}`,
+      subtitulo: [f.cuenta?.nombre, cobrada ? "cobrada" : `${eur(f.pendiente)} pendiente`].filter(Boolean).join(" · "),
+      dia: f.fecha_vencimiento,
+      hora: null,
+      completado: cobrada,
+      href: `/finanzas/facturas/${f.id}`,
+    });
+  }
+  for (const s of suscripciones) {
+    for (const dia of renovacionesEntre(s, desdeYMD, hastaYMD)) {
+      items.push({
+        clave: `r-${s.id}-${dia}`,
+        tipo: "renovacion",
+        titulo: s.nombre,
+        subtitulo: `Renovación · ${eur(s.importe)}`,
+        dia,
+        hora: null,
+        completado: false,
+        href: "/finanzas/suscripciones",
+      });
+    }
+  }
+
+  // Primero lo de día completo (entregas, tareas…), después por hora.
+  const ordenTipo: Record<TipoItemCalendario, number> = {
+    entrega: 0,
+    factura: 0,
+    renovacion: 0,
+    tarea: 1,
+    seguimiento: 2,
+    reunion: 2,
+    evento: 2,
+  };
   return items.sort(
     (a, b) => a.dia.localeCompare(b.dia) || ordenTipo[a.tipo] - ordenTipo[b.tipo] || (a.hora ?? "").localeCompare(b.hora ?? "")
   );

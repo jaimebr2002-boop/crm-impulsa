@@ -9,10 +9,12 @@ import { listarTareas } from "@/lib/data/tareas";
 import { listarActividad } from "@/lib/data/actividad";
 import { listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
 import { obtenerLeadsActuales } from "@/lib/data/analitica";
+import { listarCobros, listarFacturas } from "@/lib/data/finanzas";
+import { aCentimos, calcularKpis, eur, periodoQueContiene } from "@/lib/finanzas";
 import { ESTADOS_ABIERTOS, formatEuros, sumarValor } from "@/lib/constants";
 import { aYMD, endOfDay, formatHora, formatYMDRelativa, hoyYMD, startOfDay, sumarDiasYMD } from "@/lib/dates";
 import { ESTADOS_PROYECTO_ACTIVOS } from "@/lib/trabajo";
-import type { Actividad, EventoConLead, Lead, ProyectoConRelaciones, TareaConRelaciones } from "@/lib/types";
+import type { Actividad, CobroConFactura, EventoConLead, FacturaConCuenta, Lead, ProyectoConRelaciones, TareaConRelaciones } from "@/lib/types";
 import { useAccionesTareas } from "@/lib/useAccionesTareas";
 import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
 import { SkeletonLineas, SkeletonTarjetas } from "@/components/ui/Skeleton";
@@ -58,6 +60,8 @@ function Inicio() {
   const [eventosVencidos, setEventosVencidos] = useState<EventoConLead[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [actividad, setActividad] = useState<Actividad[]>([]);
+  const [facturas, setFacturas] = useState<FacturaConCuenta[]>([]);
+  const [cobros, setCobros] = useState<CobroConFactura[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [anadirAbierto, setAnadirAbierto] = useState(false);
@@ -69,13 +73,15 @@ function Inicio() {
     setError(null);
     try {
       const ahora = new Date();
-      const [p, t, eh, ev, l, a] = await Promise.all([
+      const [p, t, eh, ev, l, a, fs, cs] = await Promise.all([
         listarProyectos(),
         listarTareas({ diasCompletadas: 1 }),
         listarEventosDeHoy(startOfDay(ahora).toISOString(), endOfDay(ahora).toISOString(), usuarioActual.id),
         listarEventosVencidos(startOfDay(ahora).toISOString(), usuarioActual.id),
         obtenerLeadsActuales(),
         listarActividad({ limite: 8 }),
+        listarFacturas(),
+        listarCobros({ desde: periodoQueContiene("anio").desde }),
       ]);
       setProyectos(p);
       setTareas(t);
@@ -83,6 +89,8 @@ function Inicio() {
       setEventosVencidos(ev);
       setLeads(l);
       setActividad(a);
+      setFacturas(fs);
+      setCobros(cs);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se ha podido cargar el inicio.");
     } finally {
@@ -97,6 +105,17 @@ function Inicio() {
   const hoy = hoyYMD();
   const en7 = sumarDiasYMD(hoy, 7);
   const mesActual = hoy.slice(0, 7);
+
+  // Finanzas: las mismas reglas que /finanzas (lib/finanzas.ts).
+  const fin = useMemo(() => {
+    const mes = periodoQueContiene("mes");
+    const anio = periodoQueContiene("anio");
+    const datos = { facturas, cobros, gastos: [] };
+    const pendientes = facturas
+      .filter((f) => f.estado === "emitida" && aCentimos(f.pendiente) > 0)
+      .sort((a, b) => (a.fecha_vencimiento ?? "9999").localeCompare(b.fecha_vencimiento ?? "9999"));
+    return { mes: calcularKpis(datos, mes.desde, mes.hasta), anio: calcularKpis(datos, anio.desde, anio.hasta), pendientes };
+  }, [facturas, cobros]);
 
   const m = useMemo(() => {
     const activos = proyectos.filter((p) => ESTADOS_PROYECTO_ACTIVOS.has(p.estado));
@@ -227,6 +246,22 @@ function Inicio() {
             ]}
           />
 
+          <FilaKpis
+            columnas="md:grid-cols-4"
+            kpis={[
+              { etiqueta: "Facturado este mes", valor: eur(fin.mes.facturado), nota: `${fin.mes.numFacturas} factura${fin.mes.numFacturas === 1 ? "" : "s"}`, href: "/finanzas" },
+              { etiqueta: "Cobrado este mes", valor: eur(fin.mes.cobrado), href: "/finanzas" },
+              {
+                etiqueta: "Pendiente de cobro",
+                valor: eur(fin.mes.pendiente),
+                nota: fin.mes.numVencidas ? `${eur(fin.mes.vencido)} vencido` : `${fin.mes.numPendientes} factura${fin.mes.numPendientes === 1 ? "" : "s"}`,
+                alerta: fin.mes.numVencidas > 0,
+                href: "/finanzas/facturas?estado=pendientes",
+              },
+              { etiqueta: "Facturado este año", valor: eur(fin.anio.facturado), nota: `Cobrado ${eur(fin.anio.cobrado)}`, href: "/finanzas" },
+            ]}
+          />
+
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Hoy */}
             <Panel titulo="Hoy" contador={itemsHoy} enlace={{ href: "/tareas", texto: "Tareas" }} className="lg:col-span-2">
@@ -300,11 +335,46 @@ function Inicio() {
             </Panel>
           </div>
 
-          <Panel titulo="Actividad reciente" enlace={{ href: "/actividad", texto: "Ver toda" }}>
-            <div className="px-4 py-1">
-              <ActividadLista items={actividad} vacio="Aquí aparecerá lo que vaya pasando: proyectos, tareas, leads…" />
-            </div>
-          </Panel>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Panel titulo="Actividad reciente" enlace={{ href: "/actividad", texto: "Ver toda" }} className="lg:col-span-2">
+              <div className="px-4 py-1">
+                <ActividadLista items={actividad} vacio="Aquí aparecerá lo que vaya pasando: proyectos, tareas, leads…" />
+              </div>
+            </Panel>
+
+            <Panel
+              titulo="Pendiente de cobro"
+              contador={fin.pendientes.length}
+              tono={fin.pendientes.some((f) => f.vencida) ? "alerta" : undefined}
+              enlace={{ href: "/finanzas/facturas?estado=pendientes", texto: "Facturas" }}
+            >
+              {fin.pendientes.length === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-ink3">Todo cobrado.</p>
+              ) : (
+                <div className="divide-y divide-line">
+                  {fin.pendientes.slice(0, 6).map((f) => (
+                    <Link key={f.id} href={`/finanzas/facturas/${f.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-mute/50">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-ink">{f.cuenta?.nombre}</span>
+                        <span className="block truncate text-xs text-ink3">
+                          Factura {f.numero}
+                          {f.fecha_vencimiento ? (
+                            <span className={f.vencida ? "font-medium text-red-600 dark:text-red-400" : ""}>
+                              {" · "}
+                              {f.vencida ? "vencida " : "vence "}
+                              {formatYMDRelativa(f.fecha_vencimiento).toLowerCase()}
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-medium tabular-nums text-ink">{eur(f.pendiente)}</span>
+                    </Link>
+                  ))}
+                  {fin.pendientes.length > 6 ? <p className="px-4 py-2 text-xs text-ink3">y {fin.pendientes.length - 6} más</p> : null}
+                </div>
+              )}
+            </Panel>
+          </div>
         </div>
       ) : null}
 

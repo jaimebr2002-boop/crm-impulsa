@@ -27,13 +27,18 @@ import { EventoGenericoForm } from "@/components/forms/EventoGenericoForm";
 import { IconChevron, IconMas } from "@/components/Icons";
 
 type Vista = "mes" | "agenda";
-const FILTROS: { id: FiltroCalendario; label: string; punto: string }[] = [
+const FILTROS: { id: FiltroCalendario; label: string; punto: string; soloAdmin?: boolean }[] = [
   { id: "tareas", label: "Tareas", punto: TIPO_ITEM.tarea.punto },
   { id: "proyectos", label: "Entregas", punto: TIPO_ITEM.entrega.punto },
   { id: "eventos", label: "Reuniones y eventos", punto: TIPO_ITEM.reunion.punto },
   { id: "crm", label: "Seguimientos CRM", punto: TIPO_ITEM.seguimiento.punto },
+  { id: "facturas", label: "Facturas", punto: TIPO_ITEM.factura.punto, soloAdmin: true },
+  { id: "renovaciones", label: "Renovaciones", punto: TIPO_ITEM.renovacion.punto, soloAdmin: true },
 ];
-const CLAVE_FILTROS = "impulsa-calendario-filtros";
+const ETIQUETA_DIA_COMPLETO: Partial<Record<ItemCalendario["tipo"], string>> = { entrega: "Entrega", factura: "Vence", renovacion: "Renueva" };
+const TODOS_FILTROS = FILTROS.map((f) => f.id);
+// v2: al añadir Facturas y Renovaciones, las preferencias guardadas antes no las incluían.
+const CLAVE_FILTROS = "impulsa-calendario-filtros-v2";
 const CLAVE_VISTA = "impulsa-calendario-vista";
 const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -64,7 +69,7 @@ export default function CalendarioPage() {
     return new Date(h.getFullYear(), h.getMonth(), 1);
   });
   const [diaSel, setDiaSel] = useState(hoyYMD());
-  const [filtros, setFiltros] = useState<FiltroCalendario[]>(["tareas", "proyectos", "eventos", "crm"]);
+  const [filtros, setFiltros] = useState<FiltroCalendario[]>(TODOS_FILTROS);
   const [soloMio, setSoloMio] = useState(true);
   const [items, setItems] = useState<ItemCalendario[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -73,7 +78,7 @@ export default function CalendarioPage() {
   const [eventoAbierto, setEventoAbierto] = useState<EventoCalendario | null>(null);
 
   useEffect(() => {
-    setFiltros(leerLocal(CLAVE_FILTROS, ["tareas", "proyectos", "eventos", "crm"]));
+    setFiltros(leerLocal(CLAVE_FILTROS, TODOS_FILTROS));
     setVista(leerLocal<Vista>(CLAVE_VISTA, "mes"));
   }, []);
 
@@ -196,7 +201,7 @@ export default function CalendarioPage() {
           </button>
         </div>
         <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0">
-          {FILTROS.map((f) => {
+          {FILTROS.filter((f) => esAdmin || !f.soloAdmin).map((f) => {
             const activo = filtros.includes(f.id);
             return (
               <button
@@ -336,7 +341,7 @@ function ItemFila({
   mostrarTipo?: boolean;
 }) {
   const t = TIPO_ITEM[item.tipo];
-  const completable = item.tipo !== "entrega";
+  const completable = item.tipo !== "entrega" && item.tipo !== "factura" && item.tipo !== "renovacion";
   return (
     <div className="flex items-start gap-3 px-3 py-2.5 hover:bg-mute/50">
       <span className="pt-0.5">
@@ -359,7 +364,7 @@ function ItemFila({
           {item.subtitulo}
         </span>
       </button>
-      <span className="shrink-0 pt-0.5 text-xs font-medium text-ink2">{item.hora ?? (item.tipo === "entrega" ? "Entrega" : "")}</span>
+      <span className="shrink-0 pt-0.5 text-xs font-medium text-ink2">{item.hora ?? ETIQUETA_DIA_COMPLETO[item.tipo] ?? ""}</span>
     </div>
   );
 }
