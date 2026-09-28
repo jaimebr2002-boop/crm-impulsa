@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { Cuenta, Marca, TipoCuenta } from "@/lib/types";
+import type { Cuenta, DatosFiscalesCuenta, Marca, TipoCuenta } from "@/lib/types";
 import { traerTodo } from "./paginar";
 
 export async function listarCuentas({ archivadas = false }: { archivadas?: boolean } = {}): Promise<Cuenta[]> {
@@ -28,9 +28,10 @@ export async function crearCuenta(payload: CuentaInsert): Promise<Cuenta> {
 
 export async function actualizarCuenta(
   id: string,
-  cambios: Partial<Pick<Cuenta, "nombre" | "tipo" | "email" | "telefono" | "notas" | "archivada">>
+  cambios: Partial<Pick<Cuenta, "nombre" | "tipo" | "email" | "telefono" | "notas" | "archivada">> & DatosFiscalesCuenta
 ): Promise<Cuenta> {
   const { data, error } = await supabase.from("cuentas").update(cambios).eq("id", id).select("*").single();
+  if (error?.message.includes("cuentas_email_facturacion_valido")) throw new Error("El email de facturación no es válido.");
   if (error) throw errorDuplicado(error, "Ya existe una cuenta con ese nombre.");
   return data;
 }

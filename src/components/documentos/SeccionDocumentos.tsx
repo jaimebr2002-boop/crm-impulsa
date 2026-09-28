@@ -95,6 +95,7 @@ export function SeccionDocumentos({
             <TablaDocumentos
               documentos={visibles}
               onCambio={recargar}
+              siempreLista={compacta}
               vacio={
                 <button onClick={() => subir()} className="w-full px-4 py-8 text-center text-sm text-ink3 hover:text-ink">
                   {activo ? "Nada en esta categoría." : vacio ?? "Sin archivos todavía."} Arrastra un archivo aquí o pulsa para subirlo.

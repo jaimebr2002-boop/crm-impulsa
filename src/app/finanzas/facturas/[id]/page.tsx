@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useApp, useContextoPantalla } from "@/context/AppContext";
+import { useApp, useContextoPantalla, usePestanaPedida } from "@/context/AppContext";
+import { PdfFactura } from "@/components/finanzas/PdfFactura";
+import { SeccionDocumentos } from "@/components/documentos/SeccionDocumentos";
+import { listarDocumentos } from "@/lib/data/documentos";
 import {
   cambiarEstadoFactura,
   eliminarCobro,
@@ -47,6 +50,15 @@ function FichaFactura() {
   const [modal, setModal] = useState<"editar" | "cobro" | "cancelar" | "eliminar" | null>(null);
   const [cobroABorrar, setCobroABorrar] = useState<Cobro | null>(null);
   const [version, setVersion] = useState(0);
+  const [pedidoPdf, setPedidoPdf] = useState(0);
+  usePestanaPedida((t) => {
+    if (t === "generar-pdf") setPedidoPdf((n) => n + 1);
+  });
+  // Otros documentos de la factura (el PDF generado va en su propio panel).
+  const cargarAdjuntos = useCallback(
+    async () => (await listarDocumentos({ facturaIds: [id] })).filter((d) => d.origen !== "generado"),
+    [id]
+  );
 
   const cargar = useCallback(async () => {
     setError(null);
@@ -264,7 +276,18 @@ function FichaFactura() {
               <p className="whitespace-pre-wrap px-4 py-3 text-sm text-ink2">{factura.notas}</p>
             </Panel>
           ) : null}
-          <p className="px-1 text-xs text-ink3">El PDF de la factura se podrá adjuntar cuando exista el módulo de Documentos.</p>
+          <PdfFactura factura={factura} onCambio={cargar} pedido={pedidoPdf} />
+          <Panel titulo="Documentos">
+            <div className="px-3 py-3">
+              <SeccionDocumentos
+                cargar={cargarAdjuntos}
+                relacion={{ tipo: "factura", id: factura.id, etiqueta: `Factura ${factura.numero ?? "borrador"}` }}
+                textoBoton="Adjuntar"
+                vacio="Sin otros documentos (albaranes, contrato…)."
+                compacta
+              />
+            </div>
+          </Panel>
         </div>
       </div>
 

@@ -24,6 +24,7 @@ export function TablaDocumentos({
   vacio,
   abierto,
   onAbrir,
+  siempreLista = false,
 }: {
   documentos: DocumentoContexto[];
   onCambio: () => void;
@@ -32,6 +33,8 @@ export function TablaDocumentos({
   /** Visor controlado desde fuera (p. ej. /documentos?ver=id). */
   abierto?: DocumentoContexto | null;
   onAbrir?: (d: DocumentoContexto | null) => void;
+  /** Filas compactas también en escritorio (paneles estrechos). */
+  siempreLista?: boolean;
 }) {
   const { avisar, notificarCambio } = useApp();
   const [visorLocal, setVisorLocal] = useState<DocumentoContexto | null>(null);
@@ -164,7 +167,7 @@ export function TablaDocumentos({
       ) : (
         <>
           {/* Escritorio */}
-          <table className="hidden w-full table-fixed text-sm md:table">
+          <table className={`hidden w-full table-fixed text-sm ${siempreLista ? "" : "md:table"}`}>
             <colgroup>
               <col />
               <col className="w-28" />
@@ -209,7 +212,7 @@ export function TablaDocumentos({
           </table>
 
           {/* Móvil */}
-          <ul className="divide-y divide-line md:hidden">
+          <ul className={`divide-y divide-line ${siempreLista ? "" : "md:hidden"}`}>
             {documentos.map((d) => {
               const r = mostrarRelacion ? relacionPrincipal(d) : null;
               return (

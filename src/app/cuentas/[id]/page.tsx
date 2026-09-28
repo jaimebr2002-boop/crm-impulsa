@@ -36,6 +36,9 @@ import { NotasAutoguardado } from "@/components/trabajo/NotasAutoguardado";
 import { Segmentado } from "@/components/ui/Cabecera";
 import { SkeletonLineas, SkeletonTarjetas } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { SeccionDocumentos, type FiltroSeccion } from "@/components/documentos/SeccionDocumentos";
+import { listarDocumentos } from "@/lib/data/documentos";
+import { CAMPOS_FISCALES_CUENTA, DatosFiscalesForm, faltanDatosReceptor } from "@/components/forms/DatosFiscalesForm";
 import { FinanzasCuenta } from "@/components/finanzas/FinanzasCuenta";
 import { Panel } from "@/components/ui/Panel";
 import { Modal } from "@/components/Modal";
@@ -43,8 +46,42 @@ import { Avatar } from "@/components/Avatar";
 import { CuentaForm } from "@/components/forms/CuentaForm";
 import { IconFlecha, IconMas } from "@/components/Icons";
 
-const TABS = ["resumen", "proyectos", "marcas", "tareas", "finanzas", "actividad", "notas"] as const;
+const TABS = ["resumen", "proyectos", "marcas", "tareas", "finanzas", "documentos", "actividad", "notas"] as const;
 type Tab = (typeof TABS)[number];
+
+const FILTROS_DOCUMENTOS_CUENTA: FiltroSeccion[] = [
+  { id: "facturas", label: "Facturas", aplica: (d) => d.categoria === "factura" || d.categoria === "justificante" || !!d.factura_id || !!d.gasto_id },
+  { id: "proyectos", label: "Proyectos", aplica: (d) => !!d.ref_proyecto_id && !d.factura_id && !d.gasto_id },
+  { id: "contratos", label: "Contratos", aplica: (d) => d.categoria === "contrato" },
+  {
+    id: "otros",
+    label: "Otros",
+    aplica: (d) => !d.ref_proyecto_id && !d.factura_id && !d.gasto_id && !["factura", "justificante", "contrato"].includes(d.categoria),
+  },
+];
+
+/** Resumen plegado de los datos fiscales del receptor, con aviso si faltan para el PDF. */
+function DatosFacturacionCuenta({ cuenta, onEditar }: { cuenta: Cuenta; onEditar: () => void }) {
+  const falta = faltanDatosReceptor(cuenta);
+  const linea = [
+    cuenta.fiscal_nombre || cuenta.nombre,
+    cuenta.fiscal_nif,
+    [cuenta.fiscal_codigo_postal, cuenta.fiscal_ciudad].filter(Boolean).join(" "),
+    cuenta.email_facturacion,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-ink3">Datos de facturación</span>
+      <span className="min-w-0 flex-1 truncate text-ink2">{cuenta.fiscal_nif || cuenta.fiscal_direccion ? linea : "Sin datos fiscales"}</span>
+      {falta.length ? <span className="text-xs text-amber-700 dark:text-amber-400">Para el PDF falta: {falta.join(", ")}</span> : null}
+      <button onClick={onEditar} className="btn-ghost py-1 text-xs">
+        {cuenta.fiscal_nif ? "Editar" : "Añadir"}
+      </button>
+    </div>
+  );
+}
 
 export default function CuentaPage() {
   return (
@@ -71,6 +108,9 @@ function FichaCuenta() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
+  const [editandoFiscal, setEditandoFiscal] = useState(false);
+  // Documentos de la cuenta, directos o a través de sus marcas, proyectos, facturas y gastos (vista documentos_contexto).
+  const cargarDocumentos = useCallback(() => listarDocumentos({ cuentaId: id }), [id]);
   const [tab, setTab] = useState<Tab>(tabDesdeUrl(params.get("tab"), TABS, "resumen"));
   const [filtroProyectos, setFiltroProyectos] = useState<"activos" | "entregados" | "todos">("activos");
 
@@ -244,6 +284,7 @@ function FichaCuenta() {
           { id: "marcas", label: "Marcas", n: marcas.length },
           { id: "tareas", label: "Tareas", n: tareasAbiertas.length },
           { id: "finanzas", label: "Finanzas", n: facturas.length },
+          { id: "documentos", label: "Documentos" },
           { id: "actividad", label: "Actividad" },
           { id: "notas", label: "Notas" },
         ]}
@@ -374,7 +415,36 @@ function FichaCuenta() {
       ) : null}
 
       {tab === "finanzas" ? (
-        <FinanzasCuenta cuentaId={cuenta.id} proyectos={proyectos} facturas={facturas} cobros={cobros} facturacion={facturacion} />
+        <div className="flex flex-col gap-6">
+          <DatosFacturacionCuenta cuenta={cuenta} onEditar={() => setEditandoFiscal(true)} />
+          <FinanzasCuenta cuentaId={cuenta.id} proyectos={proyectos} facturas={facturas} cobros={cobros} facturacion={facturacion} />
+        </div>
+      ) : null}
+
+      {tab === "documentos" ? (
+        <SeccionDocumentos
+          cargar={cargarDocumentos}
+          relacion={{ tipo: "cuenta", id: cuenta.id, etiqueta: cuenta.nombre }}
+          filtros={FILTROS_DOCUMENTOS_CUENTA}
+          textoBoton="Subir documento"
+          vacio={`Sin documentos de ${cuenta.nombre}: ni suyos, ni de sus marcas, proyectos o facturas.`}
+        />
+      ) : null}
+
+      {editandoFiscal ? (
+        <Modal titulo={`Datos de facturación · ${cuenta.nombre}`} onClose={() => setEditandoFiscal(false)} ancho="max-w-lg">
+          <p className="-mt-2 mb-4 text-sm text-ink3">Aparecen como destinatario en los PDF de sus facturas. Todos son opcionales.</p>
+          <DatosFiscalesForm
+            campos={CAMPOS_FISCALES_CUENTA}
+            inicial={cuenta as unknown as Record<string, string | null>}
+            onCancelar={() => setEditandoFiscal(false)}
+            onSubmit={async (v) => {
+              setCuenta(await actualizarCuenta(id, v));
+              setEditandoFiscal(false);
+              avisar("Datos de facturación guardados");
+            }}
+          />
+        </Modal>
       ) : null}
 
       {tab === "actividad" ? (

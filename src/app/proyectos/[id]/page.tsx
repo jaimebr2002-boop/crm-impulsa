@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useApp, useContextoPantalla, usePestanaPedida } from "@/context/AppContext";
+import { SeccionDocumentos, type FiltroSeccion } from "@/components/documentos/SeccionDocumentos";
+import { documentosDeProyecto } from "@/lib/data/documentos";
 import { FacturacionProyecto } from "@/components/finanzas/FacturacionProyecto";
 import {
   actualizarProyecto,
@@ -51,7 +53,20 @@ import { NotasAutoguardado } from "@/components/trabajo/NotasAutoguardado";
 import { ListaProyectos } from "@/components/trabajo/ListaProyectos";
 import { IconEnlace, IconPapelera } from "@/components/Icons";
 
-type Tab = "resumen" | "tareas" | "enlaces" | "notas" | "actividad";
+type Tab = "resumen" | "tareas" | "archivos" | "enlaces" | "notas" | "actividad";
+
+const FILTROS_ARCHIVOS: FiltroSeccion[] = [
+  { id: "briefing", label: "Briefs", aplica: (d) => d.categoria === "briefing" },
+  { id: "guion", label: "Guiones", aplica: (d) => d.categoria === "guion" },
+  { id: "creativo", label: "Creativos", aplica: (d) => d.categoria === "creativo" },
+  { id: "informe", label: "Informes", aplica: (d) => d.categoria === "informe" },
+  { id: "facturas", label: "Facturas", aplica: (d) => d.categoria === "factura" || d.categoria === "justificante" || !!d.factura_id },
+  {
+    id: "otros",
+    label: "Otros",
+    aplica: (d) => !["briefing", "guion", "creativo", "informe", "factura", "justificante"].includes(d.categoria) && !d.factura_id,
+  },
+];
 
 export default function ProyectoPage() {
   return (
@@ -80,6 +95,9 @@ function FichaProyecto() {
   const [tareaEditando, setTareaEditando] = useState<TareaConRelaciones | null>(null);
 
   const tabParam = params.get("tab") as Tab | null;
+  // Archivos del proyecto, de sus subproyectos y de las facturas que lo incluyen.
+  const idsSub = subproyectos.map((s) => s.id).join(",");
+  const cargarArchivos = useCallback(() => documentosDeProyecto([id, ...(idsSub ? idsSub.split(",") : [])]), [id, idsSub]);
   const [tab, setTab] = useState<Tab>(tabParam ?? "resumen");
   const acciones = useAccionesTareas(setTareas);
 
@@ -167,6 +185,7 @@ function FichaProyecto() {
   const TABS: { id: Tab; label: string; n?: number }[] = [
     { id: "resumen", label: "Resumen" },
     { id: "tareas", label: "Tareas", n: abiertas.length },
+    { id: "archivos", label: "Archivos" },
     { id: "enlaces", label: "Enlaces", n: enlaces.length },
     { id: "notas", label: "Notas" },
     { id: "actividad", label: "Actividad" },
@@ -402,6 +421,15 @@ function FichaProyecto() {
                 </details>
               ) : null}
             </div>
+          ) : null}
+
+          {tab === "archivos" ? (
+            <SeccionDocumentos
+              cargar={cargarArchivos}
+              relacion={{ tipo: "proyecto", id: proyecto.id, etiqueta: proyecto.nombre }}
+              filtros={FILTROS_ARCHIVOS}
+              vacio="Sin archivos en este proyecto."
+            />
           ) : null}
 
           {tab === "enlaces" ? (

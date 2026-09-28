@@ -287,3 +287,22 @@ export async function pendientesDocumentales(desdeAnio: string): Promise<{ gasto
   if (err) throw new Error(err.message);
   return { gastosSinJustificante: g.count ?? 0, facturasSinPdf: f.count ?? 0, pdfDesactualizados: d.count ?? 0 };
 }
+
+// ---------- PDF de factura (se genera en el servidor) ----------
+
+export type ResultadoPdf =
+  | { ok: true; documentoId: string; regenerado: boolean }
+  | { ok: false; error: string; faltanEmisor?: string[]; faltanReceptor?: string[] };
+
+/** Pide al servidor que genere el PDF, lo guarde en Storage y actualice la factura. */
+export async function generarPdfFactura(facturaId: string): Promise<ResultadoPdf> {
+  let r: Response;
+  try {
+    r = await fetch(`/api/facturas/${facturaId}/pdf`, { method: "POST", credentials: "same-origin" });
+  } catch {
+    return { ok: false, error: "No se ha podido conectar para generar el PDF." };
+  }
+  const j = await r.json().catch(() => ({}));
+  if (r.ok) return { ok: true, documentoId: j.documentoId, regenerado: !!j.regenerado };
+  return { ok: false, error: j.error ?? "No se ha podido generar el PDF.", faltanEmisor: j.faltanEmisor, faltanReceptor: j.faltanReceptor };
+}
