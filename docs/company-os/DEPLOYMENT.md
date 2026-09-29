@@ -165,3 +165,9 @@ PDF en Vercel (12/12): sin sesión 401, comercial 404, admin 200 (~1,5 s desde `
 - **Rol de un usuario**: con 0008, `update usuarios set rol = 'admin' where email = '…'` funciona desde el SQL Editor (antes lo bloqueaba el trigger de 0006).
 - **Logs de Vercel**: la retención en Hobby es de 1 hora.
 - **Región**: funciones en `iad1` y base de datos en `eu-west-1` → más latencia (ver §6.3).
+
+## 11. Incidente de notas de Fer en staging (29-09-2026)
+
+Durante una prueba sintética se vació el campo de notas de la cuenta `FER` en staging (`effazidcqpliuxtakmnw`). El texto anterior no está disponible en esta sesión y no se reconstruyó ni se sustituyó por contenido inventado. Staging es temporal.
+
+En producción (`sfjzwieddvniimeetrud`), la cuenta `FER` se observó con las notas vacías. La actividad de la cuenta registra su creación y no muestra eventos de actualización; tampoco se aplicó allí la operación de vaciado de staging. No encontramos indicios de que el incidente de staging afectara a producción. No se modificaron las notas de producción durante esta revisión.
