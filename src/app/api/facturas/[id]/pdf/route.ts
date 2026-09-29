@@ -104,11 +104,13 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     }
   );
 
-  // Mismo documento si ya había PDF (su id es la carpeta); si no, uno nuevo.
+  // Mismo documento si ya había PDF (su id es la carpeta); cada versión usa
+  // un objeto nuevo para poder conservar el PDF anterior hasta registrar el nuevo.
   const anterior = factura.pdf_path;
   const documentoId = anterior ? anterior.split("/")[0] : crypto.randomUUID();
-  const version = crypto.randomUUID();
-  const ruta = `${documentoId}/${version}/${nombreArchivo}`;
+  const version = crypto.randomUUID().replace(/-/g, "");
+  const nombreObjeto = `${nombreArchivo.replace(/\.pdf$/i, "")}__${version}.pdf`;
+  const ruta = `${documentoId}/${nombreObjeto}`;
 
   const storage = sb.storage.from(BUCKET_DOCUMENTOS);
   const { error: e4 } = await storage.upload(ruta, bytes, { contentType: "application/pdf", upsert: false });
