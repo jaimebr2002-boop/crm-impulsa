@@ -17,6 +17,7 @@ export type DatosEmisor = {
   email?: string | null;
   telefono?: string | null;
   iban?: string | null;
+  titular_iban?: string | null;
   texto_legal?: string | null;
 };
 
@@ -35,14 +36,19 @@ export type DatosFacturaPdf = {
   numero: string;
   estado: "emitida" | "cancelada";
   fecha_emision: string; // YYYY-MM-DD
+  fecha_operacion?: string | null;
   fecha_vencimiento: string | null;
+  ultimo_cobro?: string | null;
+  estado_cobro?: "pendiente" | "parcial" | "cobrada" | "vencida" | "cancelada" | "borrador";
+  texto_legal?: string | null;
+  concepto_pago?: string | null;
   iva_pct: number | string;
   irpf_pct: number | string;
   base: number | string;
   iva: number | string;
   irpf: number | string;
   total: number | string;
-  lineas: { descripcion: string; cantidad: number | string; precio_unitario: number | string; importe: number | string }[];
+  lineas: { concepto?: string | null; descripcion: string; cantidad: number | string; precio_unitario: number | string; importe: number | string }[];
 };
 
 const A4: [number, number] = [595.28, 841.89];
@@ -51,7 +57,6 @@ const NEGRO = rgb(0.07, 0.07, 0.07);
 const GRIS = rgb(0.4, 0.4, 0.4);
 const GRIS_CLARO = rgb(0.85, 0.85, 0.85);
 const FONDO = rgb(0.96, 0.96, 0.96);
-const VERDE = rgb(0xaa / 255, 1, 0);
 
 // ---------- Formato ----------
 
@@ -148,77 +153,64 @@ export async function crearPdfFactura(f: DatosFacturaPdf, emisor: DatosEmisor, r
     p.drawText(t, { x: o.alinear === "der" ? x - ancho : x, y, size: tam, font: fuente, color: o.color ?? NEGRO });
   };
 
-  // Línea de marca, muy fina.
-  pag.drawRectangle({ x: 0, y: altoPag - 4, width: anchoPag, height: 4, color: VERDE });
-
-  // ----- Cabecera: emisor (izquierda) y datos de la factura (derecha) -----
-  let y = altoPag - MARGEN - 8;
-  escribir(pag, emisor.nombre, MARGEN, y, { tam: 12, fuente: negrita });
-  const lineasEmisor = [
-    `NIF ${emisor.nif}`,
-    emisor.direccion,
-    [emisor.codigo_postal, emisor.ciudad, emisor.provincia && emisor.provincia !== emisor.ciudad ? `(${emisor.provincia})` : ""].filter(Boolean).join(" "),
-    emisor.pais && emisor.pais !== "España" ? emisor.pais : "",
-    [emisor.email, emisor.telefono].filter(Boolean).join(" · "),
-  ].filter(Boolean);
-  let ye = y - 15;
-  for (const l of lineasEmisor) {
-    escribir(pag, l, MARGEN, ye, { color: GRIS });
-    ye -= 12;
-  }
-
-  escribir(pag, f.estado === "cancelada" ? "FACTURA ANULADA" : "FACTURA", derecha, y + 2, { tam: f.estado === "cancelada" ? 16 : 20, fuente: negrita, alinear: "der" });
+  // ----- Cabecera de factura -----
+  escribir(pag, f.estado === "cancelada" ? "FACTURA ANULADA" : "FACTURA", MARGEN, altoPag - MARGEN - 4, { tam: 24, fuente: negrita });
   const meta: [string, string][] = [
-    ["Número", f.numero],
-    ["Fecha", fechaPdf(f.fecha_emision)],
+    ["N.º factura", f.numero],
+    ["Fecha expedición", fechaPdf(f.fecha_emision)],
+    ...(f.fecha_operacion ? ([["Devengo", fechaPdf(f.fecha_operacion)]] as [string, string][]) : []),
     ...(f.fecha_vencimiento ? ([["Vencimiento", fechaPdf(f.fecha_vencimiento)]] as [string, string][]) : []),
   ];
-  let ym = y - 20;
+  let ym = altoPag - MARGEN - 2;
   for (const [k, v] of meta) {
-    escribir(pag, k, derecha - 110, ym, { color: GRIS });
+    escribir(pag, k, derecha - 130, ym, { tam: 8, color: GRIS });
     escribir(pag, v, derecha, ym, { fuente: negrita, alinear: "der" });
     ym -= 13;
   }
-  if (f.estado === "cancelada") {
-    escribir(pag, "Esta factura ha sido anulada y no es exigible.", derecha, ym - 2, { tam: 8, color: GRIS, alinear: "der" });
-    ym -= 12;
-  }
+  const lineaCabecera = Math.min(altoPag - 100, ym - 10);
+  pag.drawLine({ start: { x: MARGEN, y: lineaCabecera }, end: { x: derecha, y: lineaCabecera }, thickness: 1, color: NEGRO });
 
-  // ----- Destinatario -----
-  y = Math.min(ye, ym) - 22;
-  pag.drawLine({ start: { x: MARGEN, y: y + 12 }, end: { x: derecha, y: y + 12 }, thickness: 0.5, color: GRIS_CLARO });
-  escribir(pag, "FACTURAR A", MARGEN, y - 4, { tam: 7.5, fuente: negrita, color: GRIS });
-  y -= 19;
-  escribir(pag, receptor.nombre, MARGEN, y, { tam: 10.5, fuente: negrita });
+  // ----- Emisor / cliente en dos columnas -----
+  let y = lineaCabecera - 18;
+  const mitad = MARGEN + anchoUtil / 2 + 12;
+  escribir(pag, "EMISOR", MARGEN, y, { tam: 7.5, fuente: negrita, color: GRIS });
+  escribir(pag, "CLIENTE", mitad, y, { tam: 7.5, fuente: negrita, color: GRIS });
+  y -= 15;
+  escribir(pag, emisor.nombre, MARGEN, y, { tam: 10.5, fuente: negrita });
+  escribir(pag, receptor.nombre, mitad, y, { tam: 10.5, fuente: negrita });
   y -= 13;
-  for (const l of [
-    receptor.nif ? `NIF/CIF ${receptor.nif}` : "",
-    receptor.direccion ?? "",
+  const emisorLineas = [`NIF ${emisor.nif}`, emisor.direccion,
+    [emisor.codigo_postal, emisor.ciudad, emisor.provincia && emisor.provincia !== emisor.ciudad ? `(${emisor.provincia})` : ""].filter(Boolean).join(" "),
+    emisor.pais && emisor.pais !== "España" ? emisor.pais : "", emisor.email, emisor.telefono].filter((l): l is string => !!l);
+  const clienteLineas = [receptor.nif ? `NIF/CIF ${receptor.nif}` : "", receptor.direccion ?? "",
     [receptor.codigo_postal, receptor.ciudad, receptor.provincia && receptor.provincia !== receptor.ciudad ? `(${receptor.provincia})` : ""].filter(Boolean).join(" "),
-    receptor.pais && receptor.pais !== "España" ? receptor.pais : "",
-    receptor.email ?? "",
-  ].filter(Boolean)) {
-    escribir(pag, l, MARGEN, y, { color: GRIS });
-    y -= 12;
-  }
+    receptor.pais && receptor.pais !== "España" ? receptor.pais : "", receptor.email ?? ""].filter((l): l is string => !!l);
+  const yColumnas = y;
+  for (const l of emisorLineas) { escribir(pag, l, MARGEN, y, { tam: 8.5, color: GRIS }); y -= 12; }
+  let yCliente = yColumnas;
+  for (const l of clienteLineas) { escribir(pag, l, mitad, yCliente, { tam: 8.5, color: GRIS }); yCliente -= 12; }
+  y = Math.min(y, yCliente) - 12;
 
   // ----- Líneas -----
-  const col = { cantidad: derecha - 190, precio: derecha - 85, importe: derecha };
+  const col = { cantidad: derecha - 205, precio: derecha - 100, importe: derecha };
   const anchoConcepto = col.cantidad - 40 - MARGEN - 8;
   const cabeceraTabla = (p: PDFPage, yy: number) => {
     p.drawRectangle({ x: MARGEN, y: yy - 6, width: anchoUtil, height: 20, color: FONDO });
-    escribir(p, "Concepto", MARGEN + 8, yy, { tam: 8, fuente: negrita, color: GRIS });
-    escribir(p, "Cant.", col.cantidad, yy, { tam: 8, fuente: negrita, color: GRIS, alinear: "der" });
-    escribir(p, "Precio", col.precio, yy, { tam: 8, fuente: negrita, color: GRIS, alinear: "der" });
-    escribir(p, "Importe", col.importe - 8, yy, { tam: 8, fuente: negrita, color: GRIS, alinear: "der" });
+    escribir(p, "CONCEPTO", MARGEN + 8, yy, { tam: 8, fuente: negrita, color: GRIS });
+    escribir(p, "CANTIDAD", col.cantidad, yy, { tam: 8, fuente: negrita, color: GRIS, alinear: "der" });
+    escribir(p, "PRECIO (€)", col.precio, yy, { tam: 8, fuente: negrita, color: GRIS, alinear: "der" });
+    escribir(p, "IMPORTE (€)", col.importe - 8, yy, { tam: 8, fuente: negrita, color: GRIS, alinear: "der" });
     return yy - 24;
   };
   y = cabeceraTabla(pag, y - 22);
 
   for (const l of f.lineas) {
-    const renglones = partir(l.descripcion, normal, 9.5, anchoConcepto);
+    const concepto = l.concepto?.trim() || l.descripcion;
+    const descripcion = l.concepto?.trim() && l.concepto.trim() !== l.descripcion.trim() ? l.descripcion : "";
+    const renglones = partir(concepto, normal, 9.5, anchoConcepto);
     // Alto de la fila: renglones + margen; el separador va por debajo de los descendentes.
-    const ultimo = (renglones.length - 1) * 12;
+    const descripciones = descripcion ? partir(descripcion, normal, 8, anchoConcepto) : [];
+    const ultimo = (renglones.length - 1) * 12 + descripciones.length * 10;
     const alto = ultimo + 21;
     if (y - alto < 170) {
       pag = pdf.addPage(A4);
@@ -226,6 +218,7 @@ export async function crearPdfFactura(f: DatosFacturaPdf, emisor: DatosEmisor, r
       y = cabeceraTabla(pag, altoPag - MARGEN - 10);
     }
     renglones.forEach((r, i) => escribir(pag, r, MARGEN + 8, y - i * 12, { tam: 9.5 }));
+    descripciones.forEach((r, i) => escribir(pag, r, MARGEN + 8, y - renglones.length * 12 - i * 10, { tam: 8, color: GRIS }));
     escribir(pag, cantidadPdf(l.cantidad), col.cantidad, y, { tam: 9.5, alinear: "der" });
     escribir(pag, importePdf(l.precio_unitario), col.precio, y, { tam: 9.5, alinear: "der" });
     escribir(pag, importePdf(l.importe), col.importe - 8, y, { tam: 9.5, alinear: "der" });
@@ -250,26 +243,38 @@ export async function crearPdfFactura(f: DatosFacturaPdf, emisor: DatosEmisor, r
   filaTotal("Base imponible", importePdf(f.base));
   filaTotal(`IVA ${porcentajePdf(f.iva_pct)}`, importePdf(f.iva));
   if (Number(f.irpf_pct) > 0 || Number(f.irpf) > 0) filaTotal(`Retención IRPF ${porcentajePdf(f.irpf_pct)}`, `-${importePdf(f.irpf)}`);
-  pag.drawLine({ start: { x: xEtiqueta, y: y + 9 }, end: { x: derecha, y: y + 9 }, thickness: 1, color: NEGRO });
-  y -= 6;
-  escribir(pag, "TOTAL", xEtiqueta, y, { tam: 11, fuente: negrita });
-  escribir(pag, importePdf(f.total), derecha - 8, y, { tam: 13, fuente: negrita, alinear: "der" });
+  y -= 7;
+  pag.drawRectangle({ x: xEtiqueta - 8, y: y - 7, width: derecha - xEtiqueta + 8, height: 34, color: NEGRO });
+  escribir(pag, "TOTAL A PAGAR", xEtiqueta, y + 5, { tam: 10, fuente: negrita, color: rgb(1, 1, 1) });
+  escribir(pag, importePdf(f.total), derecha - 8, y + 3, { tam: 14, fuente: negrita, color: rgb(1, 1, 1), alinear: "der" });
 
   // ----- Pago y texto legal (pie de la última página) -----
-  let yp = 110;
-  const pie: string[] = [];
-  // En una factura anulada no se indica forma de pago.
-  if (emisor.iban && f.estado !== "cancelada") pie.push(`Forma de pago: transferencia bancaria a ${emisor.iban.replace(/(.{4})/g, "$1 ").trim()}${f.fecha_vencimiento ? `, antes del ${fechaPdf(f.fecha_vencimiento)}` : ""}.`);
-  if (emisor.texto_legal) pie.push(emisor.texto_legal);
-  if (pie.length) {
-    pag.drawLine({ start: { x: MARGEN, y: yp + 16 }, end: { x: derecha, y: yp + 16 }, thickness: 0.5, color: GRIS_CLARO });
-    for (const bloque of pie)
-      for (const r of partir(bloque, normal, 8, anchoUtil)) {
-        if (yp < 40) break;
-        escribir(pag, r, MARGEN, yp, { tam: 8, color: GRIS });
-        yp -= 11;
-      }
+  if (f.estado !== "cancelada") {
+    pag.drawRectangle({ x: MARGEN, y: 68, width: anchoUtil, height: 52, color: FONDO });
+    pag.drawLine({ start: { x: MARGEN + 5, y: 72 }, end: { x: MARGEN + 5, y: 116 }, thickness: 2, color: NEGRO });
+    escribir(pag, "DATOS DE PAGO", MARGEN + 16, 106, { tam: 7.5, fuente: negrita, color: GRIS });
+    const datosPago = [
+      emisor.iban ? `IBAN: ${emisor.iban.replace(/(.{4})/g, "$1 ").trim()}` : "",
+      emisor.titular_iban ? `Titular: ${emisor.titular_iban}` : "",
+      `Concepto: ${f.concepto_pago || `Factura ${f.numero}`}`,
+      f.estado_cobro === "cobrada" && f.ultimo_cobro ? `Cobrada el ${fechaPdf(f.ultimo_cobro)}` : "",
+    ].filter(Boolean);
+    let yPago = 93;
+    for (const dato of datosPago) { escribir(pag, dato, MARGEN + 16, yPago, { tam: 8.5 }); yPago -= 11; }
   }
+  const textoLegal = f.estado === "cancelada"
+    ? "Factura cancelada. Este documento no es exigible."
+    : f.texto_legal?.trim() || emisor.texto_legal?.trim() || (Number(f.irpf_pct) > 0
+      ? `Operación sujeta a IVA al tipo general del ${porcentajePdf(f.iva_pct)}. Se practica retención a cuenta del IRPF del ${porcentajePdf(f.irpf_pct)}.`
+      : `Operación sujeta a IVA al tipo general del ${porcentajePdf(f.iva_pct)}. No se practica retención a cuenta del IRPF.`);
+  const renglonesLegales = partir(textoLegal, normal, 7.5, anchoUtil);
+  if (renglonesLegales.length > 4) {
+    pag = pdf.addPage(A4);
+    paginas.push(pag);
+    pag.drawLine({ start: { x: MARGEN, y: altoPag - MARGEN }, end: { x: derecha, y: altoPag - MARGEN }, thickness: 1, color: NEGRO });
+  }
+  let yp = renglonesLegales.length > 4 ? altoPag - MARGEN - 22 : 52;
+  for (const r of renglonesLegales) { escribir(pag, r, MARGEN, yp, { tam: 7.5, color: GRIS }); yp -= 10; }
 
   // Numeración de páginas.
   paginas.forEach((p, i) => {

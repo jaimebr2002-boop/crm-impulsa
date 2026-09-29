@@ -131,9 +131,10 @@ export function ProyectoForm({
             step="any"
             value={v.importe ?? ""}
             onChange={(e) => set("importe", e.target.value === "" ? null : Math.max(0, Number(e.target.value)))}
-            placeholder="0"
+            placeholder="Sin valorar"
             className="input"
           />
+          <span className="mt-1 block text-[11px] text-ink3">Déjalo vacío si no hay precio acordado; 0 € significa cero real.</span>
         </Campo>
       </div>
 

@@ -9,8 +9,8 @@ const anonKey = process.env.NEXT_PUBLIC_SB_ANON_KEY || "placeholder-anon-key";
  * Usa la clave anónima: RLS y las políticas de Storage se aplican igual que en
  * el navegador. No hay service role en la app.
  */
-export function supabaseServidor() {
-  const almacen = cookies();
+export async function supabaseServidor() {
+  const almacen = await cookies();
   return createServerClient(url, anonKey, {
     cookies: {
       getAll() {

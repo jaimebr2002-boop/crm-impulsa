@@ -273,6 +273,7 @@ export type Factura = {
   cuenta_id: string;
   estado: EstadoFactura;
   fecha_emision: string;
+  fecha_operacion: string | null;
   fecha_vencimiento: string | null;
   iva_pct: number;
   irpf_pct: number;
@@ -283,6 +284,8 @@ export type Factura = {
   moneda: string;
   enviada_en: string | null;
   notas: string | null;
+  texto_legal: string | null;
+  concepto_pago: string | null;
   pdf_path: string | null;
   pdf_huella?: string | null;
   pdf_generado_en?: string | null;
@@ -310,6 +313,7 @@ export type FacturaLinea = {
   factura_id: string;
   proyecto_id: string | null;
   descripcion: string;
+  concepto?: string | null;
   cantidad: number;
   precio_unitario: number;
   importe: number;
@@ -321,6 +325,7 @@ export type FacturaLineaConProyecto = FacturaLinea & { proyecto: Pick<Proyecto, 
 /** Línea tal como se envía a guardar_factura. */
 export type LineaBorrador = {
   proyecto_id: string | null;
+  concepto?: string;
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
@@ -441,6 +446,7 @@ export type AjustesFacturacion = {
   email: string | null;
   telefono: string | null;
   iban: string | null;
+  titular_iban: string | null;
   texto_legal: string | null;
   iva_pct_defecto: number;
   irpf_pct_defecto: number;

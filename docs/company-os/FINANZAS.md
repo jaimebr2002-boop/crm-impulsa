@@ -34,8 +34,8 @@ factura_series (contador por año)
 
 | Tabla | Claves |
 |---|---|
-| `facturas` | `numero` (único si no es nulo), `cuenta_id` (restrict), `estado` borrador/emitida/cancelada, `fecha_emision`, `fecha_vencimiento`, `iva_pct` y `irpf_pct` (numeric 5,2), `base`/`iva`/`irpf`/`total` (numeric 12,2, calculados por trigger), `moneda`, `enviada_en`, `notas`, `pdf_path` (Fase 4). |
-| `factura_lineas` | `factura_id` (cascade), `proyecto_id` opcional (set null), `descripcion`, `cantidad` > 0, `precio_unitario`, `importe` generado = round(cantidad × precio, 2), `orden`. |
+| `facturas` | `numero` (único si no es nulo), `cuenta_id` (restrict), `estado` borrador/emitida/cancelada, `fecha_emision`, `fecha_operacion` (devengo, opcional), `fecha_vencimiento`, `iva_pct` y `irpf_pct` (numeric 5,2), `base`/`iva`/`irpf`/`total` (numeric 12,2, calculados por trigger), `texto_legal`, `concepto_pago`, `moneda`, `enviada_en`, `notas`, `pdf_path` (Fase 4). |
+| `factura_lineas` | `factura_id` (cascade), `proyecto_id` opcional (set null), `concepto`, `descripcion`, `cantidad` > 0, `precio_unitario`, `importe` generado = round(cantidad × precio, 2), `orden`. |
 | `cobros` | `factura_id` (restrict), `fecha`, `importe` > 0, `metodo` (transferencia, tarjeta, efectivo, bizum, domiciliación, otro), `referencia`, `notas`. |
 | `gastos` | `concepto`, `fecha`, `importe` ≥ 0, `categoria`, `proveedor`, `cuenta_id`/`proyecto_id`/`suscripcion_id` opcionales, `deducible` (informativo), `justificante_path` (Fase 4). Único (`suscripcion_id`, `fecha`). |
 | `suscripciones` | `nombre`, `importe`, `periodicidad` mensual/trimestral/anual, `proxima_renovacion`, `categoria`, `proveedor`, `activa`. |

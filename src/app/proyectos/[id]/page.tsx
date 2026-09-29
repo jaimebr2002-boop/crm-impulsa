@@ -258,7 +258,7 @@ function FichaProyecto() {
               </div>
             </Propiedad>
             <Propiedad label="Importe">
-              <span className="font-semibold text-ink">{proyecto.importe != null ? formatEuros(proyecto.importe) : "—"}</span>
+              <span className="font-semibold text-ink">{proyecto.importe != null ? formatEuros(proyecto.importe) : <span className="text-sm font-normal text-ink3">Sin valorar</span>}</span>
               {subproyectos.some((s) => s.importe != null) ? (
                 <span className="block text-xs text-ink3">
                   Subproyectos: {formatEuros(subproyectos.reduce((t, s) => t + (Number(s.importe) || 0), 0))}

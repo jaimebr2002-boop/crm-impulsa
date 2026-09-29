@@ -142,12 +142,13 @@ El orden de Eliminar es deliberado. El fallo alternativo, una fila apuntando a u
 4. Dibuja un A4 con **pdf-lib**: es un documento real, no una captura de HTML.
    - **Contenido:**
      - emisor y receptor;
-     - número, fecha y vencimiento;
-     - líneas, con descripciones largas partidas y paginación automática;
+     - número, expedición, devengo y vencimiento cuando existan;
+     - conceptos en negro y descripciones auxiliares en gris, con paginación automática;
      - base, IVA al % guardado y retención de IRPF al % guardado (solo si es mayor que 0);
      - total;
-     - forma de pago con IBAN y texto legal al pie.
-   - **Estilo:** negro y grises, con el verde `#AAFF00` solo como una línea fina arriba. Se lee bien impreso en blanco y negro.
+     - datos de pago con IBAN, titular, concepto y fecha de cobro cuando esté totalmente cobrada;
+     - texto legal específico de la factura o adaptable al IRPF y estado.
+   - **Estilo:** FACTURA a la izquierda, metadatos a la derecha, emisor/cliente en dos columnas, tabla gris y bloque negro de total, con caja gris de pago y pie legal pequeño.
    - **Cifras:** muestra **exactamente** lo guardado en la factura, sin recalcular nada.
    - **Facturas canceladas:** «FACTURA ANULADA» y sin forma de pago.
 5. Sube el PDF a Storage y llama a `registrar_pdf_factura`, que en **una transacción** hace esto:
@@ -167,6 +168,7 @@ El orden de Eliminar es deliberado. El fallo alternativo, una fila apuntando a u
 - fechas;
 - cuenta;
 - porcentajes y totales;
+- devengo, texto legal, concepto de pago y cobros;
 - las líneas.
 
 Al generar el PDF se guarda la huella. `facturas_estado.pdf_estado` compara la huella guardada con la actual.

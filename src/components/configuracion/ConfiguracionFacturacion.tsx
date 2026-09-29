@@ -19,6 +19,7 @@ const CAMPOS_EMISOR: CampoFiscal[] = [
   { campo: "pais", label: "País", ancho: "medio" },
   { campo: "telefono", label: "Teléfono", ancho: "medio" },
   { campo: "iban", label: "IBAN (opcional, para el pago por transferencia)", placeholder: "ES00 0000 0000 0000 0000 0000", ancho: "completo" },
+  { campo: "titular_iban", label: "Titular de la cuenta", placeholder: "Nombre del titular", ancho: "completo" },
   {
     campo: "texto_legal",
     label: "Texto al pie (opcional)",
