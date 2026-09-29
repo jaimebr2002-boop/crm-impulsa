@@ -66,9 +66,14 @@ export default function ActualizarPasswordPage() {
           {!listo ? (
             <LoadingState texto="Comprobando enlace…" />
           ) : !sesionValida ? (
-            <p className="field-error">
-              Este enlace no es válido o ha caducado. Pide al administrador que te reenvíe la invitación.
-            </p>
+            <div className="space-y-3">
+              <p className="field-error">
+                Este enlace no es válido o ha caducado. Vuelve a solicitar uno desde el inicio de sesión.
+              </p>
+              <a href="/login" className="text-sm text-brand-dark underline underline-offset-4">
+                Volver al inicio de sesión
+              </a>
+            </div>
           ) : exito ? (
             <p className="text-sm font-medium text-emerald-600">Contraseña guardada. Entrando…</p>
           ) : (
