@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseServidor } from "@/lib/supabase/server";
-import { crearPdfFactura } from "@/lib/pdf/facturaPdf";
+import { crearPdfFactura, nombreArchivoFactura } from "@/lib/pdf/facturaPdf";
 import { faltanDatosEmisor, faltanDatosReceptor } from "@/lib/facturacion";
-import { BUCKET_DOCUMENTOS, nombreSeguro } from "@/lib/documentos";
+import { BUCKET_DOCUMENTOS } from "@/lib/documentos";
 import type { AjustesFacturacion, Cuenta, FacturaEstado } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -57,6 +57,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const c = factura.cuenta!;
   const a = ajustes!;
+  const nombreCliente = c.fiscal_nombre || c.nombre;
+  const nombreArchivo = nombreArchivoFactura(factura.numero, nombreCliente);
   const bytes = await crearPdfFactura(
     {
       numero: factura.numero,
@@ -91,7 +93,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       texto_legal: a.texto_legal,
     },
     {
-      nombre: c.fiscal_nombre || c.nombre,
+      nombre: nombreCliente,
       nif: c.fiscal_nif,
       direccion: c.fiscal_direccion,
       codigo_postal: c.fiscal_codigo_postal,
@@ -105,7 +107,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   // Mismo documento si ya había PDF (su id es la carpeta); si no, uno nuevo.
   const anterior = factura.pdf_path;
   const documentoId = anterior ? anterior.split("/")[0] : crypto.randomUUID();
-  const ruta = `${documentoId}/${nombreSeguro(`factura-${factura.numero}-${Date.now().toString(36)}.pdf`)}`;
+  const version = crypto.randomUUID();
+  const ruta = `${documentoId}/${version}/${nombreArchivo}`;
 
   const storage = sb.storage.from(BUCKET_DOCUMENTOS);
   const { error: e4 } = await storage.upload(ruta, bytes, { contentType: "application/pdf", upsert: false });
