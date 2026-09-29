@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [solicitandoRecuperacion, setSolicitandoRecuperacion] = useState(false);
+  const [recuperacionEnviada, setRecuperacionEnviada] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -33,6 +35,33 @@ export default function LoginPage() {
       router.refresh();
     } finally {
       setEnviando(false);
+    }
+  }
+
+  async function handleRecuperarPassword() {
+    const correo = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(correo)) {
+      setError("Escribe un email válido para enviarte el enlace de recuperación.");
+      setRecuperacionEnviada(false);
+      return;
+    }
+
+    if (solicitandoRecuperacion) return;
+    setSolicitandoRecuperacion(true);
+    setError(null);
+    setRecuperacionEnviada(false);
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(correo, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/actualizar-password`,
+      });
+      if (err) {
+        setError("No se ha podido enviar el enlace. Inténtalo de nuevo más tarde.");
+        return;
+      }
+      // Supabase devuelve éxito aunque el email no pertenezca a una cuenta.
+      setRecuperacionEnviada(true);
+    } finally {
+      setSolicitandoRecuperacion(false);
     }
   }
 
@@ -75,6 +104,23 @@ export default function LoginPage() {
               required
             />
           </label>
+
+          <div className="-mt-2 text-right">
+            <button
+              type="button"
+              onClick={handleRecuperarPassword}
+              disabled={solicitandoRecuperacion}
+              className="text-sm text-ink2 underline-offset-4 hover:text-ink hover:underline disabled:opacity-60"
+            >
+              {solicitandoRecuperacion ? "Enviando enlace…" : "¿Has olvidado tu contraseña?"}
+            </button>
+          </div>
+
+          {recuperacionEnviada ? (
+            <p className="text-sm text-emerald-600">
+              Si ese email está registrado, recibirás un enlace para crear una contraseña nueva.
+            </p>
+          ) : null}
 
           {error ? <p className="field-error">{error}</p> : null}
 

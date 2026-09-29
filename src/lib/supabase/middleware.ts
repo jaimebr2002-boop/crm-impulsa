@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const url = process.env.NEXT_PUBLIC_SB_URL || "https://placeholder.supabase.co";
 const anonKey = process.env.NEXT_PUBLIC_SB_ANON_KEY || "placeholder-anon-key";
 
-const RUTAS_PUBLICAS = ["/login", "/actualizar-password"];
+const RUTAS_PUBLICAS = ["/login", "/actualizar-password", "/auth/callback"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
