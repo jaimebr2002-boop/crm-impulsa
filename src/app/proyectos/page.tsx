@@ -256,7 +256,7 @@ function TarjetaProyecto({ p, progreso }: { p: ProyectoConRelaciones; progreso?:
         <span className="chip border-line text-ink3">{TIPO_PROYECTO_LABEL[p.tipo]}</span>
         <div className="flex items-center gap-2">
           <FechaLimite fecha={p.fecha_entrega} completada={p.estado === "entregado"} />
-          {p.importe != null ? <span className="text-xs font-semibold text-ink">{formatEuros(p.importe)}</span> : null}
+          {p.importe != null ? <span className="text-xs font-semibold text-ink">{formatEuros(p.importe)}</span> : <span className="text-[11px] text-ink3">Sin valorar</span>}
         </div>
       </div>
       {progreso && progreso.total > 0 ? (
@@ -315,7 +315,7 @@ function TablaProyectos({ proyectos, progreso }: { proyectos: ProyectoConRelacio
                   <FechaLimite fecha={p.fecha_entrega} completada={p.estado === "entregado"} />
                 </td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-ink">
-                  {p.importe != null ? formatEuros(p.importe) : <span className="text-ink3">—</span>}
+                  {p.importe != null ? formatEuros(p.importe) : <span className="text-ink3">Sin valorar</span>}
                 </td>
               </tr>
             ))}
@@ -332,7 +332,7 @@ function TablaProyectos({ proyectos, progreso }: { proyectos: ProyectoConRelacio
                 <span className="block truncate text-[15px] font-medium text-ink">{p.nombre}</span>
                 <Subtitulo p={p} />
               </span>
-              {p.importe != null ? <span className="shrink-0 text-sm font-semibold text-ink">{formatEuros(p.importe)}</span> : null}
+              {p.importe != null ? <span className="shrink-0 text-sm font-semibold text-ink">{formatEuros(p.importe)}</span> : <span className="shrink-0 text-xs text-ink3">Sin valorar</span>}
             </div>
             <div className="mt-1.5 flex items-center gap-3">
               <EstadoProyectoInsignia estado={p.estado} />

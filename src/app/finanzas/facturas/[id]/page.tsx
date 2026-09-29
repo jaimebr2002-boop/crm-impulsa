@@ -130,6 +130,7 @@ function FichaFactura() {
               </Link>
             ) : null}
             <span>· Emitida el {formatYMDCorta(factura.fecha_emision)}</span>
+            {factura.fecha_operacion ? <span>· Devengo {formatYMDCorta(factura.fecha_operacion)}</span> : null}
             <EstadoFacturaChip factura={factura} />
             {factura.enviada_en ? <span className="text-xs text-ink3">Enviada {formatFecha(factura.enviada_en)}</span> : null}
           </p>
@@ -194,7 +195,8 @@ function FichaFactura() {
               {lineas.map((l) => (
                 <li key={l.id} className="flex items-start gap-3 px-4 py-2.5 text-sm">
                   <span className="min-w-0 flex-1">
-                    <span className="block text-ink">{l.descripcion}</span>
+                    <span className="block text-ink">{l.concepto || l.descripcion}</span>
+                    {l.concepto && l.concepto !== l.descripcion ? <span className="block text-xs text-ink3">{l.descripcion}</span> : null}
                     <span className="block text-xs text-ink3">
                       {Number(l.cantidad)} × {eur(l.precio_unitario)}
                       {l.proyecto && l.proyecto.nombre !== l.descripcion ? ` · ${l.proyecto.nombre}` : ""}
@@ -218,7 +220,8 @@ function FichaFactura() {
                   {lineas.map((l) => (
                     <tr key={l.id} className="border-b border-line last:border-0">
                       <td className="px-4 py-2.5">
-                        <span className="block text-ink">{l.descripcion}</span>
+                        <span className="block text-ink">{l.concepto || l.descripcion}</span>
+                        {l.concepto && l.concepto !== l.descripcion ? <span className="block text-xs text-ink3">{l.descripcion}</span> : null}
                         {l.proyecto ? (
                           <Link href={`/proyectos/${l.proyecto.id}`} className="text-xs text-ink3 hover:text-ink hover:underline">
                             {l.proyecto.nombre === l.descripcion ? "Ver proyecto" : `Proyecto: ${l.proyecto.nombre}`}
@@ -316,13 +319,17 @@ function FichaFactura() {
               cabecera: {
                 cuenta_id: factura.cuenta_id,
                 fecha_emision: factura.fecha_emision,
+                fecha_operacion: factura.fecha_operacion,
                 fecha_vencimiento: factura.fecha_vencimiento,
                 iva_pct: Number(factura.iva_pct),
                 irpf_pct: Number(factura.irpf_pct),
                 notas: factura.notas,
+                texto_legal: factura.texto_legal,
+                concepto_pago: factura.concepto_pago,
               },
               lineas: lineas.map((l) => ({
                 proyecto_id: l.proyecto_id,
+                concepto: l.concepto ?? l.descripcion,
                 descripcion: l.descripcion,
                 cantidad: Number(l.cantidad),
                 precio_unitario: Number(l.precio_unitario),

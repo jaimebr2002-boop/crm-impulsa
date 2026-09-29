@@ -83,6 +83,9 @@ Orden estricto, en el SQL Editor de producción, **una migración cada vez**, pe
 | 4 | `0010_company_os_finance.sql` | Facturas, cobros, gastos, suscripciones | Aditiva |
 | 5 | `0011_company_os_documents.sql` | Documentos, bucket privado `documentos` y sus políticas | Aditiva |
 | 6 | `0012_hardening_funciones.sql` | Permisos de `is_admin()`, `search_path` | Aditiva |
+| 7 | `0013_factura_devengo_y_pago.sql` | Fecha de operación/devengo, texto legal y concepto de pago por factura, titular del IBAN y concepto separado en líneas; amplía la huella de PDF | Aditiva |
+
+`0013` es posterior al estado de producción verificado el 29-09-2026 (0007→0012). Antes de desplegar el código que usa sus campos, aplícala primero en staging y después en producción siguiendo backup, transacción y verificación descritos arriba.
 
 Después de **cada** paso:
 - Sin error rojo. Si 0011 muestra el aviso *"No se pudieron crear las políticas de storage.objects"*, el bucket queda cerrado (seguro) y hay que crear las 4 políticas a mano (ver DOCUMENTOS.md). En staging se crearon sin aviso.

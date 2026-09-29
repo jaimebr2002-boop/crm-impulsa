@@ -22,8 +22,9 @@ const error = (status: number, mensaje: string, extra: Record<string, unknown> =
  * metadatos) y se borra el anterior. Nunca se acumulan versiones y nunca hay
  * un registro apuntando a un archivo inexistente.
  */
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
-  const sb = supabaseServidor();
+export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const sb = await supabaseServidor();
   const {
     data: { user },
   } = await sb.auth.getUser();
@@ -32,14 +33,14 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const { data: factura, error: e1 } = await sb
     .from("facturas_estado")
     .select("*, cuenta:cuentas(*)")
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle<FacturaEstado & { cuenta: Cuenta | null }>();
   if (e1) return error(500, e1.message);
   if (!factura) return error(404, "Factura no encontrada.");
   if (factura.estado === "borrador" || !factura.numero) return error(409, "Emite la factura antes de generar el PDF.");
 
   const [{ data: lineas, error: e2 }, { data: ajustes, error: e3 }] = await Promise.all([
-    sb.from("factura_lineas").select("descripcion, cantidad, precio_unitario, importe").eq("factura_id", factura.id).order("orden").order("id"),
+    sb.from("factura_lineas").select("concepto, descripcion, cantidad, precio_unitario, importe").eq("factura_id", factura.id).order("orden").order("id"),
     sb.from("ajustes_facturacion").select("*").eq("id", true).maybeSingle<AjustesFacturacion>(),
   ]);
   if (e2 || e3) return error(500, (e2 ?? e3)!.message);
@@ -61,7 +62,12 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
       numero: factura.numero,
       estado: factura.estado === "cancelada" ? "cancelada" : "emitida",
       fecha_emision: factura.fecha_emision,
+      fecha_operacion: factura.fecha_operacion,
       fecha_vencimiento: factura.fecha_vencimiento,
+      ultimo_cobro: factura.ultimo_cobro,
+      estado_cobro: factura.estado_cobro,
+      texto_legal: factura.texto_legal,
+      concepto_pago: factura.concepto_pago,
       iva_pct: factura.iva_pct,
       irpf_pct: factura.irpf_pct,
       base: factura.base,
@@ -81,6 +87,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
       email: a.email,
       telefono: a.telefono,
       iban: a.iban,
+      titular_iban: a.titular_iban,
       texto_legal: a.texto_legal,
     },
     {

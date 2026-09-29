@@ -45,14 +45,17 @@ export function FacturaForm({
   const [facturacion, setFacturacion] = useState<Record<string, ProyectoFacturacion>>({});
   const [cuentaId, setCuentaId] = useState(existente?.cabecera.cuenta_id ?? cuentaInicial ?? "");
   const [emision, setEmision] = useState(existente?.cabecera.fecha_emision ?? hoyYMD());
+  const [operacion, setOperacion] = useState(existente?.cabecera.fecha_operacion ?? "");
   const [vencimiento, setVencimiento] = useState<string>(existente ? existente.cabecera.fecha_vencimiento ?? "" : vencimientoPorDefecto());
   const [ivaPct, setIvaPct] = useState(existente?.cabecera.iva_pct ?? 21);
   const [irpfPct, setIrpfPct] = useState(existente?.cabecera.irpf_pct ?? 7);
   const [notas, setNotas] = useState(existente?.cabecera.notas ?? "");
+  const [textoLegal, setTextoLegal] = useState(existente?.cabecera.texto_legal ?? "");
+  const [conceptoPago, setConceptoPago] = useState(existente?.cabecera.concepto_pago ?? "");
   const [numeroManual, setNumeroManual] = useState(false);
   const [numero, setNumero] = useState("");
   const [lineas, setLineas] = useState<LineaForm[]>(
-    existente ? existente.lineas.map((l) => ({ ...l, clave: nuevaClave() })) : []
+    existente ? existente.lineas.map((l) => ({ ...l, concepto: l.concepto ?? l.descripcion, clave: nuevaClave() })) : []
   );
   const [precargados, setPrecargados] = useState(false);
   const [enviando, setEnviando] = useState<"borrador" | "emitida" | null>(null);
@@ -117,6 +120,7 @@ export function FacturaForm({
     return {
       clave: nuevaClave(),
       proyecto_id: p.id,
+      concepto: contextoDeProyecto(p),
       descripcion: contextoDeProyecto(p),
       cantidad: 1,
       precio_unitario: porFacturar(p) ?? 0,
@@ -137,7 +141,7 @@ export function FacturaForm({
   async function guardar(estado: "borrador" | "emitida") {
     setError(null);
     if (!cuentaId) return setError("Elige la cuenta a la que facturas.");
-    const validas = lineas.filter((l) => l.descripcion.trim());
+    const validas = lineas.filter((l) => (l.concepto ?? l.descripcion).trim());
     if (validas.length === 0) return setError("Añade al menos una línea con descripción.");
     if (validas.some((l) => !(Number(l.cantidad) > 0))) return setError("La cantidad de cada línea debe ser mayor que 0.");
     if (vencimiento && vencimiento < emision) return setError("El vencimiento no puede ser anterior a la emisión.");
@@ -148,16 +152,20 @@ export function FacturaForm({
         {
           cuenta_id: cuentaId,
           fecha_emision: emision,
+          fecha_operacion: operacion || null,
           fecha_vencimiento: vencimiento || null,
           iva_pct: Number(ivaPct) || 0,
           irpf_pct: Number(irpfPct) || 0,
           notas: notas.trim() || null,
+          texto_legal: textoLegal.trim() || null,
+          concepto_pago: conceptoPago.trim() || null,
           numero: numeroManual ? numero.trim() || null : null,
           estado,
         },
-        validas.map(({ proyecto_id, descripcion, cantidad, precio_unitario }) => ({
+        validas.map(({ proyecto_id, concepto, descripcion, cantidad, precio_unitario }) => ({
           proyecto_id,
-          descripcion: descripcion.trim(),
+          concepto: (concepto ?? descripcion).trim(),
+          descripcion: descripcion.trim() || (concepto ?? "").trim(),
           cantidad: Number(cantidad),
           precio_unitario: Number(precio_unitario) || 0,
         }))
@@ -195,6 +203,10 @@ export function FacturaForm({
               </option>
             ))}
           </select>
+        </label>
+        <label className="block">
+          <span className="field-label">Fecha de operación / devengo (opcional)</span>
+          <input type="date" value={operacion} onChange={(e) => setOperacion(e.target.value)} className="input" />
         </label>
         <label className="block">
           <span className="field-label">Emisión</span>
@@ -247,11 +259,18 @@ export function FacturaForm({
             >
               <div className="min-w-0">
                 <input
+                  value={l.concepto ?? ""}
+                  onChange={(e) => cambiarLinea(l.clave, { concepto: e.target.value })}
+                  placeholder="Concepto"
+                  aria-label="Concepto"
+                  className="w-full rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-ink hover:border-line focus:border-brand focus:outline-none"
+                />
+                <input
                   value={l.descripcion}
                   onChange={(e) => cambiarLinea(l.clave, { descripcion: e.target.value })}
-                  placeholder="Descripción"
+                  placeholder="Descripción (opcional)"
                   aria-label="Descripción"
-                  className="w-full rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-ink hover:border-line focus:border-brand focus:outline-none"
+                  className="w-full rounded-md border border-transparent bg-transparent px-1.5 py-1 text-xs text-ink3 hover:border-line focus:border-brand focus:outline-none"
                 />
                 {l.proyecto_id ? <span className="block px-1.5 text-[11px] text-ink3">Proyecto enlazado</span> : null}
               </div>
@@ -314,7 +333,7 @@ export function FacturaForm({
           </select>
           <button
             type="button"
-            onClick={() => setLineas((prev) => [...prev, { clave: nuevaClave(), proyecto_id: null, descripcion: "", cantidad: 1, precio_unitario: 0 }])}
+            onClick={() => setLineas((prev) => [...prev, { clave: nuevaClave(), proyecto_id: null, concepto: "", descripcion: "", cantidad: 1, precio_unitario: 0 }])}
             className="btn-ghost py-1 text-sm"
           >
             <IconMas className="h-3.5 w-3.5" />
@@ -351,6 +370,19 @@ export function FacturaForm({
             rows={2}
             placeholder="Notas internas (opcional)"
             className="input resize-y text-sm"
+          />
+          <textarea
+            value={textoLegal}
+            onChange={(e) => setTextoLegal(e.target.value)}
+            rows={2}
+            placeholder="Texto legal específico de esta factura (opcional)"
+            className="input resize-y text-sm"
+          />
+          <input
+            value={conceptoPago}
+            onChange={(e) => setConceptoPago(e.target.value)}
+            placeholder="Concepto para la transferencia (opcional)"
+            className="input text-sm"
           />
         </div>
         <dl className="grid min-w-[240px] grid-cols-[1fr_auto] gap-x-6 gap-y-1.5 text-sm">

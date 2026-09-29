@@ -52,7 +52,7 @@ export function FacturacionProyecto({ proyecto }: { proyecto: ProyectoConRelacio
       ) : (
         <>
           <dl className="grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-1.5">
-            <Fila label="Valor" valor={proyecto.importe != null ? eur(proyecto.importe) : "—"} />
+            <Fila label="Valor" valor={proyecto.importe != null ? eur(proyecto.importe) : "Sin valorar"} />
             <Fila label="Facturado" valor={eur(facturado)} />
             <Fila label="Cobrado" valor={eur(fact?.cobrado ?? 0)} />
             {r.enBorrador > 0 ? <Fila label="En borrador" valor={eur(r.enBorrador)} /> : null}

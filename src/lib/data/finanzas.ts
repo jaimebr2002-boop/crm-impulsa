@@ -55,10 +55,13 @@ export async function obtenerFactura(id: string): Promise<{
 export type CabeceraFactura = {
   cuenta_id: string;
   fecha_emision: string;
+  fecha_operacion: string | null;
   fecha_vencimiento: string | null;
   iva_pct: number;
   irpf_pct: number;
   notas: string | null;
+  texto_legal: string | null;
+  concepto_pago: string | null;
   numero: string | null;
   estado: "borrador" | "emitida";
 };
