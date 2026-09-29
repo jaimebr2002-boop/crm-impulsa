@@ -55,6 +55,10 @@ export default function LoginPage() {
         redirectTo: `${window.location.origin}/auth/callback?next=/actualizar-password`,
       });
       if (err) {
+        if (/rate limit|too many requests|only request this after|over_email_send_rate_limit/i.test(err.message)) {
+          setError("Has pedido varios enlaces seguidos. Revisa tu correo y usa el enlace más reciente; espera un minuto antes de solicitar otro.");
+          return;
+        }
         setError("No se ha podido enviar el enlace. Inténtalo de nuevo más tarde.");
         return;
       }
