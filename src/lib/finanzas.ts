@@ -10,6 +10,8 @@
 //                           actual: no depende del periodo.
 // Caja neta (aprox.) = cobrado − gastos del periodo. No es beneficio fiscal:
 // incluye IVA y no descuenta impuestos.
+// Resultado aprox. = base facturada − importes de gastos registrados. Gastos
+// todavía no separa el IVA soportado deducible, así que no es un resultado fiscal.
 //
 // Todo se suma en CÉNTIMOS ENTEROS para no arrastrar errores de coma flotante.
 // La base de datos es la fuente de verdad de los totales de factura; aquí solo
@@ -174,6 +176,7 @@ export type KpisFinancieros = {
   cobrado: number;
   gastos: number;
   cajaNeta: number;
+  resultadoAprox: number;
   /** Foto actual (no depende del periodo). */
   pendiente: number;
   vencido: number;
@@ -191,16 +194,18 @@ export function calcularKpis(
   const conPendiente = emitidas.filter((f) => aCentimos(f.pendiente) > 0);
   const vencidas = conPendiente.filter((f) => f.vencida);
   const facturado = sumarImportes(delPeriodo, (f) => f.total);
+  const facturadoBase = sumarImportes(delPeriodo, (f) => f.base);
   const cobrado = sumarImportes(datos.cobros.filter((c) => enRango(c.fecha, desde, hasta)), (c) => c.importe);
   const gastos = sumarImportes(datos.gastos.filter((g) => enRango(g.fecha, desde, hasta)), (g) => g.importe);
   return {
     facturado,
-    facturadoBase: sumarImportes(delPeriodo, (f) => f.base),
+    facturadoBase,
     numFacturas: delPeriodo.length,
     ticketMedio: delPeriodo.length ? deCentimos(Math.round(aCentimos(facturado) / delPeriodo.length)) : 0,
     cobrado,
     gastos,
     cajaNeta: deCentimos(aCentimos(cobrado) - aCentimos(gastos)),
+    resultadoAprox: deCentimos(aCentimos(facturadoBase) - aCentimos(gastos)),
     pendiente: sumarImportes(conPendiente, (f) => f.pendiente),
     vencido: sumarImportes(vencidas, (f) => f.pendiente),
     numPendientes: conPendiente.length,

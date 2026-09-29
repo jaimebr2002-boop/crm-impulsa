@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { listarCobros, listarFacturas, listarGastos, listarSuscripciones } from "@/lib/data/finanzas";
 import { aYMD, diasHasta, formatYMDCorta, formatYMDRelativa, hoyYMD, sumarDiasYMD, ymdADate } from "@/lib/dates";
@@ -54,6 +54,7 @@ function Resumen() {
   const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const solicitudCarga = useRef(0);
 
   // La gráfica muestra los 12 meses que terminan con el periodo elegido.
   const finSerie = useMemo(() => ymdADate(sumarDiasYMD(periodo.hasta, -1)), [periodo]);
@@ -63,7 +64,9 @@ function Resumen() {
   }, [finSerie, periodo]);
 
   const cargar = useCallback(async () => {
+    const solicitud = ++solicitudCarga.current;
     setError(null);
+    setCargando(true);
     try {
       const [f, c, g, s] = await Promise.all([
         listarFacturas(),
@@ -71,19 +74,30 @@ function Resumen() {
         listarGastos({ desde: desdeCarga, hasta: periodo.hasta }),
         listarSuscripciones(),
       ]);
+      // Si cambió el periodo o se volvió a enfocar la pestaña, una respuesta
+      // anterior más lenta no debe sobrescribir los datos de la carga reciente.
+      if (solicitud !== solicitudCarga.current) return;
       setFacturas(f);
       setCobros(c);
       setGastos(g);
       setSuscripciones(s);
     } catch (e) {
+      if (solicitud !== solicitudCarga.current) return;
       setError(e instanceof Error ? e.message : "No se han podido cargar las finanzas.");
     } finally {
-      setCargando(false);
+      if (solicitud === solicitudCarga.current) setCargando(false);
     }
   }, [desdeCarga, periodo.hasta]);
 
   useEffect(() => {
     cargar();
+    const alVolverVisible = () => {
+      if (document.visibilityState === "visible") cargar();
+    };
+    document.addEventListener("visibilitychange", alVolverVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", alVolverVisible);
+    };
   }, [cargar, versionDatos]);
 
   const datos = { facturas, cobros, gastos };
@@ -163,17 +177,24 @@ function Resumen() {
       {!cargando && !error ? (
         <div className="flex flex-col gap-6">
           <FilaKpis
+            columnas="md:grid-cols-3 xl:grid-cols-4"
             kpis={[
               {
                 etiqueta: "Facturado",
                 valor: eur(k.facturado),
-                nota: k.numFacturas ? `${eur(k.facturadoBase)} base · ${k.numFacturas} fact.` : "Sin facturas emitidas",
+                nota: k.numFacturas ? `${k.numFacturas} facturas emitidas en el periodo` : "Sin facturas emitidas",
+                href: "/finanzas/facturas",
+              },
+              {
+                etiqueta: "Base facturada · ingresos sin IVA",
+                valor: eur(k.facturadoBase),
+                nota: "Base imponible de facturas emitidas",
                 href: "/finanzas/facturas",
               },
               {
                 etiqueta: "Cobrado",
                 valor: eur(k.cobrado),
-                nota: "Recibido en el periodo",
+                nota: "Por fecha de cobro; puede incluir facturas de otros meses",
               },
               {
                 etiqueta: "Pendiente de cobro",
@@ -191,14 +212,19 @@ function Resumen() {
                 href: "/finanzas/gastos",
               },
               {
+                etiqueta: "Resultado aprox. sin IVA",
+                valor: <span className={k.resultadoAprox < 0 ? "text-red-600 dark:text-red-400" : ""}>{eur(k.resultadoAprox)}</span>,
+                nota: "Base facturada − gastos registrados; IVA deducible no desglosado",
+              },
+              {
                 etiqueta: "Caja neta (aprox.)",
                 valor: <span className={k.cajaNeta < 0 ? "text-red-600 dark:text-red-400" : ""}>{eur(k.cajaNeta)}</span>,
-                nota: "Cobrado − gastos",
+                nota: "Cobros − gastos del periodo",
               },
               {
                 etiqueta: "Ticket medio",
                 valor: k.numFacturas ? eur(k.ticketMedio) : "—",
-                nota: "Por factura emitida",
+                nota: "Total facturado ÷ facturas emitidas",
               },
             ]}
           />
@@ -317,9 +343,10 @@ function Resumen() {
           </Panel>
 
           <p className="text-xs leading-relaxed text-ink3">
-            Facturado: total de las facturas emitidas en el periodo (IVA incluido, IRPF descontado). Cobrado: cobros con fecha en el
-            periodo. Pendiente: lo que falta por cobrar hoy de todas las facturas emitidas. Caja neta (aprox.) = cobrado − gastos del
-            periodo; es un indicador de caja, no el beneficio fiscal.
+            Facturado suma el total de facturas emitidas en el periodo; la base facturada excluye IVA e IRPF. Cobrado suma movimientos
+            según su fecha real de cobro, aunque la factura se emitiera en otro mes. Resultado aprox. sin IVA = base facturada menos
+            gastos registrados; el IVA deducible de gastos aún no se desglosa. Caja neta (aprox.) = cobros − gastos del periodo y no
+            representa el beneficio fiscal.
           </p>
         </div>
       ) : null}
