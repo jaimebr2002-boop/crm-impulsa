@@ -1,20 +1,24 @@
 "use client";
 
 import { VentasNav } from "@/components/VentasNav";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useUsuario } from "@/context/UsuarioContext";
 import {
   actualizarLead,
   actualizarLeads,
   eliminarLeads,
+  LEADS_POR_PAGINA,
   listarLeads,
+  listarLeadsPagina,
+  listarLeadsTablero,
   obtenerProximosSeguimientos,
+  valorTotalLeads,
   type FiltrosLeads,
 } from "@/lib/data/leads";
 import { listarUsuarios } from "@/lib/data/usuarios";
 import type { Lead, LeadUpdate, Usuario } from "@/lib/types";
-import { ESTADOS, ESTADO_LABEL, formatEuros, sumarValor } from "@/lib/constants";
+import { ESTADOS, ESTADO_LABEL, formatEuros } from "@/lib/constants";
 import { descargarCsv, leadsACsv } from "@/lib/exportar";
 import { TablaLeads } from "@/components/ventas/TablaLeads";
 import { useApp } from "@/context/AppContext";
@@ -30,7 +34,6 @@ import { IconMas } from "@/components/Icons";
 
 type Vista = "lista" | "tablero";
 
-const POR_PAGINA = 50;
 const CLAVE_VISTA = "impulsa-leads-vista";
 
 export default function LeadsPage() {
@@ -45,7 +48,11 @@ export default function LeadsPage() {
   const [filtroAsignado, setFiltroAsignado] = useState("todos");
   const [verArchivados, setVerArchivados] = useState(false);
   const [vista, setVista] = useState<Vista>("lista");
-  const [visibles, setVisibles] = useState(POR_PAGINA);
+  const [total, setTotal] = useState(0);
+  const [totalesTablero, setTotalesTablero] = useState<Record<string, number>>({});
+  const [valorTotal, setValorTotal] = useState(0);
+  const [cargandoMas, setCargandoMas] = useState(false);
+  const paginaCargada = useRef(0);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,17 +97,26 @@ export default function LeadsPage() {
     };
   }, [filtros, busquedaAplicada, verArchivados, usuarioActual, esAdmin, filtroAsignado]);
 
+  // Lista: solo la primera página; el resto se pide al pulsar «Mostrar más».
+  // Tablero: unos pocos leads recientes por columna con el total real de cada una.
   useEffect(() => {
     if (cargandoUsuario || !usuarioActual) return;
     let activo = true;
     setCargando(true);
     setError(null);
-    setVisibles(POR_PAGINA);
     setSeleccion(new Set());
-    Promise.all([listarLeads(filtrosEfectivos), obtenerProximosSeguimientos().catch(() => ({}))])
-      .then(([data, mapa]) => {
+    paginaCargada.current = 0;
+    const pedir =
+      vista === "tablero"
+        ? listarLeadsTablero(filtrosEfectivos, ESTADOS).then(({ leads: l, totales }) => ({ l, total: Object.values(totales).reduce((a, b) => a + b, 0), totales }))
+        : listarLeadsPagina(filtrosEfectivos, 0).then(({ leads: l, total: t }) => ({ l, total: t, totales: {} as Record<string, number> }));
+    pedir
+      .then(async ({ l, total: t, totales }) => {
+        const mapa = await obtenerProximosSeguimientos(l.map((x) => x.id)).catch(() => ({}));
         if (!activo) return;
-        setLeads(data);
+        setLeads(l);
+        setTotal(t);
+        setTotalesTablero(totales);
         setProximos(mapa);
       })
       .catch((e) => activo && setError(e.message ?? "No se han podido cargar los leads."))
@@ -108,15 +124,45 @@ export default function LeadsPage() {
     return () => {
       activo = false;
     };
+  }, [filtrosEfectivos, cargandoUsuario, usuarioActual, vista]);
+
+  // El importe en juego se calcula aparte: no bloquea la lista.
+  useEffect(() => {
+    if (cargandoUsuario || !usuarioActual) return;
+    let activo = true;
+    valorTotalLeads(filtrosEfectivos)
+      .then((v) => activo && setValorTotal(v))
+      .catch(() => activo && setValorTotal(0));
+    return () => {
+      activo = false;
+    };
   }, [filtrosEfectivos, cargandoUsuario, usuarioActual]);
+
+  async function mostrarMas() {
+    if (cargandoMas) return;
+    setCargandoMas(true);
+    try {
+      const { leads: nuevos, total: t } = await listarLeadsPagina(filtrosEfectivos, paginaCargada.current + 1);
+      const mapa = await obtenerProximosSeguimientos(nuevos.map((x) => x.id)).catch(() => ({}));
+      setLeads((prev) => {
+        const ids = new Set(prev.map((x) => x.id));
+        return [...prev, ...nuevos.filter((x) => !ids.has(x.id))];
+      });
+      paginaCargada.current += 1;
+      setTotal(t);
+      setProximos((prev) => ({ ...prev, ...mapa }));
+    } catch (e) {
+      avisar(e instanceof Error ? e.message : "No se han podido cargar más leads.", { tono: "error" });
+    } finally {
+      setCargandoMas(false);
+    }
+  }
 
   const usuariosPorId = useMemo(() => {
     const m: Record<string, Usuario> = {};
     for (const u of usuarios) m[u.id] = u;
     return m;
   }, [usuarios]);
-
-  const valorTotal = useMemo(() => sumarValor(leads), [leads]);
 
   // --- Tablero: mover de estado con actualización optimista ---
   async function moverLead(leadId: string, nuevoEstado: string) {
@@ -162,7 +208,9 @@ export default function LeadsPage() {
         l.archivado === verArchivados &&
         (!filtros.estado || l.estado === filtros.estado) &&
         (!esAdmin || filtroAsignado === "todos" || l.asignado_a === filtroAsignado);
-      setLeads((prev) => prev.map((l) => porId.get(l.id) ?? l).filter(sigueVisible));
+      const restantes = leads.map((l) => porId.get(l.id) ?? l).filter(sigueVisible);
+      setTotal((t) => Math.max(0, t - (leads.length - restantes.length)));
+      setLeads(restantes);
       const omitidos = ids.length - actualizados.length;
       avisar(
         `${actualizados.length} lead${actualizados.length === 1 ? "" : "s"} ${descripcion}` +
@@ -182,6 +230,7 @@ export default function LeadsPage() {
     try {
       const borrados = await eliminarLeads(ids);
       setLeads((prev) => prev.filter((l) => !seleccion.has(l.id)));
+      setTotal((t) => Math.max(0, t - borrados));
       avisar(`${borrados} lead${borrados === 1 ? "" : "s"} eliminado${borrados === 1 ? "" : "s"}`);
       salirSeleccion();
     } catch (e) {
@@ -192,8 +241,19 @@ export default function LeadsPage() {
     }
   }
 
-  function exportar() {
-    const aExportar = seleccion.size > 0 ? leads.filter((l) => seleccion.has(l.id)) : leads;
+  async function exportar() {
+    let aExportar: Lead[];
+    if (seleccion.size > 0) aExportar = leads.filter((l) => seleccion.has(l.id));
+    else if (leads.length >= total) aExportar = leads;
+    else {
+      // Hay más leads de los cargados: se piden todos los que cumplen los filtros.
+      try {
+        aExportar = await listarLeads(filtrosEfectivos);
+      } catch (e) {
+        avisar(e instanceof Error ? e.message : "No se ha podido exportar.", { tono: "error" });
+        return;
+      }
+    }
     const fecha = new Date().toISOString().slice(0, 10);
     descargarCsv(`leads-impulsa-${fecha}.csv`, leadsACsv(aExportar, usuariosPorId));
   }
@@ -259,7 +319,7 @@ export default function LeadsPage() {
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <p className="text-ink2">
-          {cargando ? <span className="skeleton inline-block h-4 w-24 align-middle" /> : `${leads.length} lead${leads.length === 1 ? "" : "s"}`}
+          {cargando ? <span className="skeleton inline-block h-4 w-24 align-middle" /> : `${total.toLocaleString("es-ES")} lead${total === 1 ? "" : "s"}`}
           {!cargando && valorTotal > 0 ? <span className="text-ink3"> · {formatEuros(valorTotal)} en juego</span> : null}
         </p>
         {menuAcciones}
@@ -289,22 +349,22 @@ export default function LeadsPage() {
       ) : null}
 
       {!cargando && !error && leads.length > 0 && vista === "tablero" ? (
-        <LeadBoard leads={leads} usuariosPorId={usuariosPorId} proximos={proximos} onMover={moverLead} />
+        <LeadBoard leads={leads} totales={totalesTablero} usuariosPorId={usuariosPorId} proximos={proximos} onMover={moverLead} />
       ) : null}
 
       {!cargando && !error && vista === "lista" && leads.length > 0 ? (
         <div className={modoSeleccion ? "pb-40" : "pb-8"}>
           <TablaLeads
-            leads={leads.slice(0, visibles)}
+            leads={leads}
             usuariosPorId={usuariosPorId}
             proximos={proximos}
             seleccionable={modoSeleccion}
             seleccion={seleccion}
             onToggle={toggleSeleccion}
           />
-          {leads.length > visibles ? (
-            <button onClick={() => setVisibles((v) => v + POR_PAGINA)} className="btn-secondary mt-3 w-full">
-              Mostrar {Math.min(POR_PAGINA, leads.length - visibles)} más ({leads.length - visibles} restantes)
+          {total > leads.length ? (
+            <button onClick={mostrarMas} disabled={cargandoMas} className="btn-secondary mt-3 w-full">
+              {cargandoMas ? "Cargando…" : `Mostrar ${Math.min(LEADS_POR_PAGINA, total - leads.length)} más (${(total - leads.length).toLocaleString("es-ES")} restantes)`}
             </button>
           ) : null}
         </div>
@@ -314,7 +374,7 @@ export default function LeadsPage() {
         <div className="glass-strong fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-30 mx-auto flex max-w-3xl flex-wrap items-center gap-2 rounded-xl p-2.5 shadow-lg md:bottom-6">
           <span className="px-1 text-sm font-medium text-ink">{seleccion.size} seleccionado{seleccion.size === 1 ? "" : "s"}</span>
           <button onClick={() => setSeleccion(todosSeleccionados ? new Set() : new Set(leads.map((l) => l.id)))} className="btn-ghost px-2 text-xs">
-            {todosSeleccionados ? "Quitar todos" : `Todos (${leads.length})`}
+            {todosSeleccionados ? "Quitar todos" : `Cargados (${leads.length})`}
           </button>
           <span className="flex flex-1 flex-wrap justify-end gap-2">
             <select

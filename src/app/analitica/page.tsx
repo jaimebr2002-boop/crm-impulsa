@@ -4,17 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
 import { listarUsuarios } from "@/lib/data/usuarios";
 import {
-  agruparPorDia,
   contarPor,
   llamadaContestada,
   obtenerEventosPeriodo,
   obtenerInteraccionesPeriodo,
-  obtenerLeadsActuales,
-  obtenerLeadsPeriodo,
+  obtenerResumenLeadsPeriodo,
+  obtenerResumenPipeline,
+  serieDesdeGrupos,
+  sumarGrupos,
   type EventoAnalitica,
+  type GrupoLeads,
+  type ResumenEstado,
 } from "@/lib/data/analitica";
-import type { Interaccion, Lead, Usuario } from "@/lib/types";
-import { CANAL_LABEL, ESTADO_LABEL, ESTADOS_ABIERTOS, ORIGEN_LABEL, formatEuros, sumarValor } from "@/lib/constants";
+import type { Interaccion, Usuario } from "@/lib/types";
+import { CANAL_LABEL, ESTADO_LABEL, ESTADOS_ABIERTOS, ORIGEN_LABEL, formatEuros } from "@/lib/constants";
 import { PeriodSelector, calcularPeriodo, type Periodo } from "@/components/analitica/PeriodSelector";
 import { BarChart } from "@/components/analitica/BarChart";
 import { FunnelChart } from "@/components/analitica/FunnelChart";
@@ -45,9 +48,9 @@ export default function AnaliticaPage() {
   const [filtroUsuarioId, setFiltroUsuarioId] = useState("todos");
   const [periodo, setPeriodo] = useState<Periodo>(() => calcularPeriodo("30 días"));
 
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [leadsAnterior, setLeadsAnterior] = useState<Lead[]>([]);
-  const [leadsActuales, setLeadsActuales] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<GrupoLeads[]>([]);
+  const [leadsAnterior, setLeadsAnterior] = useState<GrupoLeads[]>([]);
+  const [pipeline, setPipeline] = useState<ResumenEstado[]>([]);
   const [interacciones, setInteracciones] = useState<Interaccion[]>([]);
   const [interaccionesAnterior, setInteraccionesAnterior] = useState<Interaccion[]>([]);
   const [eventos, setEventos] = useState<EventoAnalitica[]>([]);
@@ -79,9 +82,9 @@ export default function AnaliticaPage() {
       const filtroAnterior = { desdeIso: desdeAnterior.toISOString(), hastaIso: hastaAnterior.toISOString(), usuarioId: usuarioIdParaFiltro };
 
       const [l, lAnt, lActuales, i, iAnt, e, eAnt] = await Promise.all([
-        obtenerLeadsPeriodo(filtroActual),
-        obtenerLeadsPeriodo(filtroAnterior),
-        obtenerLeadsActuales(usuarioIdParaFiltro),
+        obtenerResumenLeadsPeriodo(filtroActual),
+        obtenerResumenLeadsPeriodo(filtroAnterior),
+        obtenerResumenPipeline(usuarioIdParaFiltro),
         obtenerInteraccionesPeriodo(filtroActual),
         obtenerInteraccionesPeriodo(filtroAnterior),
         obtenerEventosPeriodo(filtroActual),
@@ -90,7 +93,7 @@ export default function AnaliticaPage() {
 
       setLeads(l);
       setLeadsAnterior(lAnt);
-      setLeadsActuales(lActuales);
+      setPipeline(lActuales);
       setInteracciones(i);
       setInteraccionesAnterior(iAnt);
       setEventos(e);
@@ -118,24 +121,28 @@ export default function AnaliticaPage() {
   const seguimientosCompletados = eventos.filter((e) => e.completada);
   const seguimientosCompletadosAnterior = eventosAnterior.filter((e) => e.completada);
 
-  const cerrados = leads.filter((l) => l.estado === "cerrado");
-  const cerradosAnterior = leadsAnterior.filter((l) => l.estado === "cerrado");
+  const totalLeads = sumarGrupos(leads);
+  const totalLeadsAnterior = sumarGrupos(leadsAnterior);
+  const esCerrado = (g: { estado: string }) => g.estado === "cerrado";
+  const nCerrados = sumarGrupos(leads, (g) => g.n, esCerrado);
+  const nCerradosAnterior = sumarGrupos(leadsAnterior, (g) => g.n, esCerrado);
+  const facturado = sumarGrupos(leads, (g) => g.valor, esCerrado);
+  const facturadoAnterior = sumarGrupos(leadsAnterior, (g) => g.valor, esCerrado);
+  const cerradosConValor = sumarGrupos(leads, (g) => g.conValor, esCerrado);
+  const esAbierto = (g: { estado: string }) => ESTADOS_ABIERTOS.has(g.estado);
+  const nAbiertos = sumarGrupos(pipeline, (g) => g.n, esAbierto);
+  const valorPipeline = sumarGrupos(pipeline, (g) => g.valor, esAbierto);
+  const abiertosSinValor = sumarGrupos(pipeline, (g) => g.sinValor, esAbierto);
+  const totalPipeline = sumarGrupos(pipeline);
 
-  const facturado = sumarValor(cerrados);
-  const facturadoAnterior = sumarValor(cerradosAnterior);
-  const cerradosConValor = cerrados.filter((l) => l.valor != null).length;
-  const abiertos = leadsActuales.filter((l) => ESTADOS_ABIERTOS.has(l.estado));
-  const valorPipeline = sumarValor(abiertos);
-  const abiertosSinValor = abiertos.filter((l) => l.valor == null).length;
-
-  const serieDatos = agruparPorDia(leads, (l) => l.created_at, periodo.desde, periodo.hasta);
+  const serieDatos = serieDesdeGrupos(leads, periodo.desde, periodo.hasta);
 
   const funnelData = ETAPAS_FUNNEL.map((estado) => ({
     clave: estado,
     etiqueta: ESTADO_LABEL[estado] ?? estado,
-    valor: leadsActuales.filter((l) => l.estado === estado).length,
+    valor: sumarGrupos(pipeline, (g) => g.n, (g) => g.estado === estado),
   }));
-  const perdidos = leadsActuales.filter((l) => l.estado === "descartado" || l.estado === "no contesta").length;
+  const perdidos = sumarGrupos(pipeline, (g) => g.n, (g) => g.estado === "descartado" || g.estado === "no contesta");
 
   const porCanal = contarPor(interacciones, (i) => i.canal);
   const datosCanal = Object.keys(CANAL_LABEL)
@@ -147,19 +154,25 @@ export default function AnaliticaPage() {
     .map((u) => ({
       usuarioId: u.id,
       nombre: u.nombre,
-      leads: leads.filter((l) => l.asignado_a === u.id).length,
+      leads: sumarGrupos(leads, (g) => g.n, (g) => g.asignado_a === u.id),
       interacciones: interacciones.filter((i) => i.usuario_id === u.id).length,
       llamadasContestadas: contestadas.filter((i) => i.usuario_id === u.id).length,
       seguimientosCompletados: seguimientosCompletados.filter((e) => e.usuario_id === u.id).length,
-      cerrados: cerrados.filter((l) => l.asignado_a === u.id).length,
+      cerrados: sumarGrupos(leads, (g) => g.n, (g) => esCerrado(g) && g.asignado_a === u.id),
     }))
     .sort((a, b) => b.cerrados - a.cerrados || b.interacciones - a.interacciones);
 
   const pct = (v: number | null) => (v === null ? "nuevo" : `${v >= 0 ? "+" : "−"}${Math.abs(Math.round(v))} %`);
   const vs = (actual: number, anterior: number) => `${pct(variacionPct(actual, anterior))} vs. periodo anterior`;
-  const conversion = leads.length > 0 ? Math.round((cerrados.length / leads.length) * 100) : 0;
+  const conversion = totalLeads > 0 ? Math.round((nCerrados / totalLeads) * 100) : 0;
 
-  const origenes = Object.entries(contarPor(leads, (l) => l.origen ?? "sin_origen"))
+  const origenes = Object.entries(
+    leads.reduce<Record<string, number>>((acc, g) => {
+      const clave = g.origen ?? "sin_origen";
+      acc[clave] = (acc[clave] ?? 0) + g.n;
+      return acc;
+    }, {})
+  )
     .sort((a, b) => b[1] - a[1])
     .map(([o, n]) => ({ clave: o, etiqueta: o === "sin_origen" ? "Sin origen" : ORIGEN_LABEL[o] ?? o, importe: n }));
 
@@ -201,11 +214,11 @@ export default function AnaliticaPage() {
             <div className="flex flex-col gap-4">
               <FilaKpis
                 kpis={[
-                  { etiqueta: "Leads nuevos", valor: leads.length, nota: vs(leads.length, leadsAnterior.length) },
+                  { etiqueta: "Leads nuevos", valor: totalLeads, nota: vs(totalLeads, totalLeadsAnterior) },
                   { etiqueta: "Llamadas", valor: llamadas.length, nota: vs(llamadas.length, llamadasAnterior.length) },
                   { etiqueta: "Respuestas", valor: contestadas.length, nota: `${tasaRespuesta} % contestadas · ${pct(variacionPct(contestadas.length, contestadasAnterior.length))}` },
                   { etiqueta: "Seguimientos hechos", valor: seguimientosCompletados.length, nota: vs(seguimientosCompletados.length, seguimientosCompletadosAnterior.length) },
-                  { etiqueta: "Ganados", valor: cerrados.length, nota: `${conversion} % de conversión · ${pct(variacionPct(cerrados.length, cerradosAnterior.length))}` },
+                  { etiqueta: "Ganados", valor: nCerrados, nota: `${conversion} % de conversión · ${pct(variacionPct(nCerrados, nCerradosAnterior))}` },
                   {
                     etiqueta: "Valor ganado",
                     valor: formatEuros(facturado),
@@ -222,11 +235,11 @@ export default function AnaliticaPage() {
                 </div>
               </Panel>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <Panel titulo={`Pipeline actual · ${leadsActuales.length} leads`}>
+                <Panel titulo={`Pipeline actual · ${totalPipeline} leads`}>
                   <div className="px-4 py-3">
                     <FunnelChart etapas={funnelData} />
                     <p className="mt-3 text-xs text-ink3">
-                      {formatEuros(valorPipeline)} en juego en {abiertos.length} leads abiertos
+                      {formatEuros(valorPipeline)} en juego en {nAbiertos} leads abiertos
                       {abiertosSinValor ? ` (${abiertosSinValor} sin valor)` : ""}
                       {perdidos ? ` · ${perdidos} perdidos o sin contestar` : ""}. No depende del periodo.
                     </p>

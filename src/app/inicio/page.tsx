@@ -8,14 +8,14 @@ import { listarProyectos } from "@/lib/data/proyectos";
 import { listarTareas } from "@/lib/data/tareas";
 import { listarActividad } from "@/lib/data/actividad";
 import { listarEventosDeHoy, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
-import { obtenerLeadsActuales } from "@/lib/data/analitica";
+import { obtenerResumenPipeline, type ResumenEstado } from "@/lib/data/analitica";
 import { listarCobros, listarFacturas } from "@/lib/data/finanzas";
 import { pendientesDocumentales } from "@/lib/data/documentos";
 import { aCentimos, calcularKpis, eur, periodoQueContiene } from "@/lib/finanzas";
-import { ESTADOS_ABIERTOS, formatEuros, sumarValor } from "@/lib/constants";
+import { ESTADOS_ABIERTOS, formatEuros } from "@/lib/constants";
 import { aYMD, endOfDay, formatHora, formatYMDRelativa, hoyYMD, startOfDay, sumarDiasYMD } from "@/lib/dates";
 import { ESTADOS_PROYECTO_ACTIVOS } from "@/lib/trabajo";
-import type { Actividad, CobroConFactura, EventoConLead, FacturaConCuenta, Lead, ProyectoConRelaciones, TareaConRelaciones } from "@/lib/types";
+import type { Actividad, CobroConFactura, EventoConLead, FacturaConCuenta, ProyectoConRelaciones, TareaConRelaciones } from "@/lib/types";
 import { useAccionesTareas } from "@/lib/useAccionesTareas";
 import { SoloAdmin } from "@/components/trabajo/SoloAdmin";
 import { SkeletonLineas, SkeletonTarjetas } from "@/components/ui/Skeleton";
@@ -59,7 +59,7 @@ function Inicio() {
   const [tareas, setTareas] = useState<TareaConRelaciones[]>([]);
   const [eventosHoy, setEventosHoy] = useState<EventoConLead[]>([]);
   const [eventosVencidos, setEventosVencidos] = useState<EventoConLead[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [pipeline, setPipeline] = useState<ResumenEstado[]>([]);
   const [actividad, setActividad] = useState<Actividad[]>([]);
   const [facturas, setFacturas] = useState<FacturaConCuenta[]>([]);
   const [cobros, setCobros] = useState<CobroConFactura[]>([]);
@@ -80,7 +80,7 @@ function Inicio() {
         listarTareas({ diasCompletadas: 1 }),
         listarEventosDeHoy(startOfDay(ahora).toISOString(), endOfDay(ahora).toISOString(), usuarioActual.id),
         listarEventosVencidos(startOfDay(ahora).toISOString(), usuarioActual.id),
-        obtenerLeadsActuales(),
+        obtenerResumenPipeline(),
         listarActividad({ limite: 8 }),
         listarFacturas(),
         listarCobros({ desde: periodoQueContiene("anio").desde }),
@@ -89,7 +89,7 @@ function Inicio() {
       setTareas(t);
       setEventosHoy(eh);
       setEventosVencidos(ev);
-      setLeads(l);
+      setPipeline(l);
       setActividad(a);
       setFacturas(fs);
       setCobros(cs);
@@ -134,7 +134,7 @@ function Inicio() {
     const entregasSemana = activos.filter((p) => p.fecha_entrega && p.fecha_entrega >= hoy && p.fecha_entrega <= en7);
     const entregasHoy = activos.filter((p) => p.fecha_entrega === hoy);
     const entregadosMes = proyectos.filter((p) => p.estado === "entregado" && !!p.entregado_en && aYMD(new Date(p.entregado_en)).startsWith(mesActual));
-    const leadsActivos = leads.filter((l) => ESTADOS_ABIERTOS.has(l.estado));
+    const leadsActivos = pipeline.filter((r) => ESTADOS_ABIERTOS.has(r.estado));
 
     const urgentes: Urgente[] = [
       ...tareasVencidas.map((t) => ({ tipo: "tarea" as const, id: t.id, fecha: t.fecha_limite, tarea: t })),
@@ -152,12 +152,12 @@ function Inicio() {
       valorEnCurso: activos.reduce((s, p) => s + (Number(p.importe) || 0), 0),
       valorEntregadoMes: entregadosMes.reduce((s, p) => s + (Number(p.importe) || 0), 0),
       leadsActivos,
-      valorLeads: sumarValor(leadsActivos),
+      valorLeads: leadsActivos.reduce((t, r) => t + r.valor, 0),
       urgentes,
       enRevision: activos.filter((p) => p.estado === "revision").length,
       esperando: activos.filter((p) => p.estado === "esperando").length,
     };
-  }, [proyectos, tareas, leads, eventosVencidos, usuarioActual, hoy, en7, mesActual]);
+  }, [proyectos, tareas, pipeline, eventosVencidos, usuarioActual, hoy, en7, mesActual]);
 
   async function completarSeguimiento(ev: EventoConLead) {
     const nuevo = !ev.completada;
@@ -247,7 +247,7 @@ function Inicio() {
               },
               {
                 etiqueta: "Leads activos",
-                valor: m.leadsActivos.length,
+                valor: m.leadsActivos.reduce((t, r) => t + r.n, 0),
                 href: "/leads",
                 nota: m.valorLeads > 0 ? `${formatEuros(m.valorLeads)} en juego` : undefined,
               },

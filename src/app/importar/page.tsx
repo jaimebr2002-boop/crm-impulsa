@@ -12,7 +12,7 @@ import {
   type FilaImportada,
 } from "@/lib/importar";
 import { parsearHtmlLeads } from "@/lib/importarHtml";
-import { crearLead, listarLeads } from "@/lib/data/leads";
+import { crearLead, listarContactosExistentes } from "@/lib/data/leads";
 import { crearInteraccion } from "@/lib/data/interacciones";
 import { listarUsuarios } from "@/lib/data/usuarios";
 import { useUsuario } from "@/context/UsuarioContext";
@@ -79,7 +79,7 @@ export default function ImportarPage() {
     try {
       // La comprobación de duplicados se hace contra los leads que el usuario
       // puede ver: RLS ya limita esto a "los suyos" si es comercial.
-      const existentes = await listarLeads({ incluirArchivados: true });
+      const existentes = await listarContactosExistentes();
       final = marcarDuplicados(parseado, existentes);
     } catch {
       // Si falla la comprobación de duplicados no se bloquea la importación,

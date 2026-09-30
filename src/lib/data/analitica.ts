@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
-import type { Interaccion, Lead } from "@/lib/types";
+import type { Interaccion } from "@/lib/types";
 import { traerTodo } from "./paginar";
-import { conEstadoCanonico } from "@/lib/constants";
+import { estadoCanonico } from "@/lib/constants";
 
 export type FiltroAnalitica = {
   desdeIso: string;
@@ -31,30 +31,49 @@ export function llamadaContestada(i: Pick<Interaccion, "canal" | "resultado">): 
   return !RESULTADOS_SIN_RESPUESTA.has(i.resultado);
 }
 
-export async function obtenerLeadsPeriodo(filtro: FiltroAnalitica): Promise<Lead[]> {
-  return (await traerTodo<Lead>((desde, hasta) => {
-    let query = supabase
-      .from("leads")
-      .select("*")
-      .gte("created_at", filtro.desdeIso)
-      .lte("created_at", filtro.hastaIso)
-      .order("id")
-      .range(desde, hasta);
-    if (filtro.usuarioId) query = query.eq("asignado_a", filtro.usuarioId);
-    return query;
-  })).map(conEstadoCanonico);
+/** Leads activos agrupados por estado (calculado en la base de datos: no se
+ * descargan los leads). Un comercial solo cuenta los suyos por RLS. */
+export type ResumenEstado = { estado: string; n: number; valor: number; sinValor: number };
+
+export async function obtenerResumenPipeline(usuarioId?: string): Promise<ResumenEstado[]> {
+  const { data, error } = await supabase.rpc("resumen_pipeline_leads", { p_usuario: usuarioId ?? null });
+  if (error) throw new Error(error.message);
+  const porEstado = new Map<string, ResumenEstado>();
+  for (const f of (data ?? []) as { estado: string; n: number; valor: number | string; sin_valor: number }[]) {
+    const estado = estadoCanonico(f.estado);
+    const previo = porEstado.get(estado) ?? { estado, n: 0, valor: 0, sinValor: 0 };
+    previo.n += Number(f.n);
+    previo.valor += Number(f.valor) || 0;
+    previo.sinValor += Number(f.sin_valor);
+    porEstado.set(estado, previo);
+  }
+  return Array.from(porEstado.values());
 }
 
-/** Snapshot actual del pipeline: todos los leads visibles (RLS ya limita a
- * un comercial a los suyos), sin filtrar por fecha de creación — un funnel
- * representa dónde está todo el mundo ahora, no quién entró en el periodo.
- * Los leads archivados quedan fuera del pipeline. */
-export async function obtenerLeadsActuales(usuarioId?: string): Promise<Lead[]> {
-  return (await traerTodo<Lead>((desde, hasta) => {
-    let query = supabase.from("leads").select("*").eq("archivado", false).order("id").range(desde, hasta);
-    if (usuarioId) query = query.eq("asignado_a", usuarioId);
-    return query;
-  })).map(conEstadoCanonico);
+/** Leads creados en un periodo, agrupados por día, estado, origen y responsable. */
+export type GrupoLeads = { dia: string; estado: string; origen: string | null; asignado_a: string | null; n: number; valor: number; conValor: number };
+
+export async function obtenerResumenLeadsPeriodo(filtro: FiltroAnalitica): Promise<GrupoLeads[]> {
+  const { data, error } = await supabase.rpc("resumen_leads_periodo", {
+    p_desde: filtro.desdeIso,
+    p_hasta: filtro.hastaIso,
+    p_usuario: filtro.usuarioId ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { dia: string; estado: string; origen: string | null; asignado_a: string | null; n: number; valor: number | string; con_valor: number }[]).map((f) => ({
+    dia: f.dia,
+    estado: estadoCanonico(f.estado),
+    origen: f.origen,
+    asignado_a: f.asignado_a,
+    n: Number(f.n),
+    valor: Number(f.valor) || 0,
+    conValor: Number(f.con_valor),
+  }));
+}
+
+/** Suma de una magnitud sobre los grupos que cumplen el filtro. */
+export function sumarGrupos<T extends { n: number }>(grupos: T[], campo: (g: T) => number = (g) => g.n, donde: (g: T) => boolean = () => true): number {
+  return grupos.reduce((t, g) => (donde(g) ? t + campo(g) : t), 0);
 }
 
 export async function obtenerInteraccionesPeriodo(filtro: FiltroAnalitica): Promise<Interaccion[]> {
@@ -109,4 +128,17 @@ export function contarPor<T>(filas: T[], obtenerClave: (fila: T) => string | nul
     conteo[clave] = (conteo[clave] ?? 0) + 1;
   }
   return conteo;
+}
+
+/** Igual que agruparPorDia, pero sobre grupos ya contados en la base de datos. */
+export function serieDesdeGrupos(grupos: GrupoLeads[], desde: Date, hasta: Date) {
+  const porDia = new Map<string, number>();
+  const cursor = new Date(desde);
+  cursor.setHours(0, 0, 0, 0);
+  while (cursor <= hasta) {
+    porDia.set(cursor.toISOString().slice(0, 10), 0);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  for (const g of grupos) if (porDia.has(g.dia)) porDia.set(g.dia, (porDia.get(g.dia) ?? 0) + g.n);
+  return Array.from(porDia.entries()).map(([fecha, valor]) => ({ fecha, valor }));
 }
