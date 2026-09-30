@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUsuario } from "@/context/UsuarioContext";
 import { crearEvento, listarEventosDeHoy, listarEventosPorRango, listarEventosVencidos, marcarEventoCompletado } from "@/lib/data/eventos";
 import { listarUsuarios } from "@/lib/data/usuarios";
-import { obtenerInteraccionesPeriodo, obtenerLeadsActuales, llamadaContestada, contarPor } from "@/lib/data/analitica";
+import { obtenerInteraccionesPeriodo, obtenerResumenPipeline, llamadaContestada, type ResumenEstado } from "@/lib/data/analitica";
 import { startOfDay, endOfDay, addDias } from "@/lib/dates";
-import type { EventoConLead, Lead, Usuario } from "@/lib/types";
+import type { EventoConLead, Usuario } from "@/lib/types";
 import { ESTADOS, ESTADO_LABEL, ESTADO_COLOR } from "@/lib/constants";
 import { EventCard } from "@/components/EventCard";
 import { LoadingState } from "@/components/LoadingState";
@@ -29,7 +29,7 @@ export default function HoyPage() {
   const [vencidos, setVencidos] = useState<EventoConLead[]>([]);
   const [deHoy, setDeHoy] = useState<EventoConLead[]>([]);
   const [proximos, setProximos] = useState<EventoConLead[]>([]);
-  const [leadsActuales, setLeadsActuales] = useState<Lead[]>([]);
+  const [pipeline, setPipeline] = useState<ResumenEstado[]>([]);
   const [contactadosSemana, setContactadosSemana] = useState(0);
   const [tasaRespuestaSemana, setTasaRespuestaSemana] = useState(0);
   const [cargando, setCargando] = useState(true);
@@ -57,7 +57,7 @@ export default function HoyPage() {
         listarEventosVencidos(startOfDay(ahora).toISOString(), usuarioIdParaFiltro),
         listarEventosDeHoy(startOfDay(ahora).toISOString(), endOfDay(ahora).toISOString(), usuarioIdParaFiltro),
         listarEventosPorRango(startOfDay(addDias(ahora, 1)).toISOString(), endOfDay(addDias(ahora, 7)).toISOString(), usuarioIdParaFiltro),
-        obtenerLeadsActuales(usuarioIdParaFiltro),
+        obtenerResumenPipeline(usuarioIdParaFiltro),
         obtenerInteraccionesPeriodo({
           desdeIso: haceUnaSemana.toISOString(),
           hastaIso: ahora.toISOString(),
@@ -67,7 +67,7 @@ export default function HoyPage() {
       setVencidos(v);
       setDeHoy(h);
       setProximos(p.filter((e) => !e.completada));
-      setLeadsActuales(actuales);
+      setPipeline(actuales);
       setContactadosSemana(new Set(interaccionesSemana.map((i) => i.lead_id)).size);
       const llamadasSemana = interaccionesSemana.filter((i) => i.canal === "llamada");
       const contestadasSemana = llamadasSemana.filter(llamadaContestada);
@@ -107,7 +107,7 @@ export default function HoyPage() {
     [...vencidos, ...pendientesHoy].map((e) => e.lead?.id).filter(Boolean)
   ).size;
 
-  const conteoPorEstado = contarPor(leadsActuales, (l) => l.estado);
+  const conteoPorEstado = Object.fromEntries(pipeline.map((r) => [r.estado, r.n]));
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 md:px-8">

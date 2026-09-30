@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { listarLeads } from "@/lib/data/leads";
+import { listarLeadsPagina } from "@/lib/data/leads";
 import { datetimeLocalToIso } from "@/lib/dates";
 import type { Lead } from "@/lib/types";
 
@@ -30,8 +30,8 @@ export function QuickEventForm({
     setBuscando(true);
     clearTimeout(debounce.current);
     debounce.current = setTimeout(() => {
-      listarLeads({ busqueda })
-        .then((data) => setResultados(data.slice(0, 6)))
+      listarLeadsPagina({ busqueda }, 0, 6)
+        .then(({ leads }) => setResultados(leads))
         .catch(() => setResultados([]))
         .finally(() => setBuscando(false));
     }, 300);

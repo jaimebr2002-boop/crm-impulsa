@@ -9,13 +9,15 @@ import { KanbanBoard } from "./ui/KanbanBoard";
 
 type Props = {
   leads: Lead[];
+  /** Total real de leads por estado (el tablero carga solo los más recientes de cada columna). */
+  totales?: Record<string, number>;
   usuariosPorId: Record<string, Usuario>;
   proximos: Record<string, string>;
   onMover: (leadId: string, nuevoEstado: string) => void;
 };
 
 /** Pipeline de ventas: una columna por estado del lead con su valor total. */
-export function LeadBoard({ leads, usuariosPorId, proximos, onMover }: Props) {
+export function LeadBoard({ leads, totales, usuariosPorId, proximos, onMover }: Props) {
   return (
     <KanbanBoard
       columnas={ESTADOS.map((e) => ({ id: e, titulo: ESTADO_LABEL[e], acento: ESTADO_ACENTO[e] ?? "bg-line" }))}
@@ -25,6 +27,9 @@ export function LeadBoard({ leads, usuariosPorId, proximos, onMover }: Props) {
       onMover={(l, estado) => onMover(l.id, estado)}
       resumenColumna={(lista) => {
         const total = sumarValor(lista);
+        const parcial = totales?.[lista[0]?.estado ?? ""];
+        const hay = parcial != null && parcial > lista.length ? `${lista.length} de ${parcial.toLocaleString("es-ES")}` : null;
+        if (hay) return total > 0 ? `${hay} · ${formatEuros(total)}` : hay;
         return total > 0 ? formatEuros(total) : null;
       }}
       renderTarjeta={(lead) => {
